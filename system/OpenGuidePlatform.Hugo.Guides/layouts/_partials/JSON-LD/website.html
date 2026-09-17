@@ -11,19 +11,13 @@
   "publisher": {
     "@type": "Organization",
     "name": "{{ .Site.Title }}",
-    "url": {{ $siteURL }},
+    "url": {{ $siteURL }}
+    {{ with .Site.Params.logo_image }},
     "logo": {
       "@type": "ImageObject",
-      "url": {{ printf "%s%s" $siteURL "/images/logo.png" }}
+      "url": {{ . | absURL }}
     }
-  },
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": {
-      "@type": "EntryPoint",
-      "urlTemplate": {{ printf "%s%s" $siteURL "/search?q={search_term_string}" }}
-    },
-    "query-input": "required name=search_term_string"
+    {{ end }}
   },
   "sameAs": [
     {{ .Site.Params.githubUrl }}

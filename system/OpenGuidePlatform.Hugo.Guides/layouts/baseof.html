@@ -20,7 +20,7 @@
 
     {{ $title := .Title | default .Site.Title }}
     {{ if .IsHome }}
-      {{ $title = printf "%s - %s" .Site.Title .Site.Params.Description }}
+      {{ $title = .Site.Params.seo_title | default .Site.Title }}
     {{ else }}
       {{ $topSection := .Site.GetPage (printf "/%s" .Section) }}
       {{ if eq $topSection.Type "guide" }}
@@ -76,28 +76,31 @@
     {{ partial "components/seo/guide-version-links.html" . }}
 
     {{/* Open Graph / Facebook Meta Tags */}}
+    {{ $socialImage := .Params.og_image | default .Site.Params.og_image | default .Site.Params.logo_image }}
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="{{ .RelPermalink }}" />
+    <meta property="og:url" content="{{ .Permalink }}" />
     <meta property="og:title" content="{{ $title }}" />
     <meta property="og:description" content="{{ ( .Description | default  .Site.Params.description) | plainify }}" />
-    <meta property="og:image" content="{{ .Site.Params.logo_image }}" />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <meta property="og:image:alt" content="{{ .Site.Title }} Logo" />
+    {{ with $socialImage }}
+      <meta property="og:image" content="{{ . | absURL }}" />
+    {{ end }}
     <meta property="og:site_name" content="{{ .Site.Title }}" />
     <meta property="og:locale" content="{{ .Site.Language.Locale }}" />
 
     {{/* Twitter Card Meta Tags */}}
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="{{ .RelPermalink }}" />
+    <meta name="twitter:url" content="{{ .Permalink }}" />
     <meta name="twitter:title" content="{{ $title }}" />
     <meta name="twitter:description" content="{{ ( .Description | default .Site.Params.description) | plainify }}" />
-    <meta name="twitter:image" content="{{ .Site.Params.logo_image }}" />
-    <meta name="twitter:image:alt" content="{{ .Site.Title }} Logo" />
+    {{ with $socialImage }}
+      <meta name="twitter:image" content="{{ . | absURL }}" />
+    {{ end }}
 
     {{/* Additional Meta Tags */}}
     <meta name="giscus:backlink" content="{{ .Site.Params.siteProdUrl }}{{ .RelPermalink }}" />
-    <meta name="license" content="© {{ now.Format "2006" }} {{ .Site.Title }}." />
+    {{ with .Params.guide_license }}
+      <meta name="license" content="{{ . | markdownify | plainify }}" />
+    {{ end }}
 
     {{- if eq (.Site.Language.LanguageDirection | default "ltr") "rtl" }}
       <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.rtl.min.css" rel="stylesheet" integrity="sha384-MdqCcafa5BLgxBDJ3d/4D292geNL64JyRtSGjEszRUQX9rhL1QkcnId+OT7Yw+D+" crossorigin="anonymous" />
