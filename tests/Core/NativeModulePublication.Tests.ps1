@@ -21,6 +21,7 @@ BeforeAll {
         $global:LASTEXITCODE=0
         $global:OgpNativeTagCalls.Add(($args -join ' '))
         if($args[0] -eq 'api'){
+            if($args[1] -like 'repos/*/git/matching-refs/tags/v'){return '[]'}
             if($global:OgpNativeTagFailure){$global:LASTEXITCODE=1}
             return
         }
@@ -47,8 +48,10 @@ Describe 'Coordinated native module publication' {
     It 'publishes a nested module tag before making its coordinated release available' {
         & $publisher -WorkspaceRoot $root -Repository example/platform -OutputPath $assets
         $global:OgpNativeTagCalls[0] | Should -Match 'refs/tags/system/OpenGuidePlatform.Hugo.Guides/v0.1.0-Preview.1'
-        $global:OgpNativeTagCalls[-1] | Should -Match '^release create v0.1.0-Preview.1 '
-        $global:OgpNativeTagCalls[-1] | Should -Match '--generate-notes'
+        $releaseCall=$global:OgpNativeTagCalls|Where-Object {$_ -like 'release create *'}|Select-Object -Last 1
+        $releaseCall | Should -Match '^release create v0.1.0-Preview.1 '
+        $releaseCall | Should -Match '--generate-notes'
+        $releaseCall | Should -Match '--title v0.1.0-Preview.1'
         $notes=Get-Content "$assets/release-notes.md" -Raw
         $notes|Should -Match 'Update -ring preview -PlatformRelease v0.1.0-Preview.1'
         $notes|Should -Match 'First installation|OpenGuidePlatform-GuideSite.zip|settings.yaml'
@@ -59,13 +62,15 @@ Describe 'Coordinated native module publication' {
         ConvertTo-PackageManifest $manifest|ConvertTo-Json -Depth 10|Set-Content "$assets/release-manifest.json"
         & $publisher -WorkspaceRoot $root -OutputPath $assets
         $global:OgpNativeTagCalls[0]|Should -Match 'refs/tags/system/OpenGuidePlatform.Hugo.Guides/v0.1.0'
-        $global:OgpNativeTagCalls[-1]|Should -Match '^release create v0.1.0 '
-        $global:OgpNativeTagCalls[-1]|Should -Not -Match '--prerelease|--latest=false'
+        $releaseCall=$global:OgpNativeTagCalls|Where-Object {$_ -like 'release create *'}|Select-Object -Last 1
+        $releaseCall|Should -Match '^release create v0.1.0 '
+        $releaseCall|Should -Not -Match '--prerelease|--latest=false'
+        $releaseCall|Should -Match '--title v0.1.0'
         Get-Content "$assets/release-notes.md" -Raw|Should -Match 'Update -ring production -PlatformRelease v0.1.0'
     }
     It 'keeps prerelease versions as preview releases' {
         & $publisher -WorkspaceRoot $root -OutputPath $assets
-        $global:OgpNativeTagCalls[-1]|Should -Match '--prerelease --latest=false'
+        ($global:OgpNativeTagCalls|Where-Object {$_ -like 'release create *'}|Select-Object -Last 1)|Should -Match '--prerelease --latest=false'
     }
     It 'rejects a manifest channel inconsistent with its version' {
         $manifest.channel='stable'
@@ -85,12 +90,12 @@ Describe 'Coordinated native module publication' {
         try { & $publisher -WorkspaceRoot $workspace -Repository example/platform -OutputPath $relativeAssets }
         finally { Pop-Location }
         Test-Path "$assets/release-notes.md" | Should -BeTrue
-        $global:OgpNativeTagCalls[-1] | Should -Match ([regex]::Escape("$assets/OpenGuidePlatform-GuideSite.zip"))
+        ($global:OgpNativeTagCalls|Where-Object {$_ -like 'release create *'}|Select-Object -Last 1) | Should -Match ([regex]::Escape("$assets/OpenGuidePlatform-GuideSite.zip"))
     }
     It 'reuses an existing matching tag without moving or recreating it' {
         $global:OgpNativeTagExisting=@(('a'*40)+"`trefs/tags/system/OpenGuidePlatform.Hugo.Guides/v0.1.0-Preview.1")
         & $publisher -WorkspaceRoot $root -Repository example/platform -OutputPath $assets
-        @($global:OgpNativeTagCalls|Where-Object {$_ -match '^api '}).Count | Should -Be 0
+        @($global:OgpNativeTagCalls|Where-Object {$_ -match '^api .*/git/refs --method POST.*system/OpenGuidePlatform.Hugo.Guides/' }).Count | Should -Be 0
     }
     It 'refuses a conflicting immutable module tag' {
         $global:OgpNativeTagExisting=@(('b'*40)+"`trefs/tags/system/OpenGuidePlatform.Hugo.Guides/v0.1.0-Preview.1")
