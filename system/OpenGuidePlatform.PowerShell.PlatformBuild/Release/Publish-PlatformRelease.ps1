@@ -1,6 +1,6 @@
 #Requires -Version 7.4
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$WorkspaceRoot,[Parameter(Mandatory)][string]$OutputPath,[string]$Repository='nkdAgility/OpenGuidePlatform')
+param([Parameter(Mandatory)][string]$WorkspaceRoot,[Parameter(Mandatory)][string]$OutputPath,[string]$SourceCommit,[string]$Repository='nkdAgility/OpenGuidePlatform')
 $ErrorActionPreference='Stop'
 . "$PSScriptRoot/Publish-PlatformWorkflowAliases.ps1"
 $WorkspaceRoot=[IO.Path]::GetFullPath($WorkspaceRoot)
@@ -15,8 +15,8 @@ foreach($name in @('GuideSite','PlatformBuild')){
     $part=$manifest.packages.$name
     if($part.archive -cne "OpenGuidePlatform-$name.zip" -or $part.version -cne $manifest.version -or (Get-FileHash "$OutputPath/$($part.archive)").Hash -ine $part.sha256){throw "Release $name package identity or digest mismatch. Rebuild and validate the complete release."}
 }
-$commit=(& git -C $WorkspaceRoot rev-parse HEAD).Trim()
-if($LASTEXITCODE -ne 0 -or $commit -cne $manifest.sourceCommit){throw 'Release checkout does not match the package.'}
+$commit=if($SourceCommit){$SourceCommit}else{(& git -C $WorkspaceRoot rev-parse HEAD).Trim()}
+if($commit -cnotmatch '^[a-f0-9]{40}$' -or $commit -cne $manifest.sourceCommit){throw 'Release source commit does not match the package.'}
 $tag="v$($manifest.version)"
 $module=$manifest.nativeHugoModule
 if($module.path -cne 'github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides' -or $module.version -cne $tag -or $module.tag -cne "system/OpenGuidePlatform.Hugo.Guides/$tag" -or $module.sourceCommit -cne $commit){throw 'Native Hugo publication identity differs from the tested release.'}
@@ -86,7 +86,7 @@ The corresponding native Hugo module tag is $($module.tag). The platform tests a
 "@
 [IO.File]::WriteAllText("$OutputPath/release-notes.md",$notes)
 $releaseFlags=if($prerelease){@('--prerelease','--latest=false')}else{@()}
-& gh release create $tag "$OutputPath/OpenGuidePlatform-GuideSite.zip" "$OutputPath/OpenGuidePlatform-PlatformBuild.zip" "$OutputPath/release-manifest.json" --repo $Repository --target $commit @releaseFlags --title "OpenGuidePlatform $($manifest.version)" --generate-notes --notes-file "$OutputPath/release-notes.md"
+& gh release create $tag "$OutputPath/OpenGuidePlatform-GuideSite.zip" "$OutputPath/OpenGuidePlatform-PlatformBuild.zip" "$OutputPath/release-manifest.json" --repo $Repository --target $commit @releaseFlags --title $manifest.version --generate-notes --notes-file "$OutputPath/release-notes.md"
 if($LASTEXITCODE -ne 0){throw 'Platform release publication failed.'}
 
 Publish-PlatformWorkflowAliases -WorkspaceRoot $WorkspaceRoot -Repository $Repository -Version $manifest.version -Commit $commit

@@ -91,22 +91,22 @@ jobs:
       contents: write
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.build.outputs.source-commit }}
-          persist-credentials: false
       - uses: actions/download-artifact@v8
         with:
           artifact-ids: ${{ needs.build.outputs.artifact-id }}
           merge-multiple: true
           path: .processing/platform-release
+      - name: Restore packaged release tools
+        run: Expand-Archive .processing/platform-release/OpenGuidePlatform-PlatformBuild.zip .processing/platform-release/tools
       - name: Publish versioned release
         env:
           GH_TOKEN: ${{ github.token }}
           PLATFORM_VERSION: ${{ needs.build.outputs.version }}
-        run: ./build.ps1 -Stage Release -OutputPath .processing/platform-release
+          PLATFORM_COMMIT: ${{ needs.build.outputs.source-commit }}
+        run: ./.processing/platform-release/tools/release.ps1 -Stage Release -AssetsPath .processing/platform-release -SourceCommit $env:PLATFORM_COMMIT
       - name: Verify published release
         env:
           GH_TOKEN: ${{ github.token }}
           PLATFORM_VERSION: ${{ needs.build.outputs.version }}
-        run: ./build.ps1 -Stage Validate -ReleaseTag "v$env:PLATFORM_VERSION" -OutputPath .processing/published-platform
+          PLATFORM_COMMIT: ${{ needs.build.outputs.source-commit }}
+        run: ./.processing/platform-release/tools/release.ps1 -Stage Validate -AssetsPath .processing/platform-release -SourceCommit $env:PLATFORM_COMMIT -ReleaseTag "v$env:PLATFORM_VERSION"

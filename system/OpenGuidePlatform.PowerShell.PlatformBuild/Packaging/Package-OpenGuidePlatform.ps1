@@ -43,6 +43,7 @@ $guideHash=(Get-FileHash "$output/$guideArchive").Hash.ToLowerInvariant()
 $platformStage=Join-Path $output 'platform-build'
 [IO.Directory]::CreateDirectory("$platformStage/system")|Out-Null
 Copy-Item "$root/system/OpenGuidePlatform.PowerShell.PlatformBuild" "$platformStage/system/" -Recurse
+Copy-Item "$root/system/OpenGuidePlatform.PowerShell.PlatformBuild/Release/release.ps1" "$platformStage/release.ps1"
 $dependency=[ordered]@{version=$Version;sha256=$guideHash}
 $platformMetadata=[ordered]@{schemaVersion=1;product='OpenGuidePlatform';package='PlatformBuild';version=$Version;sourceCommit=$commit;dependencies=@{GuideSite=$dependency}}
 [IO.File]::WriteAllText("$platformStage/platform-build.json",($platformMetadata|ConvertTo-Json -Depth 10))
