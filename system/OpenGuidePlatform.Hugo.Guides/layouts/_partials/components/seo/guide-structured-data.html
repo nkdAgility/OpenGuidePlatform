@@ -7,8 +7,6 @@
 {{- if eq .Type "guide" -}}
   {{- $currentVersion := partial "functions/get-guide-version.html" . -}}
   {{- if $currentVersion -}}
-    {{- $latestVersion := partial "functions/get-latest-version" . -}}
-    {{- $isLatestVersion := eq $currentVersion $latestVersion -}}
     {{- $canonicalUrl := partial "functions/get-canonical-url.html" . -}}
     {{- $fullCanonicalUrl := printf "%s%s" .Site.Params.siteProdUrl $canonicalUrl -}}
 
@@ -21,13 +19,6 @@
       "datePublished": "{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}",
       "dateModified": "{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}",
       "version": "{{ $currentVersion }}",
-      {{- if not $isLatestVersion }}
-      "isBasedOn": {
-        "@type": "TechArticle",
-        "url": "{{ $fullCanonicalUrl }}",
-        "name": "{{ .Title }} (Latest Version)"
-      },
-      {{- end }}
       "url": "{{ $fullCanonicalUrl }}",
       "mainEntityOfPage": {
         "@type": "WebPage",
