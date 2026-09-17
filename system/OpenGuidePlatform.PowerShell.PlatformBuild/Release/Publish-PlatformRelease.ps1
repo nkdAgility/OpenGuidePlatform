@@ -86,7 +86,7 @@ The corresponding native Hugo module tag is $($module.tag). The platform tests a
 "@
 [IO.File]::WriteAllText("$OutputPath/release-notes.md",$notes)
 $releaseFlags=if($prerelease){@('--prerelease','--latest=false')}else{@()}
-& gh release create $tag "$OutputPath/OpenGuidePlatform-GuideSite.zip" "$OutputPath/OpenGuidePlatform-PlatformBuild.zip" "$OutputPath/release-manifest.json" --repo $Repository --target $commit @releaseFlags --title $manifest.version --generate-notes --notes-file "$OutputPath/release-notes.md"
+& gh release create $tag "$OutputPath/OpenGuidePlatform-GuideSite.zip" "$OutputPath/OpenGuidePlatform-PlatformBuild.zip" "$OutputPath/release-manifest.json" --repo $Repository --target $commit @releaseFlags --title $tag --generate-notes --notes-file "$OutputPath/release-notes.md"
 if($LASTEXITCODE -ne 0){throw 'Platform release publication failed.'}
 
 Publish-PlatformWorkflowAliases -WorkspaceRoot $WorkspaceRoot -Repository $Repository -Version $manifest.version -Commit $commit

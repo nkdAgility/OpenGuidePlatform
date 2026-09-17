@@ -51,7 +51,7 @@ Describe 'Coordinated native module publication' {
         $releaseCall=$global:OgpNativeTagCalls|Where-Object {$_ -like 'release create *'}|Select-Object -Last 1
         $releaseCall | Should -Match '^release create v0.1.0-Preview.1 '
         $releaseCall | Should -Match '--generate-notes'
-        $releaseCall | Should -Match '--title 0.1.0-Preview.1'
+        $releaseCall | Should -Match '--title v0.1.0-Preview.1'
         $notes=Get-Content "$assets/release-notes.md" -Raw
         $notes|Should -Match 'Update -ring preview -PlatformRelease v0.1.0-Preview.1'
         $notes|Should -Match 'First installation|OpenGuidePlatform-GuideSite.zip|settings.yaml'
@@ -65,7 +65,7 @@ Describe 'Coordinated native module publication' {
         $releaseCall=$global:OgpNativeTagCalls|Where-Object {$_ -like 'release create *'}|Select-Object -Last 1
         $releaseCall|Should -Match '^release create v0.1.0 '
         $releaseCall|Should -Not -Match '--prerelease|--latest=false'
-        $releaseCall|Should -Match '--title 0.1.0'
+        $releaseCall|Should -Match '--title v0.1.0'
         Get-Content "$assets/release-notes.md" -Raw|Should -Match 'Update -ring production -PlatformRelease v0.1.0'
     }
     It 'keeps prerelease versions as preview releases' {
