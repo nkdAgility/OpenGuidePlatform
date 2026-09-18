@@ -1,0 +1,23 @@
+{{/* Input: Hugo page. Output: Version/Page. Preserve date-first, then lexical
+     section fallback, including the old empty-version result. */}}
+{{- $pages := where .Site.RegularPages "Section" .Section -}}
+{{- $guides := where $pages "Type" "guide" -}}
+{{- $version := "" -}}
+{{- $page := false -}}
+{{- if $guides -}}
+  {{- $page = index $guides.ByDate.Reverse 0 -}}
+  {{- $version = partial "openguide/editions/get-edition-version.html" $page -}}
+{{- end -}}
+{{- if not $version -}}
+  {{- range $candidate := $pages -}}
+    {{- range split .RelPermalink "/" -}}
+      {{- if and (ne . "") (findRE `^\d{4}\.\d+$` .) -}}
+        {{- if or (not $version) (gt . $version) -}}
+          {{- $version = . -}}
+          {{- $page = $candidate -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return (dict "Version" $version "Page" $page) -}}

@@ -1,0 +1,30 @@
+{{/* Input: edition Hugo page. Output: Language/Page/EditionPage/PDFs records.
+     Page is false for a PDF-only language. LegacyPDF preserves the old single
+     download selection without discarding other resources. No body rendering. */}}
+{{- $editionPage := . -}}
+{{- $pages := .AllTranslations -}}
+{{- $pdfs := partial "openguide/pdfs/discover-edition-pdfs.html" (dict "Page" .) -}}
+{{- $languages := slice -}}
+{{- range $pages -}}
+  {{- if not (in $languages .Language.Lang) }}{{ $languages = $languages | append .Language.Lang }}{{ end -}}
+{{- end -}}
+{{- range $pdfs -}}
+  {{- if and .Language (not (in $languages .Language)) }}{{ $languages = $languages | append .Language }}{{ end -}}
+{{- end -}}
+{{- $translations := slice -}}
+{{- range $language := $languages -}}
+  {{- $page := false -}}
+  {{- range $pages }}{{ if eq .Language.Lang $language }}{{ $page = . }}{{ end }}{{ end -}}
+  {{- $matches := partial "openguide/pdfs/select-translation-pdfs.html" (dict "PDFs" $pdfs "Language" $language) -}}
+  {{- $selected := false -}}
+  {{- range $matches }}{{ $selected = .Resource }}{{ end -}}
+  {{- if and (not $selected) $page -}}
+    {{- $matches = partial "openguide/pdfs/discover-edition-pdfs.html" (dict "Page" $page "Pattern" (printf "pdf/*.%s.pdf" $language)) -}}
+    {{- if not $matches -}}
+      {{- $matches = partial "openguide/pdfs/discover-edition-pdfs.html" (dict "Page" $page "Pattern" (printf "pdf/*.%s.pdf" (lower $language))) -}}
+    {{- end -}}
+    {{- if $matches }}{{ $selected = (index $matches 0).Resource }}{{ end -}}
+  {{- end -}}
+  {{- $translations = $translations | append (dict "Language" $language "Page" $page "EditionPage" $editionPage "PDFs" $matches "LegacyPDF" $selected) -}}
+{{- end -}}
+{{- return $translations -}}

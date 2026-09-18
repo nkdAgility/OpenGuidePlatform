@@ -1,0 +1,9 @@
+{{/* Input: Hugo page. Preserve the existing version convention in its permalink. */}}
+{{- $version := "" -}}
+{{- range split .RelPermalink "/" -}}
+  {{- if and (ne . "") (findRE `^\d{4}\.\d+$` .) -}}
+    {{- $version = . -}}
+    {{- break -}}
+  {{- end -}}
+{{- end -}}
+{{- return $version -}}

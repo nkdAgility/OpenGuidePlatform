@@ -1,0 +1,14 @@
+{{/* Input: Hugo page. Output: guide section pages in existing weight order. */}}
+{{- $guides := slice -}}
+{{- $seen := slice -}}
+{{- range where .Site.Sections "Type" "guide" -}}
+  {{- $sections := slice . -}}
+  {{- if reflect.IsSlice . }}{{ $sections = . }}{{ end -}}
+  {{- range $sections -}}
+    {{- if not (in $seen .RelPermalink) -}}
+      {{- $seen = $seen | append .RelPermalink -}}
+      {{- $guides = $guides | append . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return (sort $guides "Weight") -}}

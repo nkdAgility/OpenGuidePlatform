@@ -1,0 +1,11 @@
+{{/* Input: dict Page, optional Pattern. Output: Name/Language/Resource records.
+     Retain every matching resource, including multiple files for one language. */}}
+{{- $pdfs := slice -}}
+{{- $pattern := .Pattern | default "pdf/*.*.pdf" -}}
+{{- range .Page.Resources.Match $pattern -}}
+  {{- $language := "" -}}
+  {{- $parts := split .Name "." -}}
+  {{- if ge (len $parts) 3 }}{{ $language = index $parts (sub (len $parts) 2) }}{{ end -}}
+  {{- $pdfs = $pdfs | append (dict "Name" .Name "Language" $language "Resource" .) -}}
+{{- end -}}
+{{- return $pdfs -}}

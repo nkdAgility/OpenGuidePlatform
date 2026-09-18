@@ -1,0 +1,13 @@
+{{/* Input: Hugo page. Existing version-selector/history shape and URL behavior. */}}
+{{/* Keep the consumer override hook; its default delegates to the capability. */}}
+{{- $latest := partial "functions/get-latest-version.html" . -}}
+{{- $sectionPage := .Site.GetPage .Section -}}
+{{- $sectionURL := printf "/%s/" .Section -}}
+{{- if $sectionPage }}{{ $sectionURL = $sectionPage.RelPermalink }}{{ end -}}
+{{- $versions := slice -}}
+{{- range partial "openguide/editions/discover-guide-editions.html" (dict "Page" . "Scope" "section" "Order" "source") -}}
+  {{- $url := .Page.RelPermalink -}}
+  {{- if eq .Version $latest }}{{ $url = $sectionURL }}{{ end -}}
+  {{- $versions = $versions | append (dict "version" .Version "url" $url "title" .Page.Title "date" .Page.Date "page" .Page "isLatest" (eq .Version $latest)) -}}
+{{- end -}}
+{{- return (sort $versions "date" "desc") -}}

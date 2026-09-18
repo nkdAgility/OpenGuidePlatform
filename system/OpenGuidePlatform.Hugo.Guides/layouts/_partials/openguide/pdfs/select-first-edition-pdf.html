@@ -1,0 +1,6 @@
+{{/* Input: Page and Pattern. Preserve Resources.GetMatch's first-match policy.
+     Return the Hugo resource or false. Enumeration belongs to PDF discovery. */}}
+{{- $pdfs := partial "openguide/pdfs/discover-edition-pdfs.html" . -}}
+{{- $resource := false -}}
+{{- with $pdfs }}{{ $resource = (index . 0).Resource }}{{ end -}}
+{{- return $resource -}}

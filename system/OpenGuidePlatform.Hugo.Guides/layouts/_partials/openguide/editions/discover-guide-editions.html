@@ -1,0 +1,16 @@
+{{/* Input: dict Page, Scope (children or section), optional Order (source).
+     Output: Version/Page records; date descending unless source order requested.
+     Scope preserves the distinct existing child-page and whole-section callers.
+     Enumeration does not render Content or Plain. */}}
+{{- $pages := .Page.Pages -}}
+{{- if eq .Scope "section" }}{{ $pages = where .Page.Site.RegularPages "Section" .Page.Section }}{{ end -}}
+{{- $editions := slice -}}
+{{- $pages = where $pages "Type" "guide" -}}
+{{- if ne .Order "source" }}{{ $pages = $pages.ByDate.Reverse }}{{ end -}}
+{{- range $pages -}}
+  {{- $version := partial "openguide/editions/get-edition-version.html" . -}}
+  {{- if $version -}}
+    {{- $editions = $editions | append (dict "Version" $version "Page" .) -}}
+  {{- end -}}
+{{- end -}}
+{{- return $editions -}}

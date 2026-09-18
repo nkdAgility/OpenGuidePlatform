@@ -57,8 +57,7 @@
             {{ .Page.TableOfContents }}
           {{ else }}
             {{- /* Get the default guide content as fallback */ -}}
-            {{ $defaultSite := index hugo.Sites 0 }}
-            {{ $thisPageDefault := $defaultSite.GetPage .Path }}
+            {{ $thisPageDefault := partial "openguide/translations/resolve-translation-fallback.html" . }}
 
             {{- if not $thisPageDefault }}
               {{- fmt.Errorf "thisPageDefault page not found" }}
@@ -105,7 +104,7 @@
                   {{- if eq .Site.Language.Lang "en" }}
                     {{- /* Show both EN and EN-US buttons for English */ -}}
                     {{- $pdfPatternEN := "pdf/*.en.pdf" }}
-                    {{- $pdfResourceEN := .Resources.GetMatch $pdfPatternEN }}
+                    {{- $pdfResourceEN := partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" $pdfPatternEN) }}
                     {{- if $pdfResourceEN }}
                       <a
                         href="{{ $pdfResourceEN.RelPermalink }}"
@@ -128,7 +127,7 @@
                     {{- end }}
 
                     {{- $pdfPatternENUS := "pdf/*.en-us.pdf" }}
-                    {{- $pdfResourceENUS := .Resources.GetMatch $pdfPatternENUS }}
+                    {{- $pdfResourceENUS := partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" $pdfPatternENUS) }}
                     {{- if $pdfResourceENUS }}
                       <a
                         href="{{ $pdfResourceENUS.RelPermalink }}"
@@ -152,7 +151,7 @@
                   {{- else }}
                     {{- /* Single PDF button for other languages */ -}}
                     {{- $pdfPattern := printf "pdf/*.%s.pdf" .Site.Language.Lang }}
-                    {{- $pdfResource := .Resources.GetMatch $pdfPattern }}
+                    {{- $pdfResource := partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" $pdfPattern) }}
                     {{- if $pdfResource }}
                       <a
                         href="{{ $pdfResource.RelPermalink }}"
@@ -201,9 +200,9 @@
             {{- /* PDF intro text with Google Analytics tracking */ -}}
             {{- if eq .Site.Language.Lang "en" }}
               {{- $pdfPatternEN := "pdf/*.en.pdf" }}
-              {{- $pdfResourceEN := .Resources.GetMatch $pdfPatternEN }}
+              {{- $pdfResourceEN := partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" $pdfPatternEN) }}
               {{- $pdfPatternENUS := "pdf/*.en-us.pdf" }}
-              {{- $pdfResourceENUS := .Resources.GetMatch $pdfPatternENUS }}
+              {{- $pdfResourceENUS := partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" $pdfPatternENUS) }}
               {{- if or $pdfResourceEN $pdfResourceENUS }}
                 <div class="alert alert-info mb-4" role="alert">
                   <i class="fa-solid fa-info-circle me-2"></i>
@@ -219,7 +218,7 @@
               {{- end }}
             {{- else }}
               {{- $pdfPattern := printf "*.%s.pdf" .Site.Language.Lang }}
-              {{- $pdfResource := .Resources.GetMatch $pdfPattern }}
+              {{- $pdfResource := partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" $pdfPattern) }}
               {{- if $pdfResource }}
                 <div class="alert alert-info mb-4" role="alert">
                   <i class="fa-solid fa-info-circle me-2"></i>
@@ -249,8 +248,7 @@
               {{ .Content }}
             {{- else }}
               {{- /* Get the default guide content as fallback */ -}}
-              {{ $defaultSite := index hugo.Sites 0 }}
-              {{ $thisPageDefault := $defaultSite.GetPage .Path }}
+              {{ $thisPageDefault := partial "openguide/translations/resolve-translation-fallback.html" . }}
 
               {{- if not $thisPageDefault }}
                 {{- fmt.Errorf "thisPageDefault page not found" }}

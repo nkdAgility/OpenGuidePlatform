@@ -1,0 +1,3 @@
+{{/* Input: Hugo page. Preserve the rendering fallback to the first Hugo site. */}}
+{{- $defaultSite := index hugo.Sites 0 -}}
+{{- return ($defaultSite.GetPage .Path) -}}
