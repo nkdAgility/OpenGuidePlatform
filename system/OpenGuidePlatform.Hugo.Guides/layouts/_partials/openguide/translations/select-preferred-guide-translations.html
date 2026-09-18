@@ -75,7 +75,8 @@
   {{ $translationsList = $translationsList | append $translation }}
 {{ end }}
 
-{{/* Sort by weight then by language name for consistent output */}}
+{{/* Preserve the existing weight sort. Template range above visits string map
+     keys in language-code order; do not introduce a language-name ordering. */}}
 {{ $translationsList = sort $translationsList "Weight" "asc" }}
 
 {{/* Return the flat list of latest translations */}}

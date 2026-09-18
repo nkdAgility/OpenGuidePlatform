@@ -1,6 +1,6 @@
 # OpenGuidePlatform current system
 
-This describes the implementation inspected from repository commit `2a178e6618c2b55c4ff55913e4e7965454ea19c1`, including the subsequently approved Hugo catalogue changes in this working tree (18 September 2026). Each section links to the implementation or schema that supports its claims. The [execution plan](open-guide-platform-execution-plan.md) records acceptance status; this page describes behavior in source, not a completed consumer rollout.
+This describes the implementation based on repository commit `2a178e6618c2b55c4ff55913e4e7965454ea19c1`, including the Hugo catalogue changes proposed in PR #52 as of 18 September 2026. Each section links to the implementation or schema that supports its claims. The [execution plan](open-guide-platform-execution-plan.md) records acceptance status; this page describes behavior in source, not PR approval, merge status or a completed consumer rollout.
 
 ## Components and ownership
 
@@ -86,6 +86,6 @@ The [adoption resolver](../../system/OpenGuidePlatform.PowerShell.GuideSiteAdopt
 
 Hugo dynamically discovers guides, editions, translations and PDF resources through [capability partials and their contracts](hugo-guide-catalogue.md). The [shared catalogue](../../system/OpenGuidePlatform.Hugo.Guides/layouts/_partials/openguide/guides/get-guide-catalogue.html) retains Hugo Page and Resource objects; the [compatibility adapter](../../system/OpenGuidePlatform.Hugo.Guides/layouts/_partials/functions/get-guide-translations-catalogue.html) projects the existing public JSON fields. Neither reads `discovered-site.json` or `assessment.json`.
 
-The [guide rendering template](../../system/OpenGuidePlatform.Hugo.Guides/layouts/_partials/components/guide/render-guide.html) uses capability functions for PDF lookup and same-path translation fallback. It retains presentation and its existing content-availability rules. The original [execution plan](open-guide-platform-execution-plan.md#16a-e14--refactor-hugo-module-contents-last) defers broader Hugo refactoring until consumer adoption; the subsequently approved catalogue work does not establish that those wider gates have passed.
+The [guide rendering template](../../system/OpenGuidePlatform.Hugo.Guides/layouts/_partials/components/guide/render-guide.html) uses capability functions for PDF lookup and same-path translation fallback. It retains presentation and its existing content-availability rules. The original [execution plan](open-guide-platform-execution-plan.md#16a-e14--refactor-hugo-module-contents-last) defers broader Hugo refactoring until consumer adoption; the catalogue work in PR #52 does not establish that those wider gates have passed.
 
 The [execution plan](open-guide-platform-execution-plan.md#current-acceptance-status) records the remaining consumer adoption, independently administered enforcement, named-release verification and later Hugo work. The presence of a schema or test fixture is not evidence that one of those gates passed.

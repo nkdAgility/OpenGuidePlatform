@@ -154,6 +154,9 @@ Describe 'Hugo capability catalogue' {
 }
 
 Describe 'Existing catalogue contracts' {
+    It 'preserves language-code ordering when preferred translations share a weight' {
+        @($preferred|Where-Object Weight -EQ 1|ForEach-Object Language) | Should -Be @('de','en','en-us')
+    }
     It 'discovers any number of guides and retains dated editions' {
         @($catalogue).Count | Should -Be 3
         $guide=$catalogue|Where-Object Section -EQ kanban
