@@ -1,0 +1,7 @@
+{{/* Input: dict PDFs, Language. Select from discovered records; no resource scan. */}}
+{{- $language := lower .Language -}}
+{{- $pdfs := slice -}}
+{{- range .PDFs -}}
+  {{- if eq (lower .Language) $language }}{{ $pdfs = $pdfs | append . }}{{ end -}}
+{{- end -}}
+{{- return $pdfs -}}

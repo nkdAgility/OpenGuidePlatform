@@ -1,0 +1,83 @@
+{{/* Capability: select-preferred-guide-translations
+  Purpose: Get a flat list of the latest version available for each language across all versions of a single guide
+  Input: A single guide page (section)
+  Output: A slice of language objects with the latest version info for each language
+*/}}
+
+{{/* Preserve source enumeration before the numeric sort, including ties. */}}
+{{ $versionsWithInfo := slice }}
+{{ range partial "openguide/editions/discover-guide-editions.html" (dict "Page" . "Scope" "children" "Order" "source") }}
+  {{ $versionParts := split .Version "." }}
+  {{ $sortKey := add (mul (int (index $versionParts 0)) 100) (int (index $versionParts 1)) }}
+  {{ $versionsWithInfo = $versionsWithInfo | append (dict "page" .Page "version" .Version "sortKey" $sortKey) }}
+{{ end }}
+{{/* Sort versions in DESCENDING order (newest first) */}}
+{{ $versionsWithInfo = sort $versionsWithInfo "sortKey" "desc" }}
+
+{{/* Map to track best version for each language */}}
+{{ $languageMap := dict }}
+
+{{/* Process all versions (newest to oldest) to find best available for each language */}}
+{{ range $versionsWithInfo }}
+  {{ $guidePage := .page }}
+  {{ $version := .version }}
+  
+  {{/* Get available translations for this version using the dedicated function */}}
+  {{ $versionTranslations := partial "functions/get-guide-translations-for-version" $guidePage }}
+
+  {{/* Process each translation to find the best version for each language */}}
+  {{ range $versionTranslations }}
+    {{ $langCode := .Language }}
+
+    {{/* Check if this translation is usable (has content or PDF) */}}
+    {{ $isUsable := or (eq .ReadOnline true) (eq .ReadPDF true) }}
+
+    {{/* Only process usable translations */}}
+    {{ if $isUsable }}
+      {{/* Check if we already have this language */}}
+      {{ $existing := index $languageMap $langCode }}
+      {{ if not $existing }}
+        {{/* First time seeing this language, add it */}}
+        {{ $translationWithVersion := merge . (dict "Version" $version) }}
+        {{ $languageMap = merge $languageMap (dict $langCode $translationWithVersion) }}
+      {{ else }}
+        {{/* We already have this language from a newer version */}}
+        {{/* Only replace if current (older) version has ReadOnline content and existing doesn't */}}
+        {{ if and (eq .ReadOnline true) (ne $existing.ReadOnline true) }}
+          {{/* This older version has actual content, while newer version doesn't - use this one */}}
+          {{ $updatedTranslation := merge . (dict "Version" $version) }}
+          {{ $languageMap = merge $languageMap (dict $langCode $updatedTranslation) }}
+        {{ end }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* Convert map to sorted slice */}}
+{{ $translationsList := slice }}
+{{ range $langCode, $translation := $languageMap }}
+  {{/* Ensure all required fields are present */}}
+  {{ if not $translation.Version }}
+    {{/* Try to extract version from the translation's path */}}
+    {{ $pathParts := split $translation.RelPermalink "/" }}
+    {{ $extractedVersion := "" }}
+    {{ range $pathParts }}
+      {{ if and (ne . "") (findRE `^\d{4}\.\d+$` .) }}
+        {{ $extractedVersion = . }}
+        {{ break }}
+      {{ end }}
+    {{ end }}
+    {{ if $extractedVersion }}
+      {{ $translation = merge $translation (dict "Version" $extractedVersion) }}
+    {{ end }}
+  {{ end }}
+
+  {{ $translationsList = $translationsList | append $translation }}
+{{ end }}
+
+{{/* Preserve the existing weight sort. Template range above visits string map
+     keys in language-code order; do not introduce a language-name ordering. */}}
+{{ $translationsList = sort $translationsList "Weight" "asc" }}
+
+{{/* Return the flat list of latest translations */}}
+{{ return $translationsList }}

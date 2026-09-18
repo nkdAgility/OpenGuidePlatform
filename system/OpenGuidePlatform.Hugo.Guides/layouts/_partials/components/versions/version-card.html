@@ -146,7 +146,7 @@ Parameters: - page: The Hugo page object to render - itemType: Type of item - "l
           </div>
         {{ end }}
         {{- $pdfPattern := "pdf/*.*.pdf" }}
-        {{- $pdfResources := .Resources.Match $pdfPattern }}
+        {{- $pdfResources := partial "openguide/pdfs/discover-edition-pdfs.html" (dict "Page" . "Pattern" $pdfPattern) }}
         {{ if gt (len $pdfResources) 0 }}
           <div class="mb-3">
             <div class="text-muted small mb-2">
@@ -156,20 +156,14 @@ Parameters: - page: The Hugo page object to render - itemType: Type of item - "l
             <div class="d-flex flex-wrap gap-1">
               {{/* PDF language buttons */}}
               {{ range $pdfResources }}
-                {{- $filename := .Name }}
-                {{- $langCode := "" }}
+                {{- $langCode := .Language }}
                 {{- $displayName := "" }}
-                {{/* Extract language code from filename like "guide.ja.pdf" */}}
-                {{- $parts := split $filename "." }}
-                {{- if ge (len $parts) 3 }}
-                  {{- $langCode = index $parts (sub (len $parts) 2) }}
-                {{ end }}
                 {{/* Skip if no language code found */}}
                 {{- if eq $langCode "" }}
                   {{- continue }}
                 {{ end }}
                 {{ $displayName = partial "functions/get-language-display-name.html" $langCode }}
-                <a href="{{ .Permalink }}" class="btn btn-outline-secondary btn-sm" title="Download {{ $displayName }} PDF">
+                <a href="{{ .Resource.Permalink }}" class="btn btn-outline-secondary btn-sm" title="Download {{ $displayName }} PDF">
                   <i class="fas fa-file-pdf me-1"></i>
                   {{ $displayName }}
                 </a>

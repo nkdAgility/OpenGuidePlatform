@@ -1,4 +1,4 @@
-# Platform contracts — version 1 candidate
+# Platform contracts — version 1
 
 These contracts belong to Core because they describe publishing intent and observations. They do not introduce new Hugo rendering inputs. Build, GitHub reporting, filesystem discovery, PDF generation and agent integrations adapt to these contracts.
 
@@ -8,7 +8,7 @@ These contracts belong to Core because they describe publishing intent and obser
 | assessment.schema.json | Observed wrapper/guide readiness, findings, evidence, remediation and stage outcome |
 | platform-lock.schema.json | Exact coordinated package, module, workflow, component and toolchain identities |
 
-The version-1 JSON Schemas are draft-07 and self-contained. Unknown fields and unsupported schema versions fail validation. A future incompatible contract gets a new schemaVersion and an explicit migration; tools must never silently reinterpret it. Version 1 is a candidate until E03/E04 operations and E07 distribution exercise it end to end.
+The version-1 JSON Schemas are draft-07 and self-contained. Unknown fields and unsupported schema versions fail validation. A future incompatible contract needs a new schemaVersion and an explicit migration; tools must never silently reinterpret it. See the [current-system reference](../../../docs/architecture/current-system.md) for how these formats are produced and consumed today.
 
 `tests/Contracts/fixtures` contains representative shapes, not installable consumer policies. The one-, two- and fifteen-guide examples use discovered guide names and editions, but their wrapper requirements and translation selections are deliberately incomplete. They must not be injected into deployed sites. The lock has synthetic hashes and an example.invalid package URL, not a release reservation.
 
@@ -25,11 +25,11 @@ Run `pwsh -File .build/Test-PlatformContracts.ps1` locally. The thin Platform co
 - Findings carry a stable code, affected scope/subject, explanation, remediation and evidence. A pass with a blocker is structurally invalid. Missing/dependent checks yield blocked, not pass.
 - Source-language fallback and extension relationships name their targets explicitly. Schema validation checks shape; it cannot establish whether those targets exist.
 
-## Semantic validation still to implement
+## Current semantic checks and separate acceptance boundaries
 
-E03 validates unique guide/edition/language keys, extension and fallback references/cycles, intent/download consistency, actual filesystem containment, protected hashes and effective publication rules. E04 computes report outcomes from checks and diagnoses missing reports; a caller-supplied outcome is not trusted. E07 validates package digests, module tag/source provenance, workflow/source coherence and supported toolchain combinations. E06 evaluates authoritative policy independently of PR-modifiable tests and schemas.
+Core checks guide/edition/language relationships, translation fallback and download intent, protected writes and source paths. Build checks effective Hugo configuration, source/assessment freshness, published resources, routes and artifact identity. Adoption and packaging validate release/package checksums and coordinated component identity. These checks have different inputs and should not be described as schema validation alone. The [execution plan](../../../docs/architecture/open-guide-platform-execution-plan.md) records which consumer, release and independent enforcement acceptance gates remain open.
 
-Passing these structural tests is not evidence that those enforcement features already exist. No schema or fixture is loaded by Hugo or by a consumer build at this stage.
+Passing structural or local tests is not evidence that independent enforcement or a consumer deployment has been accepted. Hugo does not load these schemas or fixtures; the GuideSite build loads or generates a policy-shaped inventory and records a separate assessment.
 
 ## Download publication paths
 

@@ -1,0 +1,32 @@
+{{/* Input: discovered translation. Output: existing public translation fields.
+     Preserve the catalogue's >10-word rule and contextual language defaults. */}}
+{{- $language := .Language -}}
+{{- $page := .Page -}}
+{{- $editionPage := .EditionPage -}}
+{{- $configuration := $editionPage.Site.Language -}}
+{{- $configured := false -}}
+{{- range hugo.Sites -}}
+  {{- if eq .Language.Lang $language }}{{ $configuration = .Language }}{{ $configured = true }}{{ end -}}
+{{- end -}}
+{{- $languageName := "" -}}
+{{- if $configured -}}
+  {{- $languageName = $configuration.LanguageName | default $language -}}
+{{- else -}}
+  {{- $languageName = partial "functions/get-language-display-name.html" $language -}}
+{{- end -}}
+{{- $hasContent := false -}}
+{{- $metadata := $editionPage -}}
+{{- if $page -}}
+  {{- $metadata = $page -}}
+  {{- $hasContent = gt (len (split (trim $page.Plain " \n\r\t") " ")) 10 -}}
+{{- end -}}
+{{- $pdfPath := "" -}}
+{{- if .LegacyPDF }}{{ $pdfPath = .LegacyPDF.RelPermalink }}{{ end -}}
+{{- return (dict
+  "Language" $language "LanguageName" $languageName
+  "Weight" ($configuration.Weight | default 999)
+  "Title" $metadata.Title "RelPermalink" $metadata.RelPermalink
+  "Path" $metadata.Path "VersionPath" $editionPage.Path "Date" $metadata.Date
+  "Status" (cond (and $hasContent .LegacyPDF) "published" (cond $hasContent "online-only" (cond .LegacyPDF "pdf-only" "site-only")))
+  "ReadOnline" $hasContent "ReadOnlineStub" (cond $page true false)
+  "ReadPDF" (cond .LegacyPDF true false) "PathPdf" $pdfPath) -}}

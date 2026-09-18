@@ -177,6 +177,7 @@ If you need help, include the command, finding and relevant report in a [GitHub 
 - [First-time site setup](docs/using/first-adoption.md) — policy, existing files and deployment setup.
 - [SEO metadata](docs/using/seo-metadata.md) — homepage titles, social images, publisher logos, authors and publication licences.
 - [Platform development](docs/platform-development.md) — build this repository, run the sample locally and understand releases.
+- [Current system](docs/architecture/current-system.md) — component ownership, guide discovery, contracts, file formats and build evidence.
 - [Workflow dependency locking](docs/platform-development.md#workflow-dependency-lockfile) — regenerate, verify and review Actions dependency locks when changing platform workflows.
 - [Execution plan and current progress](docs/architecture/open-guide-platform-execution-plan.md).
 

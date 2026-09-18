@@ -1,0 +1,13 @@
+{{/* Input: Hugo page. Output: SiteLanguage/Guides; retains Hugo objects and
+     multiple PDFs. JSON callers must explicitly project their public fields. */}}
+{{- $guides := slice -}}
+{{- range partial "openguide/guides/discover-guides.html" . -}}
+  {{- $versions := slice -}}
+  {{- range partial "openguide/editions/discover-guide-editions.html" (dict "Page" . "Scope" "children") -}}
+    {{- $translations := partial "openguide/translations/discover-edition-translations.html" .Page -}}
+    {{- $versions = $versions | append (dict "Version" .Version "Page" .Page "Translations" $translations) -}}
+  {{- end -}}
+  {{- $latest := partial "openguide/editions/select-latest-guide-edition.html" . -}}
+  {{- $guides = $guides | append (dict "Id" .Section "Page" . "Title" .Title "Versions" $versions "LatestVersion" $latest.Version) -}}
+{{- end -}}
+{{- return (dict "SiteLanguage" .Site.Language.Lang "Guides" $guides) -}}

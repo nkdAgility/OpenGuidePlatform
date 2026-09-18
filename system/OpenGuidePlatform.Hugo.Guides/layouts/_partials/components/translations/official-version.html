@@ -73,7 +73,7 @@
 {{- $foundingContributors = where $foundingContributors "role" "in" (slice "contributor" "creator") -}}
 
 {{ $pdfPattern := printf "pdf/*.%s*.pdf" $defaultSite.Language }}
-{{ $pdfMatches := $guidePage.Resources.Match $pdfPattern }}
+{{ $pdfMatches := slice }}{{ range partial "openguide/pdfs/discover-edition-pdfs.html" (dict "Page" $guidePage "Pattern" $pdfPattern) }}{{ $pdfMatches = $pdfMatches | append .Resource }}{{ end }}
 
 
 <h2 class="mb-3">{{ i18n "download_official_version" . }}</h2>

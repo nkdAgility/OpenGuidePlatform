@@ -12,7 +12,7 @@ Install the tools listed in the README and Node.js 20 or newer and npm (for real
 ./build.ps1 -Version 0.0.0-local
 ```
 
-Without a version override, the platform calculates GitVersion using the same module operation as Actions. The repository currently uses GitVersion 5 configuration, so Dependencies installs a compatible 5.x tool beneath `.processing/tools/` without changing a global GitVersion installation. `-Version` remains an explicit override.
+Without a version override, the platform calculates GitVersion using the same module operation as Actions. The repository uses GitVersion 6 configuration; Dependencies installs a compatible 6.x tool beneath `.processing/tools/` without changing a global GitVersion installation. `-Version` remains an explicit override.
 
 The platform build runs preparation, tests, packaging and package verification. It writes to a fresh directory under `.processing/platform/`, then builds and validates the sample in preview and production from the exact package ZIP it produced. It does not publish a release or deploy the sample by default; the opt-in commands below add those operations. Pester is a platform-development dependency, not an everyday guide-site requirement.
 
@@ -33,6 +33,8 @@ The platform's source checkout is the input being built and tested. Runtime buil
 The built-in hosting adapter follows the [Azure Static Web Apps CLI deployment contract](https://azure.github.io/static-web-apps-cli/docs/cli/swa-deploy/). It runs outside the source directory, passes credentials through the environment, strips GitHub context from the child process, and requires a confirmed HTTPS URL rather than accepting exit code zero alone.
 
 ## Build module ownership
+
+For the current component boundaries, source/discovery behavior, file formats and build evidence, see [Current system](architecture/current-system.md).
 
 `OpenGuidePlatform.PowerShell.PlatformBuild` owns platform engineering. `OpenGuidePlatform.PowerShell.GuideSiteBuild` owns guide-site stages and remains independently importable. They ship as separate GuideSite and PlatformBuild ZIP assets in one coordinated release. Root scripts dispatch to the selected module; existing `.build/` build/test/package entry points forward to PlatformBuild.
 
