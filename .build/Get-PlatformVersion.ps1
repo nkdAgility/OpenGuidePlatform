@@ -7,6 +7,10 @@ if($env:GITHUB_ACTIONS -eq 'true' -and $env:GITHUB_REF -like 'refs/tags/*'){
         throw "Unsupported platform release tag: $env:GITHUB_REF"
     }
     $releaseVersion=$Matches[1]
+    $parsedVersion=$null
+    if(-not [System.Management.Automation.SemanticVersion]::TryParse($releaseVersion,[ref]$parsedVersion) -or $parsedVersion.ToString() -cne $releaseVersion){
+        throw "Unsupported platform release tag: $env:GITHUB_REF"
+    }
     $tagCommit=(& git -C $WorkspaceRoot rev-parse "$($env:GITHUB_REF)^{commit}" 2>$null)
     if($LASTEXITCODE -ne 0){throw "Cannot resolve platform release tag: $env:GITHUB_REF"}
     $version=Get-PlatformBuildVersion -WorkspaceRoot $WorkspaceRoot -Version $releaseVersion

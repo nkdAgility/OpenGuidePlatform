@@ -18,7 +18,7 @@ Describe 'Platform version selection for a pushed release tag' {
         $priorOutput=$env:GITHUB_OUTPUT
         $env:GITHUB_ACTIONS='true'
         $env:GITHUB_REF='refs/tags/v1.0.2'
-        $env:GITHUB_OUTPUT=Join-Path $TestDrive 'github-output.txt'
+        $env:GITHUB_OUTPUT=Join-Path $fixture 'github-output.txt'
     }
     AfterEach {
         $env:GITHUB_ACTIONS=$priorActions
@@ -38,5 +38,21 @@ Describe 'Platform version selection for a pushed release tag' {
     It 'rejects an unsupported tag before calculating a version' {
         $env:GITHUB_REF='refs/tags/v1.0'
         { & $entry -WorkspaceRoot $fixture }|Should -Throw '*Unsupported platform release tag*'
+    }
+    It 'rejects noncanonical semantic version <Tag> without writing workflow outputs' -ForEach @(
+        @{Tag='v01.0.0'}
+        @{Tag='v1.0.0-.alpha'}
+        @{Tag='v1.0.0-01'}
+    ) {
+        git -C $fixture tag $Tag
+        $env:GITHUB_REF="refs/tags/$Tag"
+        { & $entry -WorkspaceRoot $fixture }|Should -Throw '*Unsupported platform release tag*'
+        Test-Path $env:GITHUB_OUTPUT|Should -BeFalse
+    }
+    It 'uses the exact prerelease tag when stable tags identify the same commit' {
+        $env:GITHUB_REF='refs/tags/v1.0.1-Preview.6'
+        $result=& $entry -WorkspaceRoot $fixture
+        $result.SemVer|Should -BeExactly '1.0.1-Preview.6'
+        $result.Sha|Should -BeExactly $commit
     }
 }
