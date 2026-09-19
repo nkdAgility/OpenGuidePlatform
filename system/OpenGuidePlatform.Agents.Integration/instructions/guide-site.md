@@ -16,7 +16,7 @@ Shared skills are in .agents/skills. To load the installed Core module in PowerS
     $platform = ./.OpenGuidePlatform/Resolve-OpenGuidePlatform.ps1 -WorkspaceRoot $PWD -UseInstalled
     Import-Module "$platform/system/OpenGuidePlatform.PowerShell.Core/OpenGuidePlatform.PowerShell.Core.psd1"
 Run Prepare and use its generated discovered-site.json inventory for Core operations. Review any intended publishing change before applying it.
-For existing guide body corrections, use Get-GuideContent to select the discovered guide, edition and language; use Set-GuideContent with the reviewed SHA-256 and candidate body. Front matter and protected resources must remain intact. Follow the complete human-operated workflow in the installed Core README; the same commands and build checks apply with or without an agent.
+For source-language guide body corrections, use Get-GuideContent to select the discovered guide, edition and its source language; use Set-GuideContent with the reviewed SHA-256 and candidate body. For translated documents, including typo fixes, use Set-GuideTranslation with that edition's reviewed source and target hashes. Translation availability is per edition: never infer, create or require a translation in another version merely because it exists in the selected version. Front matter and protected resources must remain intact. Follow the complete human-operated workflow in the installed Core README; the same commands and build checks apply with or without an agent.
 
 These instructions guide Codex, Claude and GitHub Copilot; they do not enforce permissions.
 Independent managed agent controls remain an explicit adoption blocker.

@@ -14,7 +14,7 @@ This module enforces the supplied policy, not the authenticity of that policy. G
 
 ## Correct an existing guide
 
-This workflow works in an adopted guide-site repository without an agent. It covers body corrections while preserving front matter exactly. Metadata changes, new translations and editorial translation review are separate tasks. Use your normal editor to prepare the correction; no editor or AI provider is required by Core.
+This workflow works in an adopted guide-site repository without an agent. It covers source-language body corrections while preserving front matter exactly. Use Set-GuideTranslation for translated documents, including typo corrections, with both reviewed source and target hashes. Metadata changes and new translations are separate tasks. Use your normal editor to prepare the correction; no editor or AI provider is required by Core.
 
 ### Load the installed commands and discover content
 
@@ -57,7 +57,7 @@ Set-GuideContent @selection @change
 git diff -- $document.Path
 ```
 
-Select an existing writable document. Protected content remains readable, but Set-GuideContent refuses to edit it. Missing translations use New-GuideTranslationScaffold. Keep the original reviewed hash: a stale-file rejection requires reading the new content and reconciling your correction, not just replacing the expected hash.
+Select an existing writable source document using that edition's SourceLanguage from discovery. Set-GuideContent refuses translations and protected content. Missing translations use New-GuideTranslation or the retained New-GuideTranslationScaffold. Keep the original reviewed hash: a stale-file rejection requires reading the new content and reconciling your correction, not just replacing the expected hash.
 
 Get-GuideContent returns one object per matching translation, including missing files and protected selections. Filters match exact case-sensitive identifiers; unmatched filters fail with guidance. Set-GuideContent requires all three identifiers, preserves UTF-8 front matter bytes and accepts a nonempty replacement body. It returns `planned`, `unchanged` or `updated`, the path and hashes, and `VerificationRequired`. WhatIf does not write a file. Cooperative locks and a second hash check detect observed conflicts; they do not prevent every race with external editors. No other guide, metadata, configuration or PDF is rewritten.
 
@@ -73,6 +73,12 @@ In the adopted site, run the full entry point for both publication targets:
 In OGP, use `./build.ps1 -Product GuideSite -SourcePath examples/reference-guide-site -Target preview` and repeat with `-Target production`. Review failures and warnings, the content diff and rendered output. These builds do not deploy the site. Content corrections may make generated-PDF receipts stale; use the PDF workflow if the assessment requires regeneration. Supplied/protected PDFs remain untouched. A successful write or WhatIf is not a successful build or editorial approval.
 
 Use `Get-Help Get-GuideContent -Full` and `Get-Help Set-GuideContent -Full` for command help. Agents use this same workflow and verification, with any proposed editorial changes scoped to the user's request.
+
+### Command boundaries and edition independence
+
+Commands operate on the exact guide, edition and language selected. A translation in one edition neither supplies a missing translation in another nor requires every edition to be translated. Source language is resolved per edition. Creation preserves existing targets; editing requires an existing target in that selected edition.
+
+Set-GuideContent edits only the selected edition's source body. Set-GuideTranslation edits its translated document and requires both hashes. The shared document writer rechecks the operation, destination and same-edition source before staging and replacement. Wrapper commands reject guide content, and PDF commands accept only eligible declared PDF downloads. There is no Force switch to bypass these boundaries. These are command correctness checks under the supplied inventory, not restrictions on direct filesystem access by other tools.
 
 ## Wrapper publishing and readiness
 

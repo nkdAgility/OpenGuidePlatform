@@ -91,7 +91,7 @@ Describe 'Human-operated translation workflows' {
     It 'requires discovery refresh for existing but undeclared targets' {
         $edition.translations=@($edition.translations|Where-Object language -NE fr)
         (Test-GuideTranslation @selection -CandidateContent $candidate).Findings.Code|Should -Contain REFRESH_DISCOVERY
-        {Set-GuideTranslation @edit}|Should -Throw '*inventory*'
+        {Set-GuideTranslation @edit}|Should -Throw '*rerun Prepare*'
     }
     It 'preserves intentional fallback and PDF-only intent without claiming publication readiness' {
         $edition.translations[1].intent='fallback';$edition.translations[1].fallbackLanguage='es'

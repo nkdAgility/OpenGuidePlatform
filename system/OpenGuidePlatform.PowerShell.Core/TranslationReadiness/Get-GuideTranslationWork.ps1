@@ -70,7 +70,7 @@ function Get-GuideTranslationWork {
     )
     if($SourcePathAtRevision -and -not $SourceRevision){throw 'SourcePathAtRevision requires an explicit SourceRevision.'}
     $selection=Get-GuideSelection $Policy $GuideId $EditionId
-    if($Language -ieq $selection.Edition.sourceLanguage){throw 'Select a target language different from the source language.'}
+    if($Language -ieq $selection.Edition.sourceLanguage){throw 'Select a target language different from the source language. Use Set-GuideContent for source corrections in this edition.'}
     $source=Read-GuideSnapshot $WorkspaceRoot "$($selection.RelativePath)/index.md"
     if([string]::IsNullOrWhiteSpace($source.Body)){throw 'The selected source guide has no body to translate.'}
     $targetPath="$($selection.RelativePath)/index.$Language.md"

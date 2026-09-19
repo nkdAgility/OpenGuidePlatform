@@ -119,6 +119,7 @@ function Set-GuideTranslation {
     if($SourceRevision){$history.SourceRevision=$SourceRevision}
     if($SourcePathAtRevision){$history.SourcePathAtRevision=$SourcePathAtRevision}
     $work=Get-GuideTranslationWork @selection @history
+    Assert-GuideDocumentOperation -Policy $Policy -GuideId $GuideId -EditionId $EditionId -Language $Language -Operation Translation -RelativePath $work.TargetPath -SourcePath $work.Source.Path -ExpectedSourceSha256 $ExpectedSourceSha256
     if($work.Source.Sha256 -ine $ExpectedSourceSha256){throw 'Translation source changed since review. Compare the new source and revise the candidate.'}
     if(-not $work.Target -or $work.Target.Sha256 -ine $ExpectedSha256){throw 'Translation target changed since review or is missing. Reconcile the candidate with the current target.'}
     $check=Test-GuideTranslation @selection -CandidateContent $CandidateContent
@@ -130,7 +131,7 @@ function Set-GuideTranslation {
     if($digest -ine $ExpectedSha256){
         $status='planned'
         if($PSCmdlet.ShouldProcess($work.TargetPath,'Apply reviewed translation body and editorial metadata')){
-            Write-GuideReviewedFile -WorkspaceRoot $WorkspaceRoot -Policy $Policy -RelativePath $work.TargetPath -CandidateBytes $bytes -ExpectedSha256 $ExpectedSha256 -SourcePath $work.Source.Path -ExpectedSourceSha256 $ExpectedSourceSha256
+            Write-GuideReviewedFile -WorkspaceRoot $WorkspaceRoot -Policy $Policy -RelativePath $work.TargetPath -CandidateBytes $bytes -ExpectedSha256 $ExpectedSha256 -SourcePath $work.Source.Path -ExpectedSourceSha256 $ExpectedSourceSha256 -Operation Translation -GuideId $GuideId -EditionId $EditionId -Language $Language
             $status='updated'
         }
     }

@@ -1,13 +1,15 @@
 function Set-GuideContent {
     <#
     .SYNOPSIS
-    Apply a reviewed body correction to one existing guide document.
+    Apply a reviewed body correction to one existing source-language guide document.
     .DESCRIPTION
     Requires exact discovered identifiers and the SHA-256 of the reviewed file.
+    Language must be the selected edition's source language. For any translated
+    document, including typo corrections, use Set-GuideTranslation with both hashes.
     Preserves the original UTF-8 front matter bytes, including its delimiters and
     any BOM. Does not change metadata, other translations, configuration or PDFs.
-    Rejects protected, missing or stale files and empty candidate bodies. Use the scaffold
-    workflow for missing documents. Run the site build after applying a change;
+    Rejects protected, missing or stale files and empty candidate bodies. Restore
+    missing source documents before correcting them. Run the site build after applying a change;
     an updated result does not certify publication readiness or editorial quality.
     .EXAMPLE
     Set-GuideContent -WorkspaceRoot $PWD.Path -Policy $policy -GuideId my-guide -EditionId 2026 -Language en -ExpectedSha256 $document.Sha256 -CandidateBody $body -WhatIf
@@ -25,8 +27,9 @@ function Set-GuideContent {
     $selection=@(Get-GuideContent -WorkspaceRoot $WorkspaceRoot -Policy $Policy -GuideId $GuideId -EditionId $EditionId -Language $Language)
     if($selection.Count -ne 1){throw 'Select exactly one discovered guide document.'}
     $document=$selection[0]
+    Assert-GuideDocumentOperation -Policy $Policy -GuideId $GuideId -EditionId $EditionId -Language $Language -Operation Source -RelativePath $document.Path
     Assert-GuideWriteAllowed -Policy $Policy -RelativePath $document.Path
-    if(-not $document.Exists){throw 'Guide document is missing. Use New-GuideTranslationScaffold for a new translation.'}
+    if(-not $document.Exists){throw 'Source guide document is missing. Restore or create the selected edition source before using Set-GuideContent.'}
     if([string]::IsNullOrWhiteSpace($CandidateBody)){throw 'A guide correction must retain a nonempty body.'}
     $target=Resolve-GuideWorkspacePath $WorkspaceRoot $document.Path
     $original=[IO.File]::ReadAllBytes($target)
@@ -45,7 +48,7 @@ function Set-GuideContent {
     if($digest -ine $ExpectedSha256){
         $status='planned'
         if($PSCmdlet.ShouldProcess($target,'Apply reviewed guide body correction; preserve front matter')){
-            Write-GuideReviewedFile -WorkspaceRoot $WorkspaceRoot -Policy $Policy -RelativePath $document.Path -CandidateBytes $bytes -ExpectedSha256 $ExpectedSha256
+            Write-GuideReviewedFile -WorkspaceRoot $WorkspaceRoot -Policy $Policy -RelativePath $document.Path -CandidateBytes $bytes -ExpectedSha256 $ExpectedSha256 -Operation Source -GuideId $GuideId -EditionId $EditionId -Language $Language
             $status='updated'
         }
     }

@@ -64,7 +64,7 @@ Describe 'Human-operated guide content corrections' {
         $edit.GuideId='does-not-exist'
         {Set-GuideContent @edit}|Should -Throw '*No discovered*'
         $edit.GuideId=$guide.id;$edit.Language='ja'
-        {Set-GuideContent @edit}|Should -Throw '*missing*'
+        {Set-GuideContent @edit}|Should -Throw '*Set-GuideTranslation*'
         $edit.Language='en';$edit.CandidateBody=" `r`n "
         {Set-GuideContent @edit}|Should -Throw '*nonempty body*'
         (Get-FileHash "$directory/index.md").Hash|Should -Be $document.Sha256

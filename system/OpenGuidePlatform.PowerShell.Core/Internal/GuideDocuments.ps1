@@ -17,10 +17,30 @@ function Read-GuideSnapshot {
         Sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
     }
 }
+function Assert-GuideDocumentOperation {
+    param([Collections.IDictionary]$Policy,[string]$GuideId,[string]$EditionId,[string]$Language,
+        [ValidateSet('Source','Translation')][string]$Operation,[string]$RelativePath,
+        [string]$SourcePath,[string]$ExpectedSourceSha256)
+    $selection=Get-GuideSelection $Policy $GuideId $EditionId
+    $source="$($selection.RelativePath)/index.md"
+    if($Operation -eq 'Source'){
+        if($Language -cne $selection.Edition.sourceLanguage){throw 'Wrong command for a translation. Use Set-GuideTranslation with this guide, edition, language and reviewed source and target hashes.'}
+        if($RelativePath -cne $source -or $SourcePath -or $ExpectedSourceSha256){throw 'Source correction must target the selected edition source only. Use Set-GuideContent with its source language.'}
+    }elseif($Operation -eq 'Translation'){
+        if($Language -ieq $selection.Edition.sourceLanguage){throw 'Wrong command for source content. Use Set-GuideContent with this edition source language and reviewed target hash.'}
+        $translations=@($selection.Edition.translations|Where-Object language -CEQ $Language)
+        if($translations.Count -ne 1){throw 'Translation is not uniquely declared for this guide and edition. Use New-GuideTranslation for a missing target, then rerun Prepare.'}
+        if($RelativePath -cne "$($selection.RelativePath)/index.$Language.md" -or $SourcePath -cne $source){throw 'Translation target and source must belong to the selected guide and edition. Use Set-GuideTranslation with that exact selection.'}
+        if($ExpectedSourceSha256 -notmatch '^[a-fA-F0-9]{64}$'){throw 'Set-GuideTranslation requires the reviewed source hash as well as the target hash.'}
+    }else{throw 'A source or translation operation is required; use the corresponding public command.'}
+}
 function Write-GuideReviewedFile {
     param([string]$WorkspaceRoot,[Collections.IDictionary]$Policy,[string]$RelativePath,
-        [byte[]]$CandidateBytes,[string]$ExpectedSha256,[string]$SourcePath,[string]$ExpectedSourceSha256)
+        [byte[]]$CandidateBytes,[string]$ExpectedSha256,[string]$SourcePath,[string]$ExpectedSourceSha256,
+        [Parameter(Mandatory)][ValidateSet('Source','Translation')][string]$Operation,
+        [Parameter(Mandatory)][string]$GuideId,[Parameter(Mandatory)][string]$EditionId,[Parameter(Mandatory)][string]$Language)
     function Confirm-Inputs {
+        Assert-GuideDocumentOperation -Policy $Policy -GuideId $GuideId -EditionId $EditionId -Language $Language -Operation $Operation -RelativePath $RelativePath -SourcePath $SourcePath -ExpectedSourceSha256 $ExpectedSourceSha256
         $checked=Resolve-GuideWorkspacePath $WorkspaceRoot $RelativePath
         Assert-GuideWriteAllowed -Policy $Policy -RelativePath $RelativePath
         if(-not [IO.File]::Exists($checked) -or (Get-FileHash -LiteralPath $checked -Algorithm SHA256).Hash -ine $ExpectedSha256){throw 'Guide file changed during preparation; correction not applied.'}

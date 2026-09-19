@@ -21,6 +21,8 @@ $work.Wrapper | Format-List
 
 The source language comes from the edition. An absent target's proposed path does not create an inventory entry. Wrapper files, local i18n observations and declared downloads are included. Local observations do not establish effective fallback, complete wrapper coverage or publication readiness; use Prepare and later build results.
 
+Translation availability is independent for each guide edition. A French translation of v1 does not imply a French translation of v2. Editing v1 requires no v2 translation and never edits or creates one. Explicit creation in v2 creates only that target. Source corrections use Set-GuideContent; all translated-document corrections use Set-GuideTranslation with that edition's source and target hashes. The shared writer rejects a source path from another edition and cannot substitute an existing translation from elsewhere.
+
 ## Create a new translation
 
 ```powershell
