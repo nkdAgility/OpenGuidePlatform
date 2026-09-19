@@ -6,6 +6,8 @@ Run `./build.ps1 -Version 0.0.0-local` from the platform checkout. All runs test
 
 Sample acceptance also copies the reference site into disposable output, runs Prepare discovery, selects an existing writable guide through the packaged Core module, previews and applies a body correction, verifies other content is unchanged, and builds preview and production. Its `contributor-*/result.json` records the selection and hashes. It does not edit the source sample or consumer repositories.
 
+The same exercise simulates a missing translation in that disposable copy, scaffolds and rediscovers it, applies a complete candidate, and reconciles it against an explicit source commit/path. It checks source/configuration/PDF preservation and both publication targets. Existing sample translated text is a fixture; this verifies mechanics, not translation quality.
+
 `Invoke-PlatformBuild` accepts WorkspaceRoot, Stage, OutputPath and Version explicitly. `Invoke-PlatformBuildOperation` exposes individual platform operations to existing thin `.build/` entry points. Repository identity for release publication is an explicit parameter, independent of the CI runner.
 
 Packaging includes module implementations. Platform tests and the sample are inputs from WorkspaceRoot, not embedded fixtures in the distribution. Actual Azure upload still belongs to the existing workflow adapter; cross-provider deployment and macOS/TeamCity/Azure Pipelines acceptance remain separate gaps, not claims made by this module split.

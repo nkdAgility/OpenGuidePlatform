@@ -30,3 +30,8 @@ $script:CoreRoot=$PSScriptRoot
 
 . (Join-Path $PSScriptRoot 'GuideInventory/Get-GuideContent.ps1')
 . (Join-Path $PSScriptRoot 'ContentEditing/Set-GuideContent.ps1')
+
+. (Join-Path $PSScriptRoot 'Internal/GuideDocuments.ps1')
+
+. (Join-Path $PSScriptRoot 'TranslationReadiness/Get-GuideTranslationWork.ps1')
+. (Join-Path $PSScriptRoot 'TranslationReadiness/Edit-GuideTranslation.ps1')

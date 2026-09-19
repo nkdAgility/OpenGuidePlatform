@@ -45,20 +45,8 @@ function Set-GuideContent {
     if($digest -ine $ExpectedSha256){
         $status='planned'
         if($PSCmdlet.ShouldProcess($target,'Apply reviewed guide body correction; preserve front matter')){
-            $lockPath=$target+'.content-lock'
-            $lock=[IO.File]::Open($lockPath,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
-            $temporary=$target+'.candidate-'+[guid]::NewGuid().ToString('N')
-            try{
-                $stream=[IO.File]::Open($temporary,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
-                try{$stream.Write($bytes,0,$bytes.Length)}finally{$stream.Dispose()}
-                $checked=Resolve-GuideWorkspacePath $WorkspaceRoot $document.Path
-                Assert-GuideWriteAllowed -Policy $Policy -RelativePath $document.Path
-                if(-not [IO.File]::Exists($checked) -or (Get-FileHash -LiteralPath $checked -Algorithm SHA256).Hash -ine $ExpectedSha256){throw 'Guide file changed during preparation; correction not applied.'}
-                [IO.File]::Replace($temporary,$checked,[System.Management.Automation.Language.NullString]::Value)
-                $status='updated'
-            }finally{
-                try{if([IO.File]::Exists($temporary)){[IO.File]::Delete($temporary)}}finally{$lock.Dispose();[IO.File]::Delete($lockPath)}
-            }
+            Write-GuideReviewedFile -WorkspaceRoot $WorkspaceRoot -Policy $Policy -RelativePath $document.Path -CandidateBytes $bytes -ExpectedSha256 $ExpectedSha256
+            $status='updated'
         }
     }
     [pscustomobject]@{

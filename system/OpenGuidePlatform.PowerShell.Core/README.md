@@ -76,6 +76,8 @@ Use `Get-Help Get-GuideContent -Full` and `Get-Help Set-GuideContent -Full` for 
 
 ## Wrapper publishing and readiness
 
+For complete translation creation and source-change reconciliation, follow [Create and reconcile guide translations](TranslationReadiness/README.md). `Get-GuideTranslationWork`, `New-GuideTranslation`, `Test-GuideTranslation` and `Set-GuideTranslation` provide the same workflow to people and agents, including explicit Git source comparisons and reviewed source/target hashes. Existing scaffold and content commands remain available.
+
 Set-GuideWrapperTranslation creates or applies exact reviewed candidate text to language-specific wrapper Markdown, YAML catalogues and selected Hugo language configuration entries. Existing files require ExpectedSha256; guide content and supplied-policy protected paths are refused. New languages must be disabled in production, unrelated configuration is preserved, and legacy shared download aliases cannot be extended. Changes are staged per file; a multi-file adoption is not one transaction.
 
 Use the installed `./build.ps1 -Stage Prepare` assessment for both human/skill translation status and CI. It supplies effective Hugo catalogue/fallback evidence to Core. Local catalogue diagnostics alone must not replace that assessment. See [shared skill usage](../OpenGuidePlatform.Agents.Integration/skills/USAGE.md).

@@ -14,7 +14,7 @@ For translation status, creation and reconciliation, run the installed consumer 
 
 ```powershell
 $readinessOutput = '.processing/translation-status/' + [guid]::NewGuid().ToString('N')
-./build.ps1 -Stage Prepare -Target preview -OutputPath $readinessOutput
+./build.ps1 -Stage Prepare -Target preview -OutputPath $readinessOutput -PlatformSource Path -PlatformPath $platform
 ```
 
 Even when Prepare fails, inspect `$readinessOutput/prepare/assessment.json` and `assessment.md` if they exist. Report the outcome, wrapper findings and the selected guide/edition/language inventory. Missing reports or effective evidence are blocked/unknown, never a substitute local-only pass. Required runtime routes/integration points remain pending Build/Validate; text resolution is not translation quality or complete plural-form coverage.
@@ -22,6 +22,8 @@ Even when Prepare fails, inspect `$readinessOutput/prepare/assessment.json` and 
 Get-GuideInventory and Get-GuideWrapperStatus are useful detailed diagnostics. Get-GuideContent provides exact guide/edition/language selection for content corrections. A local catalogue-only observation must not replace the effective readiness result above. The platform development equivalent is `./build.ps1 -Product GuideSite -SourcePath examples/reference-guide-site -Stage Prepare -Target preview -OutputPath <fresh-output>`.
 
 ## Reviewed wrapper translation edits
+
+For guide translation creation and reconciliation, read `system/OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md` in the resolved package. Get-GuideTranslationWork reports source/target content and optional explicit Git comparisons; New-GuideTranslation starts scaffolding; Test-GuideTranslation checks candidates; Set-GuideTranslation applies against reviewed source/target hashes. Both humans and skills use these commands. Refresh Prepare after scaffolding rather than editing discovered inventory. Source comparisons are review evidence, not inferred translator provenance.
 
 Use Set-GuideWrapperTranslation for exact candidate text in a language-specific wrapper Markdown file, its i18n YAML catalogue, or a selected language entry in hugo.yaml/hugo.production.yaml. Supply WorkspaceRoot, Policy, Language, RelativePath and CandidateContent. Existing files require their reviewed ExpectedSha256; scaffolding never silently replaces a populated file. The command checks supplied protected-path policy and refuses guide content.
 
