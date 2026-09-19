@@ -1,0 +1,60 @@
+function Set-GuideContent {
+    <#
+    .SYNOPSIS
+    Apply a reviewed body correction to one existing source-language guide document.
+    .DESCRIPTION
+    Requires exact discovered identifiers and the SHA-256 of the reviewed file.
+    Language must be the selected edition's source language. For any translated
+    document, including typo corrections, use Set-GuideTranslation with both hashes.
+    Preserves the original UTF-8 front matter bytes, including its delimiters and
+    any BOM. Does not change metadata, other translations, configuration or PDFs.
+    Rejects protected, missing or stale files and empty candidate bodies. Restore
+    missing source documents before correcting them. Run the site build after applying a change;
+    an updated result does not certify publication readiness or editorial quality.
+    .EXAMPLE
+    Set-GuideContent -WorkspaceRoot $PWD.Path -Policy $policy -GuideId my-guide -EditionId 2026 -Language en -ExpectedSha256 $document.Sha256 -CandidateBody $body -WhatIf
+    #>
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory)][string]$WorkspaceRoot,
+        [Parameter(Mandatory)][Collections.IDictionary]$Policy,
+        [Parameter(Mandatory)][ValidateNotNullOrEmpty()][string]$GuideId,
+        [Parameter(Mandatory)][ValidateNotNullOrEmpty()][string]$EditionId,
+        [Parameter(Mandatory)][ValidateNotNullOrEmpty()][string]$Language,
+        [Parameter(Mandatory)][ValidatePattern('^[a-fA-F0-9]{64}$')][string]$ExpectedSha256,
+        [Parameter(Mandatory)][ValidateNotNullOrEmpty()][string]$CandidateBody
+    )
+    $selection=@(Get-GuideContent -WorkspaceRoot $WorkspaceRoot -Policy $Policy -GuideId $GuideId -EditionId $EditionId -Language $Language)
+    if($selection.Count -ne 1){throw 'Select exactly one discovered guide document.'}
+    $document=$selection[0]
+    Assert-GuideDocumentOperation -Policy $Policy -GuideId $GuideId -EditionId $EditionId -Language $Language -Operation Source -RelativePath $document.Path
+    Assert-GuideWriteAllowed -Policy $Policy -RelativePath $document.Path
+    if(-not $document.Exists){throw 'Source guide document is missing. Restore or create the selected edition source before using Set-GuideContent.'}
+    if([string]::IsNullOrWhiteSpace($CandidateBody)){throw 'A guide correction must retain a nonempty body.'}
+    $target=Resolve-GuideWorkspacePath $WorkspaceRoot $document.Path
+    $original=[IO.File]::ReadAllBytes($target)
+    $hash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($original))
+    if($hash -ine $ExpectedSha256){throw 'Guide file changed since review. Read the current document and review the correction again.'}
+    $encoding=[Text.UTF8Encoding]::new($false,$true)
+    $text=$encoding.GetString($original)
+    $match=[regex]::Match($text,'\A\uFEFF?---\r?\n.*?\r?\n---(?:\r?\n|\z)',[Text.RegularExpressions.RegexOptions]::Singleline)
+    if(-not $match.Success){throw 'Expected UTF-8 guide Markdown with YAML front matter.'}
+    $prefix=$match.Value
+    # A document whose closing delimiter ends at EOF needs a newline before its body.
+    if(-not $prefix.EndsWith("`n")){throw 'The front matter closing delimiter needs a newline before editing the body.'}
+    $bytes=$encoding.GetBytes($prefix+$CandidateBody)
+    $digest=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    $status='unchanged'
+    if($digest -ine $ExpectedSha256){
+        $status='planned'
+        if($PSCmdlet.ShouldProcess($target,'Apply reviewed guide body correction; preserve front matter')){
+            Write-GuideReviewedFile -WorkspaceRoot $WorkspaceRoot -Policy $Policy -RelativePath $document.Path -CandidateBytes $bytes -ExpectedSha256 $ExpectedSha256 -Operation Source -GuideId $GuideId -EditionId $EditionId -Language $Language
+            $status='updated'
+        }
+    }
+    [pscustomobject]@{
+        Status=$status;GuideId=$GuideId;EditionId=$EditionId;Language=$Language
+        Path=$document.Path;PreviousSha256=$ExpectedSha256.ToLowerInvariant();CandidateSha256=$digest
+        VerificationRequired=$true
+    }
+}

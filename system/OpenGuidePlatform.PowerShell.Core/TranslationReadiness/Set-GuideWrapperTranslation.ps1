@@ -1,17 +1,6 @@
 function Test-GuideWrapperValueEqual {
     param($Left,$Right)
-    if($null -eq $Left -or $null -eq $Right){return $null -eq $Left -and $null -eq $Right}
-    if($Left -is [Collections.IDictionary]){
-        if($Right -isnot [Collections.IDictionary] -or $Left.Count -ne $Right.Count){return $false}
-        foreach($key in $Left.Keys){if(-not $Right.Contains($key) -or -not (Test-GuideWrapperValueEqual $Left[$key] $Right[$key])){return $false}}
-        return $true
-    }
-    if($Left -is [Collections.IList]){
-        if($Right -isnot [Collections.IList] -or $Left.Count -ne $Right.Count){return $false}
-        for($index=0;$index -lt $Left.Count;$index++){if(-not (Test-GuideWrapperValueEqual $Left[$index] $Right[$index])){return $false}}
-        return $true
-    }
-    return $Left.GetType() -eq $Right.GetType() -and $Left -ceq $Right
+    Test-GuideValueEqual $Left $Right
 }
 function Set-GuideWrapperTranslation {
     [CmdletBinding(SupportsShouldProcess)]
