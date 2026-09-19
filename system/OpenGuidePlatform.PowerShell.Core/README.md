@@ -1,20 +1,78 @@
-# Publishing Core (candidate)
+# Publishing Core
 
-This PowerShell 7.4 module contains publishing operations organised by capability. It accepts an explicit workspace and reviewed site policy; it has no GitHub or agent dependency. Guide and edition collections are not limited to fixture counts.
+This PowerShell 7.4 module contains publishing operations organised by capability. It accepts an explicit workspace and policy-shaped inventory, normally produced by Prepare's discovery; explicit reviewed policies remain supported. It has no GitHub or agent dependency. Guide and edition collections are not limited to fixture counts.
 
-```powershell
-Import-Module ./system/OpenGuidePlatform.PowerShell.Core/OpenGuidePlatform.PowerShell.Core.psd1
-$policy = Import-GuidePolicy -Path ./path/to/reviewed-site-policy.json
-Get-GuideInventory -WorkspaceRoot $PWD.Path -Policy $policy
-```
+Use the complete workflow below to load the site's installed module and discover its content. Platform developers can import the module from this directory directly.
 
-Policy loading and document operations use powershell-yaml 0.4.12. Only PDF generation requires Pandoc and XeLaTeX; explicit font choices require font diagnostics. No command installs fonts automatically. Tests require Pester 5.7.1; run `./.build/Test-PlatformCore.ps1` from the platform root.
+Policy loading and document operations use powershell-yaml 0.4.12. Only PDF generation requires Pandoc and XeLaTeX; explicit font choices require font diagnostics. No command installs fonts automatically. Tests require Pester 5.7.1; run `./build.ps1 -Version 0.0.0-local` from the platform root for tests, packaging and sample acceptance.
 
-Capabilities include inventory and translation readiness, publication exclusions, write-policy decisions, empty translation scaffolding, draft edition snapshots, new contributor records, Gravatar hashing, and new PDF generation. Mutation commands support WhatIf. Supplied and protected downloads cannot be regenerated. Existing destinations are refused or preserved, never force-overwritten.
+Capabilities include inventory and translation readiness, publication exclusions, write-policy decisions, empty translation scaffolding, guide body corrections, draft edition snapshots, contributor records, Gravatar hashing, and PDF generation. Mutation commands support WhatIf. Supplied and protected downloads cannot be regenerated. Supported replacements require reviewed hashes; creation operations refuse or preserve existing destinations.
 
 PDF language comes from the filename suffix or declared source language and is passed explicitly to Pandoc metadata. Source front matter does not need a lang field. Generation checks native failures and PDF format before publishing a new file; returned evidence includes input, policy, executable and output hashes. Visual review remains necessary.
 
-This module enforces the supplied policy, not the authenticity of that policy. The independent trusted gate is E06. Preview installation distributes these commands; native module publication and complete coordinated adoption remain E07/E08 work.
+This module enforces the supplied policy, not the authenticity of that policy. GuideSite packages distribute these commands through installation and Update. Independent enforcement requires the AgentControls evaluator to be configured with an external trusted baseline; installing skills does not configure that enforcement.
+
+## Correct an existing guide
+
+This workflow works in an adopted guide-site repository without an agent. It covers body corrections while preserving front matter exactly. Metadata changes, new translations and editorial translation review are separate tasks. Use your normal editor to prepare the correction; no editor or AI provider is required by Core.
+
+### Load the installed commands and discover content
+
+Run from the repository root in PowerShell 7.4 or later:
+
+```powershell
+$workspace = $PWD.Path
+$platform = ./.OpenGuidePlatform/Resolve-OpenGuidePlatform.ps1 -WorkspaceRoot $workspace -UseInstalled
+Import-Module "$platform/system/OpenGuidePlatform.PowerShell.Core/OpenGuidePlatform.PowerShell.Core.psd1" -Force
+$output = '.processing/content-edit/' + [guid]::NewGuid().ToString('N')
+./build.ps1 -Stage Prepare -Target preview -OutputPath $output -PlatformSource Path -PlatformPath $platform
+$policy = Import-GuidePolicy -Path "$output/discovered-site.json"
+Get-GuideContent -WorkspaceRoot $workspace -Policy $policy |
+    Format-Table GuideId, EditionId, Language, State, WriteAllowed, Path
+```
+
+The explicit platform path keeps Prepare on the same installed package as Core, including when settings select a floating release family. If the installed package predates these commands, use the coordinated Update workflow first. If Prepare fails, read `<output>/prepare/assessment.md` and the reported error. Its discovered inventory may still support repairing the reported problem, but it is not evidence of a successful build. If discovery did not produce a valid file, resolve that failure before proceeding. Do not reuse an older run's inventory. Refresh Prepare after adding/removing guides, editions or languages or changing configuration.
+
+In the OGP checkout, import `./system/OpenGuidePlatform.PowerShell.Core/OpenGuidePlatform.PowerShell.Core.psd1` instead of invoking the installed resolver, and use `./build.ps1 -Product GuideSite -SourcePath examples/reference-guide-site -Stage Prepare -Target preview -OutputPath $output`. Continue to use the repository root as WorkspaceRoot.
+
+### Select, edit and apply
+
+Replace these identifiers with values from the discovery table; there are no fixed guide counts or language lists:
+
+```powershell
+$selection = @{ GuideId = 'your-guide'; EditionId = 'your-edition'; Language = 'en' }
+$document = Get-GuideContent -WorkspaceRoot $workspace -Policy $policy @selection
+$document | Format-List GuideId, EditionId, Language, Path, WriteAllowed, WriteReason, Sha256
+$candidatePath = Join-Path $workspace "$output/candidate-body.md"
+[IO.File]::WriteAllText($candidatePath, $document.Body, [Text.UTF8Encoding]::new($false))
+# Open $candidatePath in your preferred editor. Edit only the body, then save.
+$body = [IO.File]::ReadAllText($candidatePath)
+$change = @{
+    WorkspaceRoot = $workspace; Policy = $policy
+    ExpectedSha256 = $document.Sha256; CandidateBody = $body
+}
+Set-GuideContent @selection @change -WhatIf
+# After reviewing the candidate and intended destination:
+Set-GuideContent @selection @change
+git diff -- $document.Path
+```
+
+Select an existing writable document. Protected content remains readable, but Set-GuideContent refuses to edit it. Missing translations use New-GuideTranslationScaffold. Keep the original reviewed hash: a stale-file rejection requires reading the new content and reconciling your correction, not just replacing the expected hash.
+
+Get-GuideContent returns one object per matching translation, including missing files and protected selections. Filters match exact case-sensitive identifiers; unmatched filters fail with guidance. Set-GuideContent requires all three identifiers, preserves UTF-8 front matter bytes and accepts a nonempty replacement body. It returns `planned`, `unchanged` or `updated`, the path and hashes, and `VerificationRequired`. WhatIf does not write a file. Cooperative locks and a second hash check detect observed conflicts; they do not prevent every race with external editors. No other guide, metadata, configuration or PDF is rewritten.
+
+### Verify the result
+
+In the adopted site, run the full entry point for both publication targets:
+
+```powershell
+./build.ps1 -Target preview -PlatformSource Path -PlatformPath $platform
+./build.ps1 -Target production -PlatformSource Path -PlatformPath $platform
+```
+
+In OGP, use `./build.ps1 -Product GuideSite -SourcePath examples/reference-guide-site -Target preview` and repeat with `-Target production`. Review failures and warnings, the content diff and rendered output. These builds do not deploy the site. Content corrections may make generated-PDF receipts stale; use the PDF workflow if the assessment requires regeneration. Supplied/protected PDFs remain untouched. A successful write or WhatIf is not a successful build or editorial approval.
+
+Use `Get-Help Get-GuideContent -Full` and `Get-Help Set-GuideContent -Full` for command help. Agents use this same workflow and verification, with any proposed editorial changes scoped to the user's request.
 
 ## Wrapper publishing and readiness
 

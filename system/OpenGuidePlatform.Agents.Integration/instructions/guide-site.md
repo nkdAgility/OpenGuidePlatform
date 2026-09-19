@@ -13,9 +13,10 @@ Update them using ./build.ps1 Update -WhatIf, then ./build.ps1 Update on a revie
 For first installation, use the remote bootstrap command documented in the platform README.
 
 Shared skills are in .agents/skills. To load the installed Core module in PowerShell:
-    $platform = ./.OpenGuidePlatform/Resolve-OpenGuidePlatform.ps1 -WorkspaceRoot $PWD
+    $platform = ./.OpenGuidePlatform/Resolve-OpenGuidePlatform.ps1 -WorkspaceRoot $PWD -UseInstalled
     Import-Module "$platform/system/OpenGuidePlatform.PowerShell.Core/OpenGuidePlatform.PowerShell.Core.psd1"
 Run Prepare and use its generated discovered-site.json inventory for Core operations. Review any intended publishing change before applying it.
+For existing guide body corrections, use Get-GuideContent to select the discovered guide, edition and language; use Set-GuideContent with the reviewed SHA-256 and candidate body. Front matter and protected resources must remain intact. Follow the complete human-operated workflow in the installed Core README; the same commands and build checks apply with or without an agent.
 
 These instructions guide Codex, Claude and GitHub Copilot; they do not enforce permissions.
 Independent managed agent controls remain an explicit adoption blocker.
