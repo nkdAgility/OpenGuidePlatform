@@ -1,0 +1,8 @@
+% Included for right-to-left PDFs (raw LaTeX, not a template). Pandoc's
+% babel setup for XeTeX does not define \LR/\RL, which Pandoc emits for
+% [text]{dir=ltr} spans and the platform uses for Latin names on covers.
+\ifdefined\XeTeXrevision
+  \TeXXeTstate=1
+  \providecommand{\LR}[1]{\beginL #1\endL}
+  \providecommand{\RL}[1]{\beginR #1\endR}
+\fi

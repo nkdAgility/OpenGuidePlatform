@@ -6,13 +6,7 @@ version: 2025.5
 keywords:
   - Guide 1
   - Best Practices
-author:
-  - Jane Smith
-  - Anonymous Author
 type: guide
-mainfont: "Times New Roman"
-sansfont: "Arial"
-monofont: "Courier New"
 sitemap:
   priority: 0.6
 guide_whatis: |

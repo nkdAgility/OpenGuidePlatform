@@ -49,4 +49,12 @@
   {{- $filtered = slice -}}
 {{- end -}}
 
-{{- return $filtered -}}
+{{- /* Show localizedNames.<language> where a record provides one */ -}}
+{{- $language := "" -}}
+{{- with .Language -}}{{- $language = .Lang -}}{{- end -}}
+{{- $localized := slice -}}
+{{- range $filtered -}}
+  {{- $localized = $localized | append (partial "functions/localize-contributor.html" (dict "record" . "language" $language)) -}}
+{{- end -}}
+
+{{- return $localized -}}

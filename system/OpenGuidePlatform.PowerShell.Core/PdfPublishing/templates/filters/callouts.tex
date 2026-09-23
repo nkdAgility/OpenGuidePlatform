@@ -1,0 +1,21 @@
+% Preamble for filters/callouts.lua (raw LaTeX, included as-is).
+% Adapted from ScrumGuide-ExpansionPack scripts/callouts-header.tex.
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\tcbset{
+  breakable,
+  enhanced,
+  sharp corners,
+  boxrule=0.6pt,
+  left=8pt,
+  right=8pt,
+  top=5pt,
+  bottom=5pt,
+  parbox=false,
+  before skip=10pt,
+  after skip=10pt
+}
+\AtBeginEnvironment{tcolorbox}{%
+  \setlength{\parskip}{0.5em}%
+  \setlength{\parindent}{0pt}%
+}

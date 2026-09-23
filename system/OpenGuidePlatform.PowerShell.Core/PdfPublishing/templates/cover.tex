@@ -1,0 +1,42 @@
+% OpenGuidePlatform default cover. Pandoc template: variables come from the
+% generated PDF metadata; write a literal dollar sign as $$.
+\begin{titlepage}
+  \centering
+  \thispagestyle{empty}
+  $if(logo)$
+  \vspace*{1cm}
+  \includegraphics[width=4cm,height=4cm,keepaspectratio]{$logo$}\par
+  \vspace{1.5cm}
+  $else$
+  \vspace*{3cm}
+  $endif$
+  {\Huge\bfseries $title$\par}
+  \vspace{0.8cm}
+  {\large $labels.edition$ $edition$$if(date)$ · $date$$endif$\par}
+  $if(tagline)$
+  \vspace{0.5cm}
+  {\normalsize\itshape $tagline$\par}
+  $elseif(based_on)$
+  \vspace{0.5cm}
+  {\normalsize\itshape $labels.based_on$ $based_on$\par}
+  $endif$
+  $if(authors)$
+  \vspace{2cm}
+  {\Large\bfseries $labels.authors$\par}
+  \vspace{0.3cm}
+  {\large $for(authors)$$authors.name$$sep$ · $endfor$\par}
+  $endif$
+  $if(translators)$
+  \vspace{1cm}
+  {\Large\bfseries $labels.translators$\par}
+  \vspace{0.3cm}
+  {\large $for(translators)$$translators.name$$sep$ · $endfor$\par}
+  $endif$
+  $if(contributors)$
+  \vspace{1cm}
+  {\bfseries $labels.contributors$\par}
+  \vspace{0.2cm}
+  {\small $for(contributors)$$contributors.name$$sep$, $endfor$\par}
+  $endif$
+  \vfill
+\end{titlepage}

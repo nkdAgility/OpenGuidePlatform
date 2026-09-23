@@ -1,0 +1,25 @@
+{{- /*
+  Purpose: Translation team for one guide edition and language.
+  Input: dict "guide" (section / data key), "version" (edition id, optional) and "language".
+  Source: data/contributions/<guide>.<language>.yml (matched case-insensitively).
+  Returns: records for the edition, sorted by weight, with name replaced by
+  localizedNames.<language> when present.
+*/ -}}
+{{- $guide := lower (string .guide) -}}
+{{- $language := lower (string .language) -}}
+{{- $version := string (.version | default "") -}}
+{{- $records := slice -}}
+{{- range $key, $list := hugo.Data.contributions -}}
+  {{- if eq (lower $key) (printf "%s.%s" $guide $language) -}}
+    {{- $records = $list -}}
+  {{- end -}}
+{{- end -}}
+{{- $result := slice -}}
+{{- range $records -}}
+  {{- $editions := slice -}}
+  {{- range .contributions -}}{{- $editions = $editions | append (string .) -}}{{- end -}}
+  {{- if or (eq $version "") (in $editions $version) -}}
+    {{- $result = $result | append (partial "functions/localize-contributor.html" (dict "record" . "language" $language)) -}}
+  {{- end -}}
+{{- end -}}
+{{- return (sort $result "weight" "asc") -}}

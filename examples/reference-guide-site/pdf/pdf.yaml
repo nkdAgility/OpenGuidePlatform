@@ -1,0 +1,5 @@
+# Site PDF settings. Override per guide (pdf/<guide>/pdf.yaml), per edition
+# (pdf/<guide>/<edition>/pdf.yaml) and per language (pdf.<lang>.yaml).
+mainfont: Times New Roman
+sansfont: Arial
+monofont: Courier New

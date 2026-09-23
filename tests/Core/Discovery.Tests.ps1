@@ -178,3 +178,30 @@ Describe 'Non-rendering Hugo metadata' {
         Test-Path "$fixture/public"|Should -BeFalse
     }
 }
+
+Describe 'PDF declarations and language direction in discovery' {
+    It 'marks declared downloads generated, keeps the rest supplied and records language direction' {
+        $fixture=Join-Path $TestDrive 'declared-pdfs'
+        New-Item "$fixture/content/guide/2024.1/pdf" -ItemType Directory -Force|Out-Null
+        New-Item "$fixture/pdf/guide/2024.1" -ItemType Directory -Force|Out-Null
+        foreach($ring in @('canary','preview','production')){''|Set-Content "$fixture/hugo.$ring.yaml"}
+        "---`ntype: guide`nlayout: root`n---"|Set-Content "$fixture/content/guide/_index.md"
+        "---`ntype: guide`nversion: 2024.1`n---`nBody"|Set-Content "$fixture/content/guide/2024.1/index.md"
+        "---`ntype: guide`n---`nمتن"|Set-Content "$fixture/content/guide/2024.1/index.fa.md"
+        'supplied PDF bytes'|Set-Content "$fixture/content/guide/2024.1/pdf/guide.en.pdf"
+        "downloads:`n  - path: pdf/guide.fa.pdf`n    handling: generated`n"|Set-Content "$fixture/pdf/guide/2024.1/pdf.yaml"
+        Mock Get-GuideSourcePages -ModuleName OpenGuidePlatform.PowerShell.GuideSiteBuild { @() }
+        Mock Get-GuideHugoConfiguration -ModuleName OpenGuidePlatform.PowerShell.GuideSiteBuild {
+            @{Configuration=@{baseurl='https://example.test/';contentdir='content';defaultcontentlanguage='en';defaultcontentlanguageinsubdir=$false;languages=@{en=@{disabled=$false};fa=@{disabled=$false;direction='rtl'};he=@{disabled=$true;languagedirection='rtl'}};outputs=@{home=@()};outputformats=@{};mediatypes=@{}}}
+        }
+        $found=New-GuideSiteDiscovery -WorkspaceRoot $TestDrive -SourcePath declared-pdfs -ConfigFiles @('hugo.yaml') -Target preview
+        $translations=$found.guides[0].editions[0].translations
+        (($translations|Where-Object language -eq en).downloads|Where-Object path -eq 'pdf/guide.en.pdf').handling|Should -Be supplied
+        (($translations|Where-Object language -eq fa).downloads|Where-Object path -eq 'pdf/guide.fa.pdf').handling|Should -Be generated
+        $found.wrapper.languageDirections.fa|Should -Be rtl
+        $found.wrapper.languageDirections.he|Should -Be rtl
+        $found.wrapper.languageDirections.Contains('en')|Should -BeFalse
+        $found|ConvertTo-Json -Depth 50|Set-Content "$fixture/policy.json"
+        {Import-GuidePolicy "$fixture/policy.json"}|Should -Not -Throw
+    }
+}

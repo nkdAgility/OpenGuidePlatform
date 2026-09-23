@@ -8,14 +8,8 @@ date: 2020-12-01T09:00:00Z
 keywords:
   - Guide 1
 
-author:
-  - Jane Banana Smith
-  - Anonymous Banana Author
 
 type: guide
-mainfont: "Times New Banana"
-sansfont: "Ari-Banana"
-monofont: "Courier Peel"
 translationDraft: true
 sitemap:
   priority: 0.6

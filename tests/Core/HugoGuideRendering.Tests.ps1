@@ -11,7 +11,7 @@ BeforeAll {
     Copy-Item "$module/layouts/index.html" "$fixture/themes/guides/layouts/index.html"
     Copy-Item "$module/layouts/guide/details.html" "$fixture/layouts/guide/details.html"
     [IO.File]::WriteAllText("$fixture/layouts/baseof.html",'<html><body>{{ block "main" . }}{{ end }}</body></html>')
-    [IO.File]::WriteAllText("$fixture/layouts/guide/probe.html",'{{ define "main" }}{{ partial "components/guide/guide-creators.html" . }}{{ partial "components/versions/version-card.html" (dict "page" . "itemType" "latest") }}<script id="catalogue" type="application/json">{{ partial "functions/get-guide-translations-for-version.html" . | jsonify | safeJS }}</script>{{ end }}')
+    [IO.File]::WriteAllText("$fixture/layouts/guide/probe.html",'{{ define "main" }}{{ partial "components/guide/guide-creators.html" . }}{{ partial "components/guide/guide-translators.html" . }}{{ partial "components/versions/version-card.html" (dict "page" . "itemType" "latest") }}<script id="catalogue" type="application/json">{{ partial "functions/get-guide-translations-for-version.html" . | jsonify | safeJS }}</script>{{ end }}')
     [IO.File]::WriteAllText("$fixture/hugo.yaml",@'
 baseURL: https://fixture.example/
 theme: guides
@@ -32,12 +32,17 @@ languages:
   role: creator
   founder: true
   weight: 1
+  localizedNames:
+    fa: سازنده آزمایشی
 - name: Fixture Contributor
   gravatarHash: fixture-hash
   role: contributor
   founder: true
   weight: 2
 '@)
+    # Translation teams: the data key keeps the content language's case (es-ES)
+    # while Hugo reports the page language in lower case (es-es).
+    [IO.File]::WriteAllText("$fixture/data/contributions/guide.es-ES.yml","- name: Fixture Traductora`n  role: translator`n  weight: 2`n- name: Fixture Revisora`n  role: reviewer`n  weight: 1`n")
     [IO.File]::WriteAllText("$fixture/content/guide/_index.md","---`ntitle: Fixture guide`ntype: guide`nlayout: details`n---`nGuide overview.")
     foreach($language in @('en','fa','fr','ja','min','es-ES','pt-BR')){
         [IO.File]::WriteAllText("$fixture/content/guide/latest/index.$($language.ToLowerInvariant()).md","---`ntitle: Fixture guide $language`ntype: guide`nlayout: probe`n---`nThis is a complete guide body with enough words to represent an online translation in the catalogue.")
@@ -80,6 +85,18 @@ Describe 'Guide contributor rendering' {
             $rendered | Should -Match 'avatars.githubusercontent.com/fixture-creator'
             $rendered | Should -Match 'gravatar.com/avatar/fixture-hash'
         }
+    }
+}
+Describe 'Translator and localized name rendering' {
+    It 'renders the translation team from the guide language data file' {
+        $spanish=[IO.File]::ReadAllText("$fixture/public/es-es/guide/latest/index.html")
+        $spanish | Should -Match 'Fixture Traductora'
+        $spanish.IndexOf('Fixture Revisora') | Should -BeLessThan $spanish.IndexOf('Fixture Traductora') -Because 'records are ordered by weight'
+        [IO.File]::ReadAllText("$fixture/public/guide/latest/index.html") | Should -Not -Match 'Fixture Traductora'
+    }
+    It 'uses localizedNames for the page language only' {
+        [IO.File]::ReadAllText("$fixture/public/fa/guide/latest/index.html") | Should -Match 'سازنده آزمایشی'
+        [IO.File]::ReadAllText("$fixture/public/fr/guide/latest/index.html") | Should -Match 'Fixture Creator'
     }
 }
 Describe 'Translation PDF resource selection' {

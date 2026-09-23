@@ -1,4 +1,8 @@
-{{ $translators := .Params.translators }}
+{{- $version := "" -}}
+{{- range split .Path "/" -}}
+  {{- if and (ne . "") (findRE `^\d{4}\.\d+$` .) -}}{{- $version = . -}}{{- end -}}
+{{- end -}}
+{{ $translators := partial "functions/get-translators.html" (dict "guide" .Section "version" $version "language" .Language.Lang) }}
 {{ if $translators }}
   <div class="content-authors mt-3">
     <div class="row">

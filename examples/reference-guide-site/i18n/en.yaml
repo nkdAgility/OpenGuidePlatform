@@ -202,6 +202,9 @@
 - id: contributors_label
   translation: "Contributors"
 
+- id: translators_label
+  translation: "Translators"
+
 - id: contributors_description
   translation: "The contributors listed below are a collection of all contributors across all guides and versions."
 

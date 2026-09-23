@@ -19,30 +19,32 @@ function New-GuideSiteDiscovery {
         $rootDocument=Read-GuideDocument $rootFile.FullName
         if($rootDocument.Metadata['type'] -ne 'guide' -or $rootDocument.Metadata['layout'] -ne 'root'){continue}
         $directory=$rootFile.DirectoryName
+        $guideId=[IO.Path]::GetRelativePath($content,$directory).Replace('\','/')
         $editions=@(foreach($editionDirectory in Get-ChildItem $directory -Directory){
             $base=Join-Path $editionDirectory.FullName 'index.md'
             if(-not (Test-Path $base)){continue}
             $document=Read-GuideDocument $base
             if($document.Metadata['layout'] -in @('translations','history','root','details')){continue}
             if($document.Metadata['type'] -ne 'guide' -and -not $document.Metadata.Contains('version')){continue}
-            $pdfs=@(Get-ChildItem $editionDirectory.FullName -Filter '*.pdf' -Recurse -File)
-            $editionLanguages=@(@(Get-ChildItem $editionDirectory.FullName -Filter 'index*.md' -File|ForEach-Object {Language $_.Name})+@($pdfs|ForEach-Object {if($_.Name -match '\.([A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*)\.pdf$'){$Matches[1]}})|Sort-Object -Unique)
+            # Existing PDFs are supplied unless <site>/pdf/<guide>/<edition>/pdf.yaml declares
+            # otherwise; a declared generated PDF may not exist yet.
+            $declared=@(Get-GuidePdfDeclaredDownloads -SourceDirectory $source -GuideId $guideId -EditionPath $editionDirectory.Name)
+            $pdfPaths=@(@(Get-ChildItem $editionDirectory.FullName -Filter '*.pdf' -Recurse -File|ForEach-Object {[IO.Path]::GetRelativePath($editionDirectory.FullName,$_.FullName).Replace('\','/')})+@($declared|ForEach-Object {$_.Path})|Where-Object {$_}|Sort-Object -Unique)
+            $editionLanguages=@(@(Get-ChildItem $editionDirectory.FullName -Filter 'index*.md' -File|ForEach-Object {Language $_.Name})+@($pdfPaths|ForEach-Object {if($_ -match '\.([A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*)\.pdf$'){$Matches[1]}})|Sort-Object -Unique)
             $translations=@(foreach($language in $editionLanguages){
                 $name=if($language -eq $default){'index.md'}else{"index.$language.md"}
                 $file=Join-Path $editionDirectory.FullName $name
                 $body=if(Test-Path $file){(Read-GuideDocument $file).Body}else{''}
-                $downloads=@(foreach($pdf in $pdfs){
-                    $pdfLanguage=if($pdf.Name -match '\.([A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*)\.pdf$'){$Matches[1]}else{$default}
+                $downloads=@(foreach($relative in $pdfPaths){
+                    $pdfLanguage=if($relative -match '\.([A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*)\.pdf$'){$Matches[1]}else{$default}
                     if($pdfLanguage -ne $language){continue}
-                    $relative=[IO.Path]::GetRelativePath($editionDirectory.FullName,$pdf.FullName).Replace('\','/')
                     $owners=@($pages|Where-Object {
                         $pageFile=[IO.Path]::GetFullPath((Join-Path $source $_.path))
                         [IO.Path]::GetDirectoryName($pageFile) -ieq $editionDirectory.FullName -and
                         [IO.Path]::GetFileName($pageFile) -iin @('index.md',"index.$language.md")
                     }|ForEach-Object {ArtifactRoute $_.permalink}|Sort-Object -Unique)
-                    $download=@{path=$relative;handling='supplied';publicationRoots=$owners}
-
-                    $download
+                    $handling=@($declared|Where-Object Path -CEQ $relative|ForEach-Object Handling|Select-Object -Last 1)
+                    @{path=$relative;handling=$(if($handling){$handling[0]}else{'supplied'});publicationRoots=$owners}
                 })
                 $intent=if(-not [string]::IsNullOrWhiteSpace($body)){'web'}elseif($downloads.Count){'pdf-only'}elseif($language -eq $default){'web'}else{'fallback'}
                 $entry=@{language=$language;intent=$intent;downloads=$downloads}
@@ -57,7 +59,7 @@ function New-GuideSiteDiscovery {
             $suffix=if($language -eq $default){''}else{".$language"}
             foreach($relative in @("_index$suffix.md","history/index$suffix.md","translations/index$suffix.md")){$requiredFiles.Add((Relative (Join-Path $directory $relative)))}
         }
-        @{id=([IO.Path]::GetRelativePath($content,$directory).Replace('\','/'));contentRoot=(Relative $directory);relationship=@{kind='independent'};protectSource=$false;editions=$editions}
+        @{id=$guideId;contentRoot=(Relative $directory);relationship=@{kind='independent'};protectSource=$false;editions=$editions}
     })
     if(-not $guides.Count){throw 'No guides were found. Expected guide roots with type: guide, layout: root, and edition bundles with version metadata.'}
     $aliases=@(foreach($file in Get-ChildItem $content -Filter '*.md' -Recurse -File){
@@ -160,6 +162,13 @@ function New-GuideSiteDiscovery {
             }
         }
     }
-    $inventory=@{schemaVersion=1;siteId=(Split-Path $WorkspaceRoot -Leaf);wrapper=@{discovery='source';jsonIndexes=$indexes;jsonFileNames=@(Get-GuideJsonFileNames -Configuration $configuration);sourcePath=$SourcePath;requiredRoutes=$routes;requiredFiles=@($requiredFiles);requiredI18nKeys=@();integrationPoints=@();legacyAliases=$aliases};guides=$guides;publication=@{environments=$environments;permanentExclusions=@(if($hasMin){@{environment='production';subject='language';id='min';reason='Minionese must never be published to production.'}})};protectedPaths=@()}
+    # Hugo 0.158 renamed languageDirection to direction; accept either.
+    $directions=@{}
+    foreach($language in $configuration.languages.Keys){
+        $settings=$configuration.languages[$language]
+        $direction=if($settings -is [Collections.IDictionary]){@($settings['direction'],$settings['languagedirection'])|Where-Object {$_ -in @('ltr','rtl')}|Select-Object -First 1}
+        if($direction){$directions[$language]=[string]$direction}
+    }
+    $inventory=@{schemaVersion=1;siteId=(Split-Path $WorkspaceRoot -Leaf);wrapper=@{discovery='source';languageDirections=$directions;jsonIndexes=$indexes;jsonFileNames=@(Get-GuideJsonFileNames -Configuration $configuration);sourcePath=$SourcePath;requiredRoutes=$routes;requiredFiles=@($requiredFiles);requiredI18nKeys=@();integrationPoints=@();legacyAliases=$aliases};guides=$guides;publication=@{environments=$environments;permanentExclusions=@(if($hasMin){@{environment='production';subject='language';id='min';reason='Minionese must never be published to production.'}})};protectedPaths=@()}
     return $inventory
 }
