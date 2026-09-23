@@ -7,14 +7,9 @@ description: >
   Works with Agiley, Lean-y, and flowy-wowy ways. All da bananas welcome! 🍌
 keywords:
   - Guide 2
-author:
-  - Johnny Banana
 date: 2025-07-02T09:00:00Z
 type: guide
 forked_from: guide-1/2025.5
-mainfont: "Times New Banana"
-sansfont: "Ari-Banana"
-monofont: "Courier Peel"
 sitemap:
   priority: 1.0
 aliases:

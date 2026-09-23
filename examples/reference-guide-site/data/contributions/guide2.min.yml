@@ -1,0 +1,6 @@
+# Minionese translation team for Guide 2. Roles: translator, reviewer.
+- name: Banana Translator
+  role: translator
+  contributions:
+    - "2025.7"
+  weight: 1

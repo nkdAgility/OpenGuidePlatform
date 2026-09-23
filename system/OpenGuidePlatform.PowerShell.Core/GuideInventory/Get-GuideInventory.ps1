@@ -8,11 +8,12 @@ function Get-GuideInventory {
             $translations=@(foreach ($translation in $edition.translations) {
                 $name=if($translation.language -eq $edition.sourceLanguage){'index.md'}else{"index.$($translation.language).md"}
                 $path=Resolve-GuideWorkspacePath $WorkspaceRoot "$relative/$name"
-                $body='missing';$frontMatterLang=$false
+                $body='missing';$frontMatterLang=$false;$retiredKeys=@()
                 if (Test-Path -LiteralPath $path -PathType Leaf) {
                     $document=Read-GuideDocument $path
                     $body=if([string]::IsNullOrWhiteSpace($document.Body)){'empty'}else{'populated'}
                     $frontMatterLang=$document.Metadata.Contains('lang')
+                    $retiredKeys=@($script:GuideRetiredFrontMatterKeys|Where-Object { $document.Metadata.Contains($_) })
                 }
                 $downloads=@(foreach($download in $translation.downloads){
                     $file=Resolve-GuideWorkspacePath $WorkspaceRoot "$relative/$($download.path)"
@@ -37,7 +38,7 @@ function Get-GuideInventory {
                     }
                 }
                 $state=Get-GuideTranslationState -Intent $translation.intent -Body $body -HasDownload (@($downloads|Where-Object Exists).Count -gt 0) -FallbackAvailable $fallbackAvailable
-                [pscustomobject]@{Language=$translation.language;Intent=$translation.intent;Source="$relative/$name";State=$state.State;Body=$body;FindingCode=$state.FindingCode;DeprecatedLang=$frontMatterLang;Downloads=$downloads}
+                [pscustomobject]@{Language=$translation.language;Intent=$translation.intent;Source="$relative/$name";State=$state.State;Body=$body;FindingCode=$state.FindingCode;DeprecatedLang=$frontMatterLang;RetiredKeys=$retiredKeys;Downloads=$downloads}
             })
             [pscustomobject]@{Id=$edition.id;SourceLanguage=$edition.sourceLanguage;Translations=$translations}
         })

@@ -73,6 +73,8 @@
         {{- if .ReadOnline }}
           {{- $pageObj = $.Site.GetPage .RelPermalink }}
         {{- end }}
+        {{/* Translators come from data/contributions/<guide>.<language>.yml, so PDF-only translations are credited too */}}
+        {{- $translators := partial "functions/get-translators.html" (dict "guide" $guidePage.Section "version" .Version "language" .Language) }}
 
 
         <!-- Mobile Card -->
@@ -91,9 +93,9 @@
             </h6>
             <p class="card-text text-muted mb-3">
               <small>{{ i18n "download_table_translations_by" $ }}:</small><br />
-              {{/* Use page object translators if available, otherwise fall back to community contributors */}}
-              {{- if and $pageObj $pageObj.Params.translators }}
-                {{- range $index, $translator := $pageObj.Params.translators }}
+              {{/* Credited translators, otherwise the community contributors label */}}
+              {{- if $translators }}
+                {{- range $index, $translator := $translators }}
                   {{- if $index }},{{ end }}
                   {{- if $translator.url }}
                     <a href="{{ $translator.url }}" target="_blank" rel="noopener" class="text-decoration-none">
@@ -159,9 +161,9 @@
             {{- end }}
           </div>
           <div class="col-md-4">
-            {{/* Use page object translators if available, otherwise fall back to community contributors */}}
-            {{- if and $pageObj $pageObj.Params.translators }}
-              {{- range $index, $translator := $pageObj.Params.translators }}
+            {{/* Credited translators, otherwise the community contributors label */}}
+            {{- if $translators }}
+              {{- range $index, $translator := $translators }}
                 {{- if $index }},{{ end }}
                 {{- if $translator.url }}
                   <a href="{{ $translator.url }}" target="_blank" rel="noopener" class="text-decoration-none">

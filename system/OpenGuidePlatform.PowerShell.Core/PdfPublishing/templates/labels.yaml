@@ -1,0 +1,11 @@
+# English fallbacks for PDF labels. Sites translate these ids in i18n/<lang>.yaml.
+pdf_authors_label: Authors
+pdf_contributors_label: Contributors
+pdf_translators_label: Translators
+pdf_edition_label: Edition
+pdf_based_on_label: Based on
+pdf_callout_note: Note
+pdf_callout_tip: Tip
+pdf_callout_important: Important
+pdf_callout_warning: Warning
+pdf_callout_caution: Caution

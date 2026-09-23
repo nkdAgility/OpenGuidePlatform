@@ -1,0 +1,14 @@
+# OpenGuidePlatform PDF defaults. Sites override any key in <site>/pdf/pdf.yaml,
+# per guide, per edition and per language (pdf.<lang>.yaml).
+papersize: a4
+geometry: margin=2.2cm
+fontsize: 11pt
+toc: false
+tocDepth: 2
+watermark: ""
+licence: ""
+parts: [cover, licence, body, back]
+cover:
+  tagline: ""
+  contributorRoles: [contributor, reviewer]
+  translatorRoles: [translator]

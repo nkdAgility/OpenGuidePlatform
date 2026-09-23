@@ -52,6 +52,7 @@ function Get-GuideAssessment {
                         }else{Add-Finding $translation.FindingCode translation $subject "Declared $($translation.Intent) content is not ready (body: $($translation.Body))." 'Restore the required body/resource or review the declared publication intent; preserve intentional PDF-only and fallback states.'}
                     }
                     if($translation.DeprecatedLang){Add-Finding DEPRECATED_LANG translation $subject 'The document contains deprecated lang front matter.' 'Remove lang from Hugo front matter; pass the filename/default language through Pandoc metadata.'}
+                    if(@($translation.RetiredKeys).Count){Add-Finding FRONT_MATTER_RETIRED_KEY translation $subject "Front matter contains retired keys: $($translation.RetiredKeys -join ', ')." 'Move authors and translators to data/contributions/<guide>[.<lang>].yml and PDF fonts to pdf/pdf[.<lang>].yaml, then remove these keys; direction comes from the Hugo language configuration.'}
                     foreach($download in $translation.Downloads){if(-not $download.Exists){Add-Finding DOWNLOAD_MISSING download "$subject/$($download.Path)" 'A declared download is missing.' 'Restore supplied/protected downloads; generate only resources declared generated.' $(if($download.Handling -eq 'generated'){'warning'}else{'blocker'})}}
                     [ordered]@{language=$translation.Language;state=$translation.State;body=$translation.Body;downloads=@($translation.Downloads|ForEach-Object {[ordered]@{path=$_.Path;handling=$_.Handling}})}
                 })
@@ -60,6 +61,13 @@ function Get-GuideAssessment {
         })
         [ordered]@{id=$guide.id;editions=$editions}
     })
+    # Contributor records and PDF configuration are site-wide source conventions.
+    $conventionScopes=@{CONTRIBUTOR_FILE_UNKNOWN='guide';CONTRIBUTOR_FILE_AMBIGUOUS='guide';CONTRIBUTOR_RECORD_INVALID='guide';CONTRIBUTOR_EDITION_UNKNOWN='guide';CREATORS_MISSING='edition';TRANSLATORS_MISSING='translation';PDF_SETTINGS_INVALID='download';PDF_LABEL_MISSING='wrapper'}
+    try {
+        foreach($finding in @(Get-GuideContributorFindings $WorkspaceRoot $Policy)+@(Get-GuidePdfSettingFindings $WorkspaceRoot $Policy)){
+            Add-Finding $finding.Code $conventionScopes[$finding.Code] $finding.Subject $finding.Message $finding.Remediation $finding.Severity
+        }
+    } catch { Add-Finding SOURCE_CONVENTIONS_FAILED platform $Policy.siteId $_.Exception.Message 'Correct the contributor data or PDF settings and rerun Prepare.' }
     $policyJson=$Policy|ConvertTo-Json -Depth 100 -Compress
     [ordered]@{schemaVersion=1;sourceCommit=$SourceCommit;platformVersion=$PlatformVersion;policyDigest=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($policyJson))).ToLowerInvariant();target=$Target;stage='Prepare';outcome=if(@($findings|Where-Object severity -eq blocker).Count){'fail'}else{'pass'};findings=@($findings.ToArray());inventory=[ordered]@{wrapper=[ordered]@{state=$wrapperState;languages=@($Languages)};guides=$guides}}
 }

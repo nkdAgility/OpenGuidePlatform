@@ -6,7 +6,11 @@
 
 {{ $creators:= $currentPageDefaultLang.Params.creators }}
 {{ $contributors := $currentPageDefaultLang.Params.contributors }}
-{{ $translators:= .Params.translators }}
+{{- $version := "" -}}
+{{- range split .Path "/" -}}
+  {{- if and (ne . "") (findRE `^\d{4}\.\d+$` .) -}}{{- $version = . -}}{{- end -}}
+{{- end -}}
+{{ $translators := partial "functions/get-translators.html" (dict "guide" .Section "version" $version "language" .Language.Lang) }}
 
 {{/* Join all participants into a single slice */}}
 {{ $allParticipants := slice }}

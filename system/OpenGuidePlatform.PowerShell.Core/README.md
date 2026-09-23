@@ -10,6 +10,25 @@ Capabilities include inventory and translation readiness, publication exclusions
 
 PDF language comes from the filename suffix or declared source language and is passed explicitly to Pandoc metadata. Source front matter does not need a lang field. Generation checks native failures and PDF format before publishing a new file; returned evidence includes input, policy, executable and output hashes. Visual review remains necessary.
 
+### Guide credits
+
+`data/contributions/<guide>.yml` lists the guide's people with roles `creator` (the authors), `contributor`, `reviewer` or `involved`. `data/contributions/<guide>.<lang>.yml` lists one translation team with roles `translator` or `reviewer`. Each record has `name`, `role` and `contributions` (edition identifiers); optional `weight` orders records and `localizedNames` gives the name to show in a language. `Get-GuideCredits` resolves an edition's authors, contributors and translators; the website and PDF covers use the same records. Prepare blocks invalid roles, unknown editions or files, duplicates and the retired front matter keys `author`, `translators`, `mainfont`, `sansfont`, `monofont` and `dir`, and warns when an edition has no creator or a web translation has no translator.
+
+### PDF configuration
+
+`Get-GuidePdfPlan` builds the recipe from committed configuration only, most specific last:
+
+| Level | Folder |
+|---|---|
+| Platform | `PdfPublishing/templates/` in this module |
+| Site | `<site>/pdf/` |
+| Guide | `<site>/pdf/<guide>/` |
+| Edition | `<site>/pdf/<guide>/<edition>/` |
+
+`pdf.yaml` settings merge key by key, with `pdf.<lang>.yaml` applied after `pdf.yaml` at each level: `mainfont`, `sansfont`, `monofont`, `CJKmainfont`, `CJKsansfont`, `CJKmonofont`, `papersize`, `geometry`, `fontsize`, `toc`, `tocDepth`, `watermark`, `licence`, `parts` (order of `cover`, `licence`, `body`, `back`) and `cover` (`tagline`, `contributorRoles`, `translatorRoles`). Edition-level `downloads` entries declare `path` and `handling` (`supplied`, `protected` or `generated`, default `supplied`) and may override page settings for that one file; discovery uses them, and only `generated` downloads can be planned. Unknown keys are refused.
+
+`cover.tex`, `licence.tex`, `back.tex`, `page-header.tex`, `page-footer.tex` and `style.tex` are Pandoc templates (write a literal `$` as `$$`); the most specific file, including a `.<lang>.tex` variant, replaces the default. `filters/<name>.lua` accumulate across levels, a same-named file replacing a less specific one, and an optional `filters/<name>.tex` is included in the preamble. The platform ships a Hugo image-path filter and a callouts filter for `> [!NOTE]` blocks. Templates receive `title`, `short_title`, `date`, `edition`, `guide`, `authors`, `contributors`, `translators` (each with `name`, `role`, optional `url`), `labels` (from the site i18n ids `pdf_authors_label`, `pdf_contributors_label`, `pdf_translators_label`, `pdf_edition_label`, `pdf_based_on_label` and `pdf_callout_*`, with English defaults), `tagline`, `based_on` (from `forked_from`), `logo` (`content/<guide>/images/<guide>-logo.png`), `licence`, `watermark` and, for right-to-left languages, `dir`. Direction comes from the Hugo language `direction` (or `languageDirection`). Pandoc's own title block is suppressed; the cover replaces it. Japanese and other CJK text needs `CJKmainfont`.
+
 This module enforces the supplied policy, not the authenticity of that policy. GuideSite packages distribute these commands through installation and Update. Independent enforcement requires the AgentControls evaluator to be configured with an external trusted baseline; installing skills does not configure that enforcement.
 
 ## Correct an existing guide

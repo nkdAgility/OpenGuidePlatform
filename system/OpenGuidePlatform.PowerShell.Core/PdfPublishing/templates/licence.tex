@@ -1,0 +1,12 @@
+% OpenGuidePlatform default licence page. Rendered only when a licence is set
+% in pdf.yaml; the guide body keeps its own attribution text.
+$if(licence)$
+\thispagestyle{empty}
+\vspace*{\fill}
+{\small
+\noindent $title$\\
+$labels.edition$ $edition$$if(date)$ · $date$$endif$\par
+\medskip
+\noindent $licence$\par}
+\clearpage
+$endif$

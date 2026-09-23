@@ -16,6 +16,10 @@
       "additionalProperties": false,
       "properties": {
         "discovery": { "const": "source" },
+        "languageDirections": {
+          "type": "object",
+          "additionalProperties": { "enum": ["ltr", "rtl"] }
+        },
         "sourcePath": {
           "type": "string",
           "minLength": 1,

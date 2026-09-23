@@ -491,6 +491,9 @@
 
 - id: contributors_label
   translation: "Helper Minions"
+
+- id: translators_label
+  translation: "Translatey Minions"
 - id: download_table_contributed_by
   translation: "Made by da Helpers"
 

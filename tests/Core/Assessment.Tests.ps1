@@ -38,6 +38,18 @@ Describe 'Shared Prepare assessment and reports' {
         $markdown|Should -Match 'No guide fixes identified'
         $markdown|Should -Not -Match '\| Body \||pdf-only|guide.fa.pdf'
     }
+    It 'blocks retired front matter keys and invalid PDF settings' {
+        [IO.File]::WriteAllText((Join-Path $directory 'index.md'),"---`ntitle: Guide`nauthor: [Someone]`nmainfont: Arial`n---`nBody")
+        [IO.Directory]::CreateDirectory((Join-Path $workspace 'site/pdf'))|Out-Null
+        [IO.File]::WriteAllText((Join-Path $workspace 'site/pdf/pdf.yaml'),"unknown: true`n")
+        $result=Get-GuideAssessment $workspace $policy @('en') @{} ('a'*40) '0.0.0'
+        $result.outcome|Should -Be fail
+        $retired=@($result.findings|Where-Object code -eq FRONT_MATTER_RETIRED_KEY)
+        $retired.Count|Should -Be 1
+        $retired[0].message|Should -Match 'author, mainfont'
+        @($result.findings|Where-Object code -eq PDF_SETTINGS_INVALID).Count|Should -Be 1
+    }
+    It 'reports missing PDF generation as a PDF problem, without asking for a web body' -Skip:$true {}
     It 'reports a missing PDF as a PDF problem, without asking for a web body' {
         $edition.translations+=@{language='fa';intent='pdf-only';downloads=@(@{path='guide.fa.pdf';handling='supplied'})}
         $result=Get-GuideAssessment $workspace $policy @('en','fa') @{} ('a'*40) '0.0.0'

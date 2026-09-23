@@ -19,6 +19,7 @@ function Test-GuidePdfCache {
 }
 function Get-GuidePdfCacheKey {
     param($Plan,[object[]]$Toolchain,[string]$EnvironmentSha256)
-    $evidence=[ordered]@{Generator=(Get-FileHash -LiteralPath (Join-Path $script:CoreRoot 'PdfPublishing/Get-GuidePdfPlan.ps1')).Hash;Inputs=$Plan.Fingerprints;Policy=$Plan.ConfigurationSha256;Arguments=$Plan.Arguments;Fonts=$Plan.Fonts;Tools=$Toolchain;Environment=$EnvironmentSha256;Output=$Plan.RelativeOutput}
+    $generator=@('PdfPublishing/Get-GuidePdfPlan.ps1','PdfPublishing/Resolve-GuidePdfRecipe.ps1','ContributorManagement/Get-GuideCredits.ps1'|ForEach-Object {(Get-FileHash -LiteralPath (Join-Path $script:CoreRoot $_)).Hash}) -join ','
+    $evidence=[ordered]@{Generator=$generator;Inputs=$Plan.Fingerprints;Policy=$Plan.ConfigurationSha256;Arguments=$Plan.Arguments;Includes=@($Plan.Includes|ForEach-Object {"$($_.Placement):$($_.Part)"});Metadata=$Plan.MetadataSha256;Platform=$Plan.PlatformSha256;Fonts=$Plan.Fonts;Tools=$Toolchain;Environment=$EnvironmentSha256;Output=$Plan.RelativeOutput}
     [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes(($evidence|ConvertTo-Json -Depth 100 -Compress)))).ToLowerInvariant()
 }

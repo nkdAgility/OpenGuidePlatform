@@ -1,15 +1,13 @@
 function Resolve-GuideContributionsPath {
-    param([string]$WorkspaceRoot,[System.Collections.IDictionary]$Policy,[string]$GuideId)
+    param([string]$WorkspaceRoot,[System.Collections.IDictionary]$Policy,[string]$GuideId,[string]$Language)
     if (@($Policy.guides | Where-Object { $_.id -ceq $GuideId }).Count -ne 1) { throw 'Select one declared guide.' }
-    $base="$($Policy.wrapper.sourcePath)/data/contributions/$GuideId"
-    $existing=@(foreach($extension in @('yml','yaml')) {
-        $relative="$base.$extension"
-        $path=Resolve-GuideWorkspacePath $WorkspaceRoot $relative
-        if ([IO.File]::Exists($path)) { [pscustomobject]@{Path=$path;Relative=$relative} }
-    })
+    if ($Language -and $Language -notmatch '^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$') { throw "Invalid language: $Language" }
+    # <guide>.yml holds the guide's own contributors; <guide>.<lang>.yml holds one translation team.
+    $existing=@(Get-GuideContributionFiles $WorkspaceRoot $Policy | Where-Object { $_.GuideId -ceq $GuideId -and "$($_.Language)" -ieq "$Language" })
     if ($existing.Count -gt 1) { throw 'Ambiguous contributor files: both .yml and .yaml exist.' }
-    if ($existing.Count -eq 1) { return $existing[0] }
-    [pscustomobject]@{Path=(Resolve-GuideWorkspacePath $WorkspaceRoot "$base.yml");Relative="$base.yml"}
+    if ($existing.Count -eq 1) { return [pscustomobject]@{Path=(Resolve-GuideWorkspacePath $WorkspaceRoot $existing[0].Relative);Relative=$existing[0].Relative} }
+    $relative="$($Policy.wrapper.sourcePath)/data/contributions/$GuideId$(if($Language){".$Language"}).yml"
+    [pscustomobject]@{Path=(Resolve-GuideWorkspacePath $WorkspaceRoot $relative);Relative=$relative}
 }
 function Update-GuideContributions {
     [CmdletBinding(SupportsShouldProcess)]
@@ -19,9 +17,10 @@ function Update-GuideContributions {
         [Parameter(Mandatory)][string]$GuideId,
         [Parameter(Mandatory)][string]$ContributorName,
         [Parameter(Mandatory)][ValidatePattern('^[a-fA-F0-9]{64}$')][string]$ExpectedSha256,
-        [Parameter(Mandatory)][string]$CandidateYaml
+        [Parameter(Mandatory)][string]$CandidateYaml,
+        [string]$Language
     )
-    $selection=Resolve-GuideContributionsPath $WorkspaceRoot $Policy $GuideId
+    $selection=Resolve-GuideContributionsPath $WorkspaceRoot $Policy $GuideId $Language
     Assert-GuideWriteAllowed $Policy $selection.Relative
     if (-not [IO.File]::Exists($selection.Path)) { throw 'Contributor file is missing; use the new-file operation.' }
     $originalBytes=[IO.File]::ReadAllBytes($selection.Path)
