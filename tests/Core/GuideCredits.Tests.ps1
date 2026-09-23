@@ -51,7 +51,7 @@ Describe 'Contributor records and credits' {
     It 'omits translators for the source language and honours selected roles' {
         $credits=Get-GuideCredits $workspace $policy example $editionId en -ContributorRoles @('reviewer','involved') -TranslatorRoles @('translator','reviewer')
         @($credits.Authors|ForEach-Object {$_.name}) | Should -Be @('Adam Creator','Zoe Creator')
-        @($credits.Contributors|ForEach-Object {$_.name}) | Should -Be @('Ivy Involved','Rita Reviewer')
+        @($credits.Contributors|ForEach-Object {$_.name}) | Should -Be @('Rita Reviewer','Ivy Involved') -Because 'equal weights keep the data file order'
         @($credits.Translators).Count | Should -Be 0
     }
     It 'creates and updates a translation team file' {

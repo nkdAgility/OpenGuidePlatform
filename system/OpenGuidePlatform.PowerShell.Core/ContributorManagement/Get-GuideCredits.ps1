@@ -60,13 +60,16 @@ function ConvertTo-GuideCredit {
 
 function Select-GuideCredits {
     param([object[]]$Records,[string]$EditionId,[string[]]$Roles,[string]$Language)
+    # Order by weight; equal weights keep the data file's order, as the website does.
+    $position=0
     $selected=@(foreach($record in $Records){
+        $position++
         if($record -isnot [Collections.IDictionary]){continue}
         if([string]$record['role'] -notin $Roles){continue}
         if(@($record['contributions']|ForEach-Object {[string]$_}) -notcontains $EditionId){continue}
-        [pscustomobject]@{Weight=$(if($null -ne $record['weight']){[double]$record['weight']}else{100});Name=[string]$record['name'];Record=$record}
+        [pscustomobject]@{Weight=$(if($null -ne $record['weight']){[double]$record['weight']}else{100});Position=$position;Record=$record}
     })
-    @($selected|Sort-Object Weight,Name|ForEach-Object {ConvertTo-GuideCredit $_.Record $Language})
+    @($selected|Sort-Object Weight,Position|ForEach-Object {ConvertTo-GuideCredit $_.Record $Language})
 }
 
 function Get-GuideCredits {
