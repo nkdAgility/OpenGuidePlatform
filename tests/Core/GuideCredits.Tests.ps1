@@ -75,7 +75,8 @@ Describe 'Contributor records and credits' {
         $codes=@(Find-ContributorIssues $workspace $policy|ForEach-Object Code)
         $codes | Should -Contain CONTRIBUTOR_RECORD_INVALID
         $codes | Should -Contain CONTRIBUTOR_EDITION_UNKNOWN
-        @($codes|Where-Object {$_ -eq 'CONTRIBUTOR_FILE_UNKNOWN'}).Count | Should -Be 2
+        @($codes|Where-Object {$_ -eq 'CONTRIBUTOR_FILE_UNKNOWN'}).Count | Should -Be 1 -Because 'an unknown guide is an error'
+        (Find-ContributorIssues $workspace $policy|Where-Object Code -eq CONTRIBUTOR_FILE_UNUSED).Severity | Should -Be warning -Because 'a translation team may exist before or while its translation does'
     }
     It 'warns about missing creators and translators only when the site keeps contributor data' {
         Remove-Item (Join-Path $workspace "$data/example.fa.yml")

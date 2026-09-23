@@ -62,7 +62,7 @@ function Get-GuideAssessment {
         [ordered]@{id=$guide.id;editions=$editions}
     })
     # Contributor records and PDF configuration are site-wide source conventions.
-    $conventionScopes=@{CONTRIBUTOR_FILE_UNKNOWN='guide';CONTRIBUTOR_FILE_AMBIGUOUS='guide';CONTRIBUTOR_RECORD_INVALID='guide';CONTRIBUTOR_EDITION_UNKNOWN='guide';CREATORS_MISSING='edition';TRANSLATORS_MISSING='translation';PDF_SETTINGS_INVALID='download';PDF_LABEL_MISSING='wrapper'}
+    $conventionScopes=@{CONTRIBUTOR_FILE_UNKNOWN='guide';CONTRIBUTOR_FILE_UNUSED='guide';CONTRIBUTOR_FILE_AMBIGUOUS='guide';CONTRIBUTOR_RECORD_INVALID='guide';CONTRIBUTOR_EDITION_UNKNOWN='guide';CREATORS_MISSING='edition';TRANSLATORS_MISSING='translation';PDF_SETTINGS_INVALID='download';PDF_LABEL_MISSING='wrapper'}
     try {
         foreach($finding in @(Get-GuideContributorFindings $WorkspaceRoot $Policy)+@(Get-GuidePdfSettingFindings $WorkspaceRoot $Policy)){
             Add-Finding $finding.Code $conventionScopes[$finding.Code] $finding.Subject $finding.Message $finding.Remediation $finding.Severity

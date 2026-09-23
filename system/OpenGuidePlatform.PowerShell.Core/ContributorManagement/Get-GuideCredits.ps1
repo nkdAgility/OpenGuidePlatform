@@ -117,7 +117,8 @@ function Get-GuideContributorFindings {
         $editionIds=@($guide.editions|ForEach-Object {[string]$_.id})
         if($file.Language){
             $declared=@($guide.editions|ForEach-Object {$edition=$_;$_.translations|Where-Object {$_.language -ine $edition.sourceLanguage}|ForEach-Object {$_.language}})
-            if($declared -inotcontains $file.Language){Add CONTRIBUTOR_FILE_UNKNOWN $file.Relative "No edition of $($file.GuideId) declares a $($file.Language) translation." 'Remove the file or add the translation it describes.';continue}
+            # A translation may be missing while it is being (re)created; its team file is kept.
+            if($declared -inotcontains $file.Language){Add CONTRIBUTOR_FILE_UNUSED $file.Relative "No edition of $($file.GuideId) has a $($file.Language) translation yet." 'Keep the file while the translation is in progress; otherwise remove it.' warning;continue}
         }
         try{$records=@(Read-GuideContributionFile $file.Path)}catch{Add CONTRIBUTOR_RECORD_INVALID $file.Relative $_.Exception.Message 'Correct the YAML so the file is a list of contributor records.';continue}
         $roles=if($file.Language){$script:GuideTranslationRoles}else{$script:GuideContributorRoles}
