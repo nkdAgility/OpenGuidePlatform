@@ -71,6 +71,9 @@ function Get-GuidePdfPlan {
 
     if ($direction -eq 'rtl') {
         foreach($key in @('title','short_title','tagline','based_on','licence','watermark')){ if($metadata.Contains($key)){ $metadata[$key]=Format-GuidePdfText $metadata[$key] $true } }
+        foreach($key in @('edition','date')){ if($metadata.Contains($key)){ $metadata[$key]=Format-GuidePdfText $metadata[$key] $true -Numeric } }
+        # babel's default XeTeX bidi mode loses colour changes in right-to-left text; bidi-r keeps them.
+        $metadata.babeloptions=@('bidi=bidi-r','provide=*')
         foreach($key in @($metadata.labels.Keys)){ $metadata.labels[$key]=Format-GuidePdfText $metadata.labels[$key] $true }
         foreach($credit in @($metadata.authors)+@($metadata.contributors)+@($metadata.translators)){ $credit.name=Format-GuidePdfText $credit.name $true }
     }
@@ -106,6 +109,12 @@ function Get-GuidePdfPlan {
 
     $fonts=[ordered]@{}
     foreach($key in $script:GuidePdfFontKeys){ if(-not [string]::IsNullOrWhiteSpace([string]$settings[$key])){ $fonts[$key]=[string]$settings[$key] } }
+    # Each required font with the settings file that chose it and, when recorded, where to get it.
+    $sources=if($settings['fontSources'] -is [Collections.IDictionary]){$settings['fontSources']}else{@{}}
+    $fontRequirements=@(foreach($key in $fonts.Keys){
+        $source=$null; foreach($name in $sources.Keys){ if($name -ieq $fonts[$key]){ $source=[string]$sources[$name] } }
+        [pscustomobject]@{Key=$key;Font=$fonts[$key];SetBy=$(if($recipe.FontOrigins.ContainsKey($key)){$recipe.FontOrigins[$key]}else{'platform/pdf.yaml'});Source=$source}
+    })
     $workspaceFiles=@(@("$($selection.RelativePath)/$filename")+$resources+@($credits.Files)+@($labels.Files)|Select-Object -Unique)
     $fingerprints=@(foreach($path in $workspaceFiles){
         $full=Resolve-GuideWorkspacePath $WorkspaceRoot $path
@@ -116,7 +125,7 @@ function Get-GuidePdfPlan {
     $metadataJson=$metadata|ConvertTo-Json -Depth 20 -Compress
     [pscustomobject]@{
         WorkspaceRoot=[IO.Path]::GetFullPath($WorkspaceRoot);Guide=$GuideId;Edition=$EditionId;Language=$resolvedLanguage;Input=$inputPath;Output=$output;RelativeOutput=$relative
-        Arguments=$arguments;Includes=@($includes.ToArray());Metadata=$metadata;Settings=$settings;Fonts=$fonts;Recipe=@($recipe.Files|Select-Object Level,Kind,@{n='Path';e={if($_.Relative){$_.Relative}else{"platform/$([IO.Path]::GetRelativePath((Get-GuidePdfPlatformRoot),$_.Path).Replace('\','/'))"}}})
+        Arguments=$arguments;Includes=@($includes.ToArray());Metadata=$metadata;Settings=$settings;Fonts=$fonts;FontRequirements=$fontRequirements;Recipe=@($recipe.Files|Select-Object Level,Kind,@{n='Path';e={if($_.Relative){$_.Relative}else{"platform/$([IO.Path]::GetRelativePath((Get-GuidePdfPlatformRoot),$_.Path).Replace('\','/'))"}}})
         Fingerprints=$fingerprints
         MetadataSha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($metadataJson))).ToLowerInvariant()
         PlatformSha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($platformEvidence))).ToLowerInvariant()
@@ -142,13 +151,9 @@ function New-GuidePdf {
     if ($ExpectedOutputSha256 -and (-not $replacing -or (Get-FileHash -LiteralPath $plan.Output).Hash -ne $ExpectedOutputSha256)) { throw 'PDF changed since review or is missing.' }
     $toolchain=@(Get-GuidePdfToolchain)
     if (@($toolchain | Where-Object { $_.Tool -in @('pandoc','xelatex') -and -not $_.Available }).Count) { throw 'PDF generation requires Pandoc and XeLaTeX. Other Core commands do not.' }
-    $fontCommand=Get-Command fc-list -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-    if($plan.Fonts.Count -and $null -eq $fontCommand){throw 'Font diagnostics require fc-list for explicitly selected fonts.'}
-    if($fontCommand) {
-        $families=@(& $fontCommand.Source --format '%{family}\n')
-        if($LASTEXITCODE -ne 0){throw 'Font enumeration failed.'}
-        $available=@($families | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() })
-        foreach($font in $plan.Fonts.Values){if($font -notin $available){throw "Font is not installed: $font. Install it or change the font in the site's pdf settings; no fonts are installed or substituted automatically."}}
+    if(@($plan.FontRequirements).Count){
+        $missing=@(Get-GuidePdfMissingFonts $plan.FontRequirements)
+        if($missing.Count){ throw (Format-GuidePdfMissingFonts $missing "$($plan.RelativeOutput)") }
     }
     if ($PSCmdlet.ShouldProcess($plan.Output,'Generate a guide PDF with explicit language metadata')) {
         [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($plan.Output))|Out-Null
@@ -204,6 +209,55 @@ function New-GuidePdf {
             } finally { $lock.Dispose();[IO.File]::Delete($lockPath) }
         }
     }
+}
+
+function Get-GuideInstalledFontFamilies {
+    # Font families visible to XeTeX's fontconfig. $null when fc-list is unavailable.
+    $command=Get-Command fc-list -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if($null -eq $command){ return $null }
+    $families=@(& $command.Source --format '%{family}\n')
+    if($LASTEXITCODE -ne 0){ throw 'Font enumeration with fc-list failed.' }
+    ,@($families | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Sort-Object -Unique)
+}
+
+function Get-GuidePdfMissingFonts {
+    param([object[]]$Requirements)
+    $installed=Get-GuideInstalledFontFamilies
+    if($null -eq $installed){ throw 'Checking fonts needs fc-list, which ships with the TeX distribution (MiKTeX or TeX Live). Install it and run again.' }
+    @($Requirements|Where-Object { $installed -inotcontains $_.Font })
+}
+
+function Format-GuidePdfMissingFonts {
+    param([object[]]$Missing,[string]$Subject)
+    $lines=foreach($group in $Missing|Group-Object Font){
+        $first=$group.Group[0]
+        $uses=(@($group.Group|ForEach-Object Key|Select-Object -Unique) -join ', ')
+        $where=if($first.Source){"Get it from $($first.Source)"}else{"No source is recorded; add it under fontSources in $($first.SetBy)"}
+        "  - $($group.Name) ($uses, set in $($first.SetBy)). $where"
+    }
+    "Missing fonts for $($Subject):
+$($lines -join "
+")
+Install them and run again. Fonts are never installed or substituted automatically."
+}
+
+function Test-GuidePdfFonts {
+    <#
+    Reports every font the site's generated PDFs need and whether it is installed,
+    with the settings file that chose it and where to get it.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$WorkspaceRoot,[Parameter(Mandatory)][System.Collections.IDictionary]$Policy)
+    $installed=Get-GuideInstalledFontFamilies
+    foreach($guide in $Policy.guides){ foreach($edition in $guide.editions){ foreach($translation in $edition.translations){
+        foreach($download in @($translation.downloads|Where-Object { $_.handling -eq 'generated' })){
+            try{ $plan=Get-GuidePdfPlan -WorkspaceRoot $WorkspaceRoot -Policy $Policy -GuideId $guide.id -EditionId $edition.id -Language $translation.language -DownloadPath $download.path }
+            catch{ [pscustomobject]@{Pdf="$($guide.contentRoot)/$($edition.path)/$($download.path)";Language=$translation.language;Key=$null;Font=$null;SetBy=$null;Source=$null;Installed=$null;Problem=$_.Exception.Message}; continue }
+            foreach($requirement in $plan.FontRequirements){
+                [pscustomobject]@{Pdf=$plan.RelativeOutput;Language=$plan.Language;Key=$requirement.Key;Font=$requirement.Font;SetBy=$requirement.SetBy;Source=$requirement.Source;Installed=$(if($null -eq $installed){$null}else{$installed -icontains $requirement.Font});Problem=$null}
+            }
+        }
+    }}}
 }
 
 function Invoke-GuidePandoc {

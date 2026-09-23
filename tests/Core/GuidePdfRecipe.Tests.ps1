@@ -47,6 +47,7 @@ Describe 'Layered PDF recipe' {
         $plan.Metadata.licence | Should -Be 'CC BY-SA 4.0'
         $plan.Metadata.labels.authors | Should -Be 'Authors'
         $plan.Metadata.Contains('dir') | Should -BeFalse
+        $plan.Metadata.Contains('babeloptions') | Should -BeFalse
         $plan.Arguments | Should -Contain 'title='
         $plan.Arguments | Should -Contain 'lang=en'
         $plan.Fingerprints.Path | Should -Contain "site/data/contributions/$($guide.id).yml"
@@ -55,10 +56,13 @@ Describe 'Layered PDF recipe' {
         Write-Fixture 'site/i18n/fa.yaml' "- id: pdf_translators_label`n  translation: مترجمان`n"
         $plan=Get-GuidePdfPlan $workspace $policy $guide.id $edition.id fa 'pdf/guide.fa.pdf'
         $plan.Metadata.dir | Should -Be 'rtl'
-        $plan.Metadata.translators[0].name | Should -Be "[Parisa Translator$([char]0x200E)]{dir=ltr}"
+        $plan.Metadata.translators[0].name | Should -Be "[Parisa Translator$([char]0x200E)]{lang=en}"
         $plan.Metadata.labels.translators | Should -Be 'مترجمان'
         $plan.Metadata.title | Should -Be 'راهنمای نمونه'
         @($plan.Includes|Where-Object Part -eq 'rtl').Count | Should -Be 1
+        $plan.Metadata.edition | Should -BeLike '*2024.8*{lang=en}' -Because 'digits and dots keep their order in right-to-left text'
+        $plan.Metadata.babeloptions | Should -Contain 'bidi=bidi-r' -Because 'the default XeTeX bidi mode loses colour changes'
+        @(for($i=0;$i -lt $plan.Arguments.Count;$i++){if($plan.Arguments[$i] -eq '--lua-filter'){[IO.Path]::GetFileName($plan.Arguments[$i+1])}}) | Should -Contain 'rtl-latin.lua'
         $plan.Fingerprints.Path | Should -Contain 'site/i18n/fa.yaml'
     }
     It 'uses the most specific template for each part and places parts around the body' {
@@ -129,5 +133,35 @@ Describe 'Rendering template parts' {
         $main | Should -Contain '--metadata-file'
         @($main|Where-Object {$_ -in @('--include-in-header','--include-before-body','--include-after-body')}).Count | Should -Be $plan.Includes.Count
         @(Get-ChildItem (Join-Path $workspace "$($guide.contentRoot)/$($edition.path)/pdf") -Force).Count | Should -Be 1 -Because 'staging is removed'
+    }
+}
+Describe 'Missing font reporting' {
+    BeforeEach {
+        $policy=Get-Content -Raw (Join-Path $root 'tests/Contracts/fixtures/single-guide.site-policy.json')|ConvertFrom-Json -AsHashtable
+        $policy.protectedPaths=@();$policy.guides[0].protectSource=$false
+        $guide=$policy.guides[0];$edition=$guide.editions[0]
+        $edition.translations=@(@{language='en';intent='web';downloads=@(@{path='pdf/guide.en.pdf';handling='generated'})},@{language='ja';intent='web';downloads=@(@{path='pdf/guide.ja.pdf';handling='generated'})})
+        $workspace=Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
+        Write-Fixture "$($guide.contentRoot)/$($edition.path)/index.md" "---`ntitle: Example`n---`nBody"
+        Write-Fixture "$($guide.contentRoot)/$($edition.path)/index.ja.md" "---`ntitle: 例`n---`n本文"
+        Write-Fixture 'site/pdf/pdf.yaml' "mainfont: Installed Serif`nsansfont: Absent Sans`nfontSources:`n  Absent Sans: https://fonts.example/absent-sans`n"
+        Write-Fixture 'site/pdf/pdf.ja.yaml' "mainfont: Absent JP`nCJKmainfont: Absent JP`n"
+        Mock Get-GuidePdfToolchain -ModuleName OpenGuidePlatform.PowerShell.Core { @([pscustomobject]@{Tool='pandoc';Available=$true},[pscustomobject]@{Tool='xelatex';Available=$true}) }
+        Mock Get-GuideInstalledFontFamilies -ModuleName OpenGuidePlatform.PowerShell.Core { ,@('Installed Serif') }
+        Mock Invoke-GuidePandoc -ModuleName OpenGuidePlatform.PowerShell.Core { 0 }
+    }
+    It 'lists every missing font with where it was set and where to get it' {
+        $message=$null
+        try { New-GuidePdf $workspace $policy $guide.id $edition.id ja 'pdf/guide.ja.pdf' } catch { $message=$_.Exception.Message }
+        $message | Should -Match 'Missing fonts for .*guide\.ja\.pdf'
+        $message | Should -Match 'Absent JP \(mainfont, CJKmainfont, set in site/pdf/pdf\.ja\.yaml\)\. No source is recorded'
+        $message | Should -Match 'Absent Sans \(sansfont, set in site/pdf/pdf\.yaml\)\. Get it from https://fonts\.example/absent-sans'
+        $message | Should -Not -Match 'Installed Serif'
+        Should -Invoke Invoke-GuidePandoc -ModuleName OpenGuidePlatform.PowerShell.Core -Times 0
+    }
+    It 'reports font status for every generated PDF' {
+        $report=@(Test-GuidePdfFonts $workspace $policy)
+        @($report|Where-Object { $_.Installed -eq $false }|ForEach-Object Font|Sort-Object -Unique) | Should -Be @('Absent JP','Absent Sans')
+        ($report|Where-Object { $_.Pdf -like '*guide.en.pdf' -and $_.Key -eq 'mainfont' }).Installed | Should -BeTrue
     }
 }

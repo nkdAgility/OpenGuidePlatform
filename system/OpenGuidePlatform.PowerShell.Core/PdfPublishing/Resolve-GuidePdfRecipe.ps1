@@ -1,5 +1,5 @@
 $script:GuidePdfFontKeys=@('mainfont','sansfont','monofont','CJKmainfont','CJKsansfont','CJKmonofont')
-$script:GuidePdfSettingKeys=@('mainfont','sansfont','monofont','CJKmainfont','CJKsansfont','CJKmonofont','papersize','geometry','fontsize','toc','tocDepth','watermark','licence','parts','cover','downloads')
+$script:GuidePdfSettingKeys=@('mainfont','sansfont','monofont','CJKmainfont','CJKsansfont','CJKmonofont','papersize','geometry','fontsize','toc','tocDepth','watermark','licence','parts','cover','fontSources','downloads')
 $script:GuidePdfCoverKeys=@('tagline','contributorRoles','translatorRoles')
 $script:GuidePdfParts=@('cover','licence','body','back')
 $script:GuidePdfTemplates=[ordered]@{style='header';'page-header'='header';'page-footer'='header';cover='before';licence='before';back='after'}
@@ -38,6 +38,10 @@ function Test-GuidePdfSettings {
     if($Settings.Contains('cover')){
         if($Settings.cover -isnot [Collections.IDictionary]){'cover must be a mapping.'}
         else{foreach($key in $Settings.cover.Keys){if($key -cnotin $script:GuidePdfCoverKeys){"Unknown cover setting '$key'."}}}
+    }
+    if($Settings.Contains('fontSources')){
+        if($Settings.fontSources -isnot [Collections.IDictionary]){'fontSources must map font names to where to get them.'}
+        else{foreach($font in $Settings.fontSources.Keys){if([string]::IsNullOrWhiteSpace([string]$Settings.fontSources[$font])){"fontSources for '$font' is empty."}}}
     }
     if($Settings.Contains('parts')){
         $parts=@($Settings.parts)
@@ -78,7 +82,7 @@ function Merge-GuidePdfSettings {
     param([Collections.IDictionary]$Target,[Collections.IDictionary]$Source)
     foreach($key in $Source.Keys){
         if($key -ceq 'downloads'){continue}
-        if($key -ceq 'cover' -and $Target[$key] -is [Collections.IDictionary] -and $Source[$key] -is [Collections.IDictionary]){
+        if($key -cin @('cover','fontSources') -and $Target[$key] -is [Collections.IDictionary] -and $Source[$key] -is [Collections.IDictionary]){
             foreach($inner in $Source[$key].Keys){$Target[$key][$inner]=$Source[$key][$inner]}
         }elseif($Source[$key] -is [Collections.IDictionary]){
             $copy=[ordered]@{};foreach($inner in $Source[$key].Keys){$copy[$inner]=$Source[$key][$inner]};$Target[$key]=$copy
@@ -99,6 +103,7 @@ function Resolve-GuidePdfRecipe {
     $files=[Collections.Generic.List[object]]::new()
     function Use($level,$path,$kind){$files.Add([pscustomobject]@{Level=$level.Name;Kind=$kind;Path=$path;Relative=$(if($level.Relative){"$($level.Relative)/$([IO.Path]::GetRelativePath($level.Path,$path).Replace('\','/'))"}else{$null})})}
     $download=$null
+    $origins=@{}
     foreach($level in $levels){
         foreach($name in @('pdf.yaml',"pdf.$Language.yaml")){
             $path=Join-Path $level.Path $name
@@ -106,6 +111,7 @@ function Resolve-GuidePdfRecipe {
             $display=if($level.Relative){"$($level.Relative)/$name"}else{"platform/$name"}
             $values=Read-GuidePdfSettingsFile $path $level.Name $display
             Merge-GuidePdfSettings $settings $values
+            foreach($key in $script:GuidePdfFontKeys){ if($values.Contains($key)){ $origins[$key]=$display } }
             if($level.Name -eq 'edition' -and $values.Contains('downloads')){
                 $declared=@($values.downloads|Where-Object {[string]$_.path -ceq $DownloadPath})
                 if($declared.Count){$download=$declared[-1]}
@@ -133,7 +139,7 @@ function Resolve-GuidePdfRecipe {
     }
     foreach($filter in $filters.Values){Use $filter.Level $filter.Lua filter;if($filter.Header){Use $filter.Level $filter.Header filter-header}}
     $resources=@($levels[($levels.Count-1)..0]|ForEach-Object {Join-Path $_.Path 'images'}|Where-Object {[IO.Directory]::Exists($_)})
-    [pscustomobject]@{Settings=$settings;Templates=$templates;Filters=@($filters.Values|Sort-Object Name);ResourcePaths=$resources;Files=@($files.ToArray());Download=$download}
+    [pscustomobject]@{Settings=$settings;FontOrigins=$origins;Templates=$templates;Filters=@($filters.Values|Sort-Object Name);ResourcePaths=$resources;Files=@($files.ToArray());Download=$download}
 }
 
 function Get-GuidePdfLabels {
@@ -214,10 +220,11 @@ function Format-GuidePdfText {
     # Metadata strings are read as Markdown. In a right-to-left document, text
     # without any RTL characters is wrapped in an LTR span so bidi keeps Latin
     # word order (Pandoc writes \LR{...}).
-    param([string]$Text,[bool]$RightToLeft)
-    if(-not $RightToLeft -or [string]::IsNullOrWhiteSpace($Text) -or $Text -match '[֐-ࣿיִ-﷿ﹰ-﻿]' -or $Text -notmatch '\p{L}'){return $Text}
+    param([string]$Text,[bool]$RightToLeft,[switch]$Numeric)
+    # -Numeric also wraps letterless values such as editions and dates ("2025.7").
+    if(-not $RightToLeft -or [string]::IsNullOrWhiteSpace($Text) -or $Text -match '[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]' -or ($Text -notmatch '\p{L}' -and -not $Numeric)){return $Text}
     # The trailing LEFT-TO-RIGHT MARK keeps closing punctuation with the Latin run.
-    '['+($Text -replace '([\\\[\]])','\$1')+[char]0x200E+']{dir=ltr}'
+    '['+($Text -replace '([\\\[\]])','\$1')+[char]0x200E+']{lang=en}'
 }
 
 function ConvertTo-GuideLatexPath {

@@ -311,4 +311,7 @@ Differences from the original draft, found while implementing and checking real 
 - Added the fixed `body-start.tex` and `rtl.tex` includes (section 4.3) and left-to-right wrapping of Latin text in right-to-left covers and headers; the running header mirrors for right-to-left documents.
 - D4: translation reviewers are not a separate cover group. They can be listed with translators through `cover.translatorRoles`; the website still shows the whole translation team.
 - Contributor warnings apply only to sites that keep `data/contributions`, so sites without contributor data are not asked for it.
+- Missing fonts are reported together, each with the settings file that chose it and the `fontSources` entry saying where to get it; `Test-GuidePdfFonts` reports this for a whole site before generating.
+- Right-to-left PDFs use babel `bidi=bidi-r` (the default XeTeX mode loses colour changes) and the `rtl-latin` filter, which marks Latin runs and Latin-only paragraphs as English; cover values use the same marking, including editions and dates.
+- Contributors with equal weights keep the data file order, as on the website.
 - Core exposes `Get-GuideCredits` (resolved credits) and `Get-GuidePdfDeclaredDownloads` (used by discovery). Discovery records `wrapper.languageDirections`, added to the site-policy schema.
