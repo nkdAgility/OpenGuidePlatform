@@ -67,6 +67,8 @@ function Set-GuideWrapperTranslation {
         $work=Get-GuideSiteTranslationWork -WorkspaceRoot $WorkspaceRoot -Policy $Policy -Language $Language
         $selected=@($work.Wrappers|Where-Object { $_.Kind -eq 'json-text-selection-required' -and $_.TargetPath -ceq $RelativePath })
         if($selected.Count -ne 1){throw 'Select discovered source-language JSON data; arbitrary JSON paths are unsupported.'}
+        if($selected[0].State -eq 'unsupported-json-schema-reconciliation'){throw 'JSON source and target schemas differ. Schema reconciliation is unsupported by this text-only writer; review keys and array structure through a separately supported operation before selecting text leaves.'}
+        if($selected[0].State -eq 'unsupported-invalid-json'){throw 'Source or target JSON is invalid; resolve the reported resource before selecting text leaves.'}
         $sourceFile=Resolve-GuideWorkspacePath $WorkspaceRoot $selected[0].SourcePath
         if(-not $ExpectedSourceSha256 -or (Get-FileHash -LiteralPath $sourceFile).Hash -ine $ExpectedSourceSha256){throw 'JSON source changed since review or ExpectedSourceSha256 is missing.'}
         if(-not $JsonTextPaths -or @($JsonTextPaths|Sort-Object -Unique).Count -ne $JsonTextPaths.Count){throw 'Select unique reviewed JSON string pointers using JsonTextPaths.'}

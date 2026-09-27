@@ -47,20 +47,45 @@ function Get-GuideSiteTranslationWork {
             WorkItem 'json-text-selection-required' $relative ($relative.Substring(0,$relative.Length-$sourceLanguage.Length-5)+"$Language.json") 'Set-GuideWrapperTranslation -JsonTextPaths'
         }}
     )
+    function SameJsonShape($source,$target){
+        if($source -is [Collections.IDictionary]){
+            if($target -isnot [Collections.IDictionary] -or $source.Count -ne $target.Count){return $false}
+            foreach($key in $source.Keys){if(-not $target.Contains($key) -or -not (SameJsonShape $source[$key] $target[$key])){return $false}}
+        }elseif($source -is [Collections.IList]){
+            if($target -isnot [Collections.IList] -or $source.Count -ne $target.Count){return $false}
+            for($i=0;$i -lt $source.Count;$i++){if(-not (SameJsonShape $source[$i] $target[$i])){return $false}}
+        }else{
+            function JsonScalarKind($value){if($null -eq $value){'null'}elseif($value -is [string]){'string'}elseif($value -is [bool]){'boolean'}elseif($value -is [ValueType]){'number'}else{'unsupported'}}
+            if((JsonScalarKind $source) -ne (JsonScalarKind $target)){return $false}
+        }
+        return $true
+    }
     foreach($item in $wrappers){
+        if($item.Kind -eq 'json-text-selection-required'){
+            try {
+                $sourceJson=ConvertFrom-Json ([IO.File]::ReadAllText((Resolve-GuideWorkspacePath $WorkspaceRoot $item.SourcePath))) -AsHashtable -NoEnumerate -ErrorAction Stop
+                if($item.TargetSha256){
+                    $targetJson=ConvertFrom-Json ([IO.File]::ReadAllText((Resolve-GuideWorkspacePath $WorkspaceRoot $item.TargetPath))) -AsHashtable -NoEnumerate -ErrorAction Stop
+                    if(-not (SameJsonShape $sourceJson $targetJson)){$item.State='unsupported-json-schema-reconciliation';$item.SupportedOperation=$null}
+                }
+            }catch{$item.State='unsupported-invalid-json';$item.SupportedOperation=$null}
+        }
         if($item.Kind -eq 'catalogue'){
             $existing=@(foreach($ext in @('yaml','yml')){$candidate="$wrapper/i18n/$Language.$ext";if(FileHash $candidate){$candidate}})
-            if($existing.Count -eq 1){$item.TargetPath=$existing[0];$item.TargetSha256=FileHash $existing[0];$item.State='existing-review-required'}
+            if($existing.Count -eq 1){$item.TargetPath=$existing[0];$item.TargetSha256=FileHash $existing[0];$item.State='existing-review-required';$item.WriteAllowed=(Test-GuideWritePolicy $Policy $item.TargetPath).Allowed}
+            elseif($existing.Count -gt 1){$item.State='ambiguous-target-catalogue';$item.SupportedOperation=$null}
         }
         if(($item.Kind -eq 'markdown' -and -not $item.TargetPath.StartsWith("$wrapper/content/")) -or ($item.Kind -eq 'json-text-selection-required' -and -not $item.TargetPath.StartsWith("$wrapper/data/"))){$item.SupportedOperation=$null;$item.State='unsupported-custom-directory'}
     }
+    $sourceCatalogues=@($wrappers|Where-Object Kind -EQ catalogue)
+    if($sourceCatalogues.Count -gt 1){foreach($item in $sourceCatalogues){$item.State='ambiguous-source-catalogue';$item.SupportedOperation=$null}}
     foreach($group in @($wrappers|Group-Object TargetPath|Where-Object Count -gt 1)){foreach($item in $group.Group){$item.State='ambiguous-source';$item.SupportedOperation=$null}}
     $guides=@(foreach($guide in $Policy.guides){foreach($edition in $guide.editions){
         $target="$($guide.contentRoot)/$($edition.path)/index.$Language.md";$path=Resolve-GuideWorkspacePath $WorkspaceRoot $target
         $translation=@($edition.translations|Where-Object language -CEQ $Language)
         $intent=if($translation.Count){$translation[0].intent}else{$null}
         $state=if([IO.File]::Exists($path)){if([string]::IsNullOrWhiteSpace((Read-GuideDocument $path).Body)){'empty-stub'}else{'populated'}}else{'missing'}
-        $excluded=@($Policy.publication.permanentExclusions|Where-Object {($_.subject -eq 'guide' -and $_.id -eq $guide.id) -or ($_.subject -eq 'edition' -and $_.id -eq "$($guide.id)/$($edition.id)")}).Count -gt 0
+        $excluded=$intent -eq 'excluded' -or @($Policy.publication.permanentExclusions|Where-Object {($_.subject -eq 'guide' -and $_.id -eq $guide.id) -or ($_.subject -eq 'edition' -and $_.id -eq "$($guide.id)/$($edition.id)")}).Count -gt 0
         $allowed=(Test-GuideWritePolicy $Policy $target).Allowed
         [pscustomobject]@{GuideId=$guide.id;EditionId=$edition.id;SourceLanguage=$edition.sourceLanguage;SourceLanguageSelected=($Language -ieq $edition.sourceLanguage);SourcePath="$($guide.contentRoot)/$($edition.path)/index.md";SourceSha256=(FileHash "$($guide.contentRoot)/$($edition.path)/index.md");TargetPath=$target;TargetSha256=(FileHash $target);State=$state;Intent=$intent;Excluded=$excluded;WriteAllowed=$allowed;Downloads=@($translation|ForEach-Object {$_.downloads});CanCreateScaffold=($state -eq 'missing' -and $Language -ine $edition.sourceLanguage -and $allowed -and $disabled -and -not $excluded -and $intent -notin @('pdf-only','fallback'))}
     }})

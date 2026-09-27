@@ -7,6 +7,7 @@ function New-GuideTranslationScaffold {
     $target=Resolve-GuideWorkspacePath $WorkspaceRoot $relative
     Assert-GuideWriteAllowed $Policy $relative
     if ([IO.File]::Exists($target)) { return [pscustomobject]@{Status='preserved';Path=$relative;ProductionChanged=$false} }
+    if(@($selection.Edition.translations|Where-Object { $_.language -ceq $Language -and $_.intent -eq 'excluded' }).Count){throw 'Preserve the declared excluded translation; do not create a scaffold.'}
     # Require an explicit disabled entry before creating a language file. Never enable it here.
     $production=Resolve-GuideWorkspacePath $WorkspaceRoot "$($Policy.wrapper.sourcePath)/hugo.production.yaml"
     Import-Module powershell-yaml -MinimumVersion 0.4.12 -ErrorAction Stop

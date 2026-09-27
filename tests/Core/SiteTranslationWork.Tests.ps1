@@ -38,6 +38,19 @@ Describe 'Site language work inventory' {
         Set-Content "$workspace/site/content/a/v1/index.kn.md" "---`ntitle: Kannada`n---`n"
         (Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn).Guides[0].State|Should -Be empty-stub
     }
+    It 'preserves explicitly excluded translations with missing target files' {
+        Set-Content "$workspace/site/hugo.production.yaml" "languages:`n  kn:`n    disabled: true"
+        $policy.guides[0].editions[0].translations=@(@{language='kn';intent='excluded';downloads=@()})
+        $work=Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn
+        $work.Configuration.ProductionExplicitlyDisabled|Should -BeTrue
+        $work.Guides[0].State|Should -Be missing
+        $work.Guides[0].Intent|Should -Be excluded
+        $work.Guides[0].Excluded|Should -BeTrue
+        $work.Guides[0].WriteAllowed|Should -BeTrue
+        $work.Guides[0].CanCreateScaffold|Should -BeFalse
+        $work.Guides[1].CanCreateScaffold|Should -BeTrue
+        Test-Path "$workspace/site/content/a/v1/index.kn.md"|Should -BeFalse
+    }
     It 'allows discovered guide wrappers but never edition resources or unknown guide files' {
         Set-Content "$workspace/site/hugo.production.yaml" "languages:`n  kn:`n    disabled: true"
         $wrapperArgs=@{WorkspaceRoot=$workspace;Policy=$policy;Language='kn';CandidateContent="---`ntitle: Kannada`n---`n"}
@@ -68,12 +81,71 @@ Describe 'Site language work inventory' {
         $wrapperArgs.JsonTextPaths=@('/title');$wrapperArgs.ExpectedSourceSha256='0'*64
         {Set-GuideWrapperTranslation @wrapperArgs -CandidateContent $candidate}|Should -Throw '*source changed*'
     }
+    It 'reports unsupported JSON schema drift and refuses writes for <Name>' -ForEach @(
+        @{Name='changed scalar type';Source='{"title":42,"color":"blue","items":["Text"]}'},
+        @{Name='added source key';Source='{"title":"Hello","color":"blue","items":["Text"],"new":"New"}'},
+        @{Name='removed source key';Source='{"title":"Hello","items":["Text"]}'},
+        @{Name='changed array length';Source='{"title":"Hello","color":"blue","items":["Text","More"]}'},
+        @{Name='changed object shape';Source='{"title":"Hello","color":"blue","items":{"label":"Text"}}'}
+    ) {
+        Set-Content "$workspace/site/hugo.production.yaml" "languages:`n  kn:`n    disabled: true"
+        $candidate='{"title":"Namaskara","color":"blue","items":["Translated"]}'
+        Set-Content "$workspace/site/data/home/kn.json" $candidate
+        $hash=(Get-FileHash "$workspace/site/data/home/kn.json").Hash
+        Set-Content "$workspace/site/data/home/en.json" $Source
+        $work=Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn
+        $json=@($work.Wrappers|Where-Object Kind -EQ json-text-selection-required)[0]
+        $json.State|Should -Be unsupported-json-schema-reconciliation
+        $json.SupportedOperation|Should -BeNullOrEmpty
+        $work.Findings.Code|Should -Contain WRAPPER_SCOPE_UNSUPPORTED
+        {Set-GuideWrapperTranslation -WorkspaceRoot $workspace -Policy $policy -Language kn -RelativePath site/data/home/kn.json -CandidateContent $candidate -ExpectedSha256 $hash -ExpectedSourceSha256 $json.SourceSha256 -JsonTextPaths '/title'}|Should -Throw '*Schema reconciliation is unsupported*'
+        (Get-FileHash "$workspace/site/data/home/kn.json").Hash|Should -Be $hash
+    }
+    It 'reports invalid JSON without aborting the inventory or writing a target' {
+        Set-Content "$workspace/site/data/home/en.json" '{invalid'
+        $work=Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn
+        $json=@($work.Wrappers|Where-Object Kind -EQ json-text-selection-required)[0]
+        $json.State|Should -Be unsupported-invalid-json
+        $json.SupportedOperation|Should -BeNullOrEmpty
+        $work.Guides.Count|Should -Be 2
+        {Set-GuideWrapperTranslation -WorkspaceRoot $workspace -Policy $policy -Language kn -RelativePath site/data/home/kn.json -CandidateContent '{}' -ExpectedSourceSha256 $json.SourceSha256 -JsonTextPaths '/title'}|Should -Throw '*JSON is invalid*'
+        Test-Path "$workspace/site/data/home/kn.json"|Should -BeFalse
+    }
+    It 'preserves an existing malformed JSON target when refusing text changes' {
+        Set-Content "$workspace/site/data/home/kn.json" '{invalid'
+        $hash=(Get-FileHash "$workspace/site/data/home/kn.json").Hash
+        $work=Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn
+        $json=@($work.Wrappers|Where-Object Kind -EQ json-text-selection-required)[0]
+        $json.State|Should -Be unsupported-invalid-json
+        $json.SupportedOperation|Should -BeNullOrEmpty
+        $work.Findings.Code|Should -Contain WRAPPER_SCOPE_UNSUPPORTED
+        {Set-GuideWrapperTranslation -WorkspaceRoot $workspace -Policy $policy -Language kn -RelativePath site/data/home/kn.json -CandidateContent '{"title":"Translated","color":"blue","items":["Text"]}' -ExpectedSha256 $hash -ExpectedSourceSha256 $json.SourceSha256 -JsonTextPaths '/title'}|Should -Throw '*JSON is invalid*'
+        (Get-FileHash "$workspace/site/data/home/kn.json").Hash|Should -Be $hash
+    }
     It 'reports source ambiguity and preserves an existing catalogue extension' {
         Set-Content "$workspace/site/content/_index.en.md" "---`ntitle: Other`n---`n"
         Set-Content "$workspace/site/i18n/kn.yml" 'home: Translated'
         $work=Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn
         @($work.Wrappers|Where-Object State -EQ ambiguous-source).Count|Should -Be 2
         $work.Wrappers.TargetPath|Should -Contain 'site/i18n/kn.yml'
+        $work.Findings.Code|Should -Contain WRAPPER_SCOPE_UNSUPPORTED
+    }
+    It 'checks protection on the actual existing catalogue extension' {
+        Set-Content "$workspace/site/i18n/kn.yml" 'home: Translated'
+        $policy.protectedPaths=@('site/i18n/kn.yml')
+        $catalogue=@((Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn).Wrappers|Where-Object Kind -EQ catalogue)[0]
+        $catalogue.TargetPath|Should -Be site/i18n/kn.yml
+        $catalogue.WriteAllowed|Should -BeFalse
+    }
+    It 'reports duplicate catalogue extensions as unsupported for <Location>' -ForEach @(
+        @{Location='target';LanguageCode='kn';Expected='ambiguous-target-catalogue'},
+        @{Location='source';LanguageCode='en';Expected='ambiguous-source-catalogue'}
+    ) {
+        Set-Content "$workspace/site/i18n/$LanguageCode.yaml" 'home: Text'
+        Set-Content "$workspace/site/i18n/$LanguageCode.yml" 'home: Text'
+        $work=Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn
+        $catalogues=@($work.Wrappers|Where-Object Kind -EQ catalogue)
+        foreach($item in $catalogues){$item.State|Should -Be $Expected;$item.SupportedOperation|Should -BeNullOrEmpty}
         $work.Findings.Code|Should -Contain WRAPPER_SCOPE_UNSUPPORTED
     }
     It 'reads Hugo configuration casing and reports unsupported custom content directories' {

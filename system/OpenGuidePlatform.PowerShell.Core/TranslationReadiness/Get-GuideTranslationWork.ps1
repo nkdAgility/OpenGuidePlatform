@@ -78,6 +78,7 @@ function Get-GuideTranslationWork {
     $target=if([IO.File]::Exists($targetFile)){Read-GuideSnapshot $WorkspaceRoot $targetPath}else{$null}
     $declared=@($selection.Edition.translations|Where-Object language -CEQ $Language)
     if($declared.Count -gt 1){throw 'Target language is ambiguous in the supplied inventory.'}
+    $excluded=$declared.Count -eq 1 -and $declared[0].intent -eq 'excluded'
     $write=Test-GuideWritePolicy -Policy $Policy -RelativePath $targetPath
     $productionPath=Resolve-GuideWorkspacePath $WorkspaceRoot "$($Policy.wrapper.sourcePath)/hugo.production.yaml"
     $disabled=$false
@@ -89,6 +90,7 @@ function Get-GuideTranslationWork {
     }
     $comparison=if($SourceRevision){Get-GuideSourceComparison $WorkspaceRoot $SourceRevision $SourcePathAtRevision $source}else{$null}
     $findings=@(
+        if($excluded){[pscustomobject]@{Code='TRANSLATION_EXCLUDED';Action='Preserve the declared excluded translation; do not create a scaffold.'}}
         if(-not $write.Allowed){[pscustomobject]@{Code='PROTECTED_RESOURCE';Action=$write.Reason}}
         if(-not $target -and -not $disabled){[pscustomobject]@{Code='SCAFFOLD_CONFIGURATION_REQUIRED';Action="Declare $Language disabled in hugo.production.yaml before scaffolding. Review main/preview language configuration separately."}}
         if($target -and -not $declared.Count){[pscustomobject]@{Code='REFRESH_DISCOVERY';Action='Rerun Prepare to discover the existing target before applying content.'}}
@@ -101,7 +103,7 @@ function Get-GuideTranslationWork {
         Source=$source;Target=$target;TargetPath=$targetPath;TargetDeclared=($declared.Count -eq 1)
         TargetIntent=if($declared.Count){$declared[0].intent}else{$null}
         Downloads=if($declared.Count){@($declared[0].downloads)}else{@()}
-        CanCreateScaffold=(-not $target -and $disabled -and $write.Allowed)
+        CanCreateScaffold=(-not $target -and $disabled -and $write.Allowed -and -not $excluded)
         WriteAllowed=$write.Allowed;ProductionExplicitlyDisabled=$disabled
         Comparison=$comparison;Wrapper=(Get-GuideWrapperStatus -WorkspaceRoot $WorkspaceRoot -Policy $Policy -Languages @($Language))
         Findings=$findings;TranslationQualityAssessed=$false;PublicationVerified=$false
