@@ -17,8 +17,14 @@ if($Stage -eq 'Release'){
     & "$PSScriptRoot/system/OpenGuidePlatform.PowerShell.PlatformBuild/Release/Publish-PlatformRelease.ps1" -WorkspaceRoot $assets -OutputPath $assets -SourceCommit $SourceCommit -Repository $Repository
     return
 }
-$published=& gh release view $tag --repo $Repository --json targetCommitish,isDraft,isPrerelease | ConvertFrom-Json
-if($LASTEXITCODE -ne 0 -or $published.targetCommitish -cne $SourceCommit -or $published.isDraft -or [bool]$published.isPrerelease -ne $manifest.version.Contains('-')){throw 'Published release identity differs from the package.'}
+$releaseRef="refs/tags/$tag"
+$refs=@(& git ls-remote "https://github.com/$Repository.git" $releaseRef "$releaseRef^{}")
+if($LASTEXITCODE -ne 0){throw 'Cannot inspect the immutable published release tag.'}
+$peeled=@($refs|Where-Object {($_ -split '\s+')[1] -ceq "$releaseRef^{}"})
+$tagCommit=if($peeled.Count -eq 1){($peeled[0] -split '\s+')[0]}elseif($refs.Count -eq 1){($refs[0] -split '\s+')[0]}else{$null}
+if($tagCommit -cne $SourceCommit){throw 'Published release tag differs from the package.'}
+$published=& gh release view $tag --repo $Repository --json isDraft,isPrerelease | ConvertFrom-Json
+if($LASTEXITCODE -ne 0 -or $published.isDraft -or [bool]$published.isPrerelease -ne $manifest.version.Contains('-')){throw 'Published release identity differs from the package.'}
 $verify=Join-Path $assets ('published-'+[guid]::NewGuid().ToString('N'))
 & gh release download $tag --repo $Repository --pattern OpenGuidePlatform-GuideSite.zip --pattern OpenGuidePlatform-PlatformBuild.zip --pattern release-manifest.json --dir $verify
 if($LASTEXITCODE -ne 0){throw 'Cannot download published release assets.'}

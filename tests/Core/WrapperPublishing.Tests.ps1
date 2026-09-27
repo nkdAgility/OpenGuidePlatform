@@ -10,6 +10,7 @@ Describe 'Reviewed wrapper translations' {
         $policy=Get-Content "$root/tests/Contracts/fixtures/single-guide.site-policy.json" -Raw|ConvertFrom-Json -AsHashtable
         [IO.File]::WriteAllText("$workspace/site/hugo.yaml","title: Bespoke`nlanguages:`n  en:`n    languageName: English`n")
         [IO.File]::WriteAllText("$workspace/site/hugo.production.yaml","title: Bespoke`nlanguages:`n  en:`n    disabled: false`n  fa:`n    disabled: true`n")
+        [IO.File]::WriteAllText("$workspace/site/i18n/en.yaml","- id: home`n  translation: Home`n- id: search`n  translation: Search`n")
         $argsForWrapper=@{WorkspaceRoot=$workspace;Policy=$policy;Language='fa'}
         $candidate="---`ntitle: فارسی`n---`nمتن فارسی`n"
     }
@@ -28,12 +29,14 @@ Describe 'Reviewed wrapper translations' {
         (Set-GuideWrapperTranslation @argsForWrapper -RelativePath site/content/_index.fa.md -ExpectedSha256 $hash -CandidateContent ($candidate+'more')).Status | Should -Be updated
     }
     It 'creates and reconciles catalogues with exact reviewed text' {
+        $sourceHash=(Get-FileHash "$workspace/site/i18n/en.yaml").Hash
         $catalogue="- id: home`n  translation: خانه`n"
         Set-GuideWrapperTranslation @argsForWrapper -RelativePath site/i18n/fa.yaml -CandidateContent $catalogue | Out-Null
         $hash=(Get-FileHash "$workspace/site/i18n/fa.yaml").Hash
         $updated=$catalogue+"- id: search`n  translation: جستجو`n"
         Set-GuideWrapperTranslation @argsForWrapper -RelativePath site/i18n/fa.yaml -ExpectedSha256 $hash -CandidateContent $updated | Out-Null
         Get-Content "$workspace/site/i18n/fa.yaml" -Raw | Should -Be $updated
+        (Get-FileHash "$workspace/site/i18n/en.yaml").Hash | Should -Be $sourceHash
         { Set-GuideWrapperTranslation @argsForWrapper -RelativePath site/i18n/fa.yml -CandidateContent $catalogue } | Should -Throw '*ambiguous*'
     }
     It 'changes only the selected language in existing configuration' {
@@ -80,5 +83,10 @@ Describe 'Reviewed wrapper translations' {
         { Set-GuideWrapperTranslation @argsForWrapper -RelativePath site/content/_index.fa.md -ExpectedSha256 $hash -CandidateContent ($candidate+'more') } | Should -Throw '*simulated*'
         (Get-FileHash "$workspace/site/content/_index.fa.md").Hash | Should -Be $hash
         @(Get-ChildItem "$workspace/site/content" -Filter '*wrapper-lock').Count | Should -Be 0
+    }
+    It 'refuses catalogue creation when no authoritative source catalogue is discovered' {
+        Remove-Item -LiteralPath "$workspace/site/i18n/en.yaml"
+        { Set-GuideWrapperTranslation @argsForWrapper -RelativePath site/i18n/fa.yaml -CandidateContent "- id: home`n  translation: خانه`n" } | Should -Throw '*uniquely discovered authoritative source*'
+        Test-Path "$workspace/site/i18n/fa.yaml" | Should -BeFalse
     }
 }

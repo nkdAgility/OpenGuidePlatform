@@ -1,3 +1,30 @@
+function ConvertFrom-GuideTranslationJson {
+    param([Parameter(Mandatory)][string]$Content)
+    # ConvertFrom-Json in PowerShell 7.4 coerces ISO strings to DateTime.
+    # Preserve the JSON types used by the text-only translation contract.
+    function ReadJsonValue([System.Text.Json.JsonElement]$element) {
+        switch ($element.ValueKind.ToString()) {
+            'Object' {
+                $value=[Collections.Specialized.OrderedDictionary]::new([StringComparer]::Ordinal)
+                foreach($property in $element.EnumerateObject()){$value.Add($property.Name,(ReadJsonValue $property.Value))}
+                return $value
+            }
+            'Array' {
+                $value=@(foreach($item in $element.EnumerateArray()){ReadJsonValue $item})
+                return ,$value
+            }
+            'String' { return $element.GetString() }
+            'Number' { return (ConvertFrom-Json $element.GetRawText() -NoEnumerate) }
+            'True' { return $true }
+            'False' { return $false }
+            'Null' { return $null }
+            default { throw 'Unsupported JSON value.' }
+        }
+    }
+    $document=[System.Text.Json.JsonDocument]::Parse($Content)
+    try { return ,(ReadJsonValue $document.RootElement) }
+    finally { $document.Dispose() }
+}
 function Get-GuideSiteTranslationWork {
     <# .SYNOPSIS
     Discover site-language work before selecting individual guide translations.
@@ -63,9 +90,9 @@ function Get-GuideSiteTranslationWork {
     foreach($item in $wrappers){
         if($item.Kind -eq 'json-text-selection-required'){
             try {
-                $sourceJson=ConvertFrom-Json ([IO.File]::ReadAllText((Resolve-GuideWorkspacePath $WorkspaceRoot $item.SourcePath))) -AsHashtable -NoEnumerate -ErrorAction Stop
+                $sourceJson=ConvertFrom-GuideTranslationJson ([IO.File]::ReadAllText((Resolve-GuideWorkspacePath $WorkspaceRoot $item.SourcePath)))
                 if($item.TargetSha256){
-                    $targetJson=ConvertFrom-Json ([IO.File]::ReadAllText((Resolve-GuideWorkspacePath $WorkspaceRoot $item.TargetPath))) -AsHashtable -NoEnumerate -ErrorAction Stop
+                    $targetJson=ConvertFrom-GuideTranslationJson ([IO.File]::ReadAllText((Resolve-GuideWorkspacePath $WorkspaceRoot $item.TargetPath)))
                     if(-not (SameJsonShape $sourceJson $targetJson)){$item.State='unsupported-json-schema-reconciliation';$item.SupportedOperation=$null}
                 }
             }catch{$item.State='unsupported-invalid-json';$item.SupportedOperation=$null}

@@ -164,4 +164,73 @@ Describe 'Site language work inventory' {
         $work.Guides[1].SourceLanguageSelected|Should -BeTrue
         $work.Guides[1].CanCreateScaffold|Should -BeFalse
     }
+    It 'refuses ambiguous source catalogues for <TargetState> and preserves target bytes' -ForEach @(
+        @{TargetState='new target';Existing=$false},
+        @{TargetState='existing target with a different extension';Existing=$true}
+    ) {
+        Set-Content "$workspace/site/hugo.production.yaml" "languages:`n  kn:`n    disabled: true"
+        Set-Content "$workspace/site/i18n/en.yml" 'home: Other source'
+        $target='site/i18n/kn.yaml'
+        $arguments=@{WorkspaceRoot=$workspace;Policy=$policy;Language='kn';CandidateContent='home: Translated'}
+        if($Existing){
+            $target='site/i18n/kn.yml'
+            Set-Content "$workspace/$target" 'home: Existing translation'
+            $hash=(Get-FileHash "$workspace/$target").Hash
+            $arguments.ExpectedSha256=$hash
+        }
+        {Set-GuideWrapperTranslation @arguments -RelativePath $target}|Should -Throw '*uniquely discovered*'
+        if($Existing){(Get-FileHash "$workspace/$target").Hash|Should -Be $hash}
+        else{Test-Path "$workspace/$target"|Should -BeFalse}
+    }
+    It 'reports timestamp strings versus numbers as schema drift and preserves an existing target' {
+        Set-Content "$workspace/site/data/home/en.json" '{"title":"2026-09-27T12:00:00Z"}'
+        Set-Content "$workspace/site/data/home/kn.json" '{"title":42}'
+        $hash=(Get-FileHash "$workspace/site/data/home/kn.json").Hash
+        $json=@((Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn).Wrappers|Where-Object Kind -EQ json-text-selection-required)[0]
+        $json.State|Should -Be unsupported-json-schema-reconciliation
+        {Set-GuideWrapperTranslation -WorkspaceRoot $workspace -Policy $policy -Language kn -RelativePath site/data/home/kn.json -CandidateContent '{"title":"Translated"}' -ExpectedSha256 $hash -ExpectedSourceSha256 $json.SourceSha256 -JsonTextPaths '/title'}|Should -Throw '*Schema reconciliation is unsupported*'
+        (Get-FileHash "$workspace/site/data/home/kn.json").Hash|Should -Be $hash
+    }
+    It 'accepts compatible timestamp string leaves and preserves unselected literal strings' {
+        Set-Content "$workspace/site/hugo.production.yaml" "languages:`n  kn:`n    disabled: true"
+        $source='{"title":"2026-09-27T12:00:00Z","published":"2026-09-27T12:00:00+00:00","items":[null,true,1,"Text"]}'
+        Set-Content "$workspace/site/data/home/en.json" $source
+        Set-Content "$workspace/site/data/home/kn.json" $source
+        $json=@((Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn).Wrappers|Where-Object Kind -EQ json-text-selection-required)[0]
+        $json.State|Should -Be existing-review-required
+        $candidate=$source.Replace('2026-09-27T12:00:00Z','Translated date')
+        $arguments=@{WorkspaceRoot=$workspace;Policy=$policy;Language='kn';RelativePath='site/data/home/kn.json';ExpectedSha256=$json.TargetSha256;ExpectedSourceSha256=$json.SourceSha256;JsonTextPaths='/title'}
+        (Set-GuideWrapperTranslation @arguments -CandidateContent $candidate).Status|Should -Be updated
+        [IO.File]::ReadAllText("$workspace/site/data/home/kn.json")|Should -BeExactly $candidate
+        $arguments.ExpectedSha256=(Get-FileHash "$workspace/site/data/home/kn.json").Hash
+        {Set-GuideWrapperTranslation @arguments -CandidateContent $candidate.Replace('2026-09-27T12:00:00+00:00','2026-09-27T12:00:00Z')}|Should -Throw '*unselected*'
+        (Get-FileHash "$workspace/site/data/home/kn.json").Hash|Should -Be $arguments.ExpectedSha256
+    }
+    It 'preserves case-distinct machine keys, nested arrays and null values' {
+        Set-Content "$workspace/site/hugo.production.yaml" "languages:`n  kn:`n    disabled: true"
+        $source='{"title":"Hello","Name":"Upper","name":"Lower","values":[[],[null],null,{"Null":null,"null":false}]}'
+        Set-Content "$workspace/site/data/home/en.json" $source
+        $candidate=$source.Replace('Hello','Translated')
+        $arguments=@{WorkspaceRoot=$workspace;Policy=$policy;Language='kn';RelativePath='site/data/home/kn.json';ExpectedSourceSha256=(Get-FileHash "$workspace/site/data/home/en.json").Hash;JsonTextPaths='/title'}
+        (Set-GuideWrapperTranslation @arguments -CandidateContent $candidate).Status|Should -Be created
+        [IO.File]::ReadAllText("$workspace/site/data/home/kn.json")|Should -BeExactly $candidate
+        $arguments.ExpectedSha256=(Get-FileHash "$workspace/site/data/home/kn.json").Hash
+        {Set-GuideWrapperTranslation @arguments -CandidateContent $candidate.Replace('Lower','Changed')}|Should -Throw '*unselected*'
+        {Set-GuideWrapperTranslation @arguments -CandidateContent $candidate.Replace('[null]','[]')}|Should -Throw '*array structure*'
+        (Get-FileHash "$workspace/site/data/home/kn.json").Hash|Should -Be $arguments.ExpectedSha256
+    }
+    It 'reports duplicate identical JSON keys as invalid without writes' {
+        Set-Content "$workspace/site/data/home/en.json" '{"title":"First","title":"Second"}'
+        $json=@((Get-GuideSiteTranslationWork -WorkspaceRoot $workspace -Policy $policy -Language kn).Wrappers|Where-Object Kind -EQ json-text-selection-required)[0]
+        $json.State|Should -Be unsupported-invalid-json
+        {Set-GuideWrapperTranslation -WorkspaceRoot $workspace -Policy $policy -Language kn -RelativePath site/data/home/kn.json -CandidateContent '{"title":"Translated"}' -ExpectedSourceSha256 $json.SourceSha256 -JsonTextPaths '/title'}|Should -Throw '*JSON is invalid*'
+        Test-Path "$workspace/site/data/home/kn.json"|Should -BeFalse
+    }
+    It 'updates a uniquely discovered existing catalogue with its retained extension' {
+        Set-Content "$workspace/site/i18n/kn.yml" 'home: Existing translation'
+        $hash=(Get-FileHash "$workspace/site/i18n/kn.yml").Hash
+        (Set-GuideWrapperTranslation -WorkspaceRoot $workspace -Policy $policy -Language kn -RelativePath site/i18n/kn.yml -CandidateContent 'home: Reviewed translation' -ExpectedSha256 $hash).Status|Should -Be updated
+        [IO.File]::ReadAllText("$workspace/site/i18n/kn.yml")|Should -BeExactly 'home: Reviewed translation'
+        Test-Path "$workspace/site/i18n/kn.yaml"|Should -BeFalse
+    }
 }

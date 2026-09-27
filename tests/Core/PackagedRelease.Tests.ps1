@@ -1,10 +1,17 @@
 BeforeAll {
     $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
     $launcher=Join-Path $root 'system/OpenGuidePlatform.PowerShell.PlatformBuild/Release/release.ps1'
+    function git {
+        $global:LASTEXITCODE=0
+        if($global:OgpPackagedMissingTag){return}
+        if($global:OgpPackagedAnnotatedTag){return @((('b'*40)+"`t"+$args[2]),($global:OgpPackagedReleaseCommit+"`t"+$args[3]))}
+        return $global:OgpPackagedReleaseCommit+"`t"+$args[2]
+    }
     function global:gh {
         $global:LASTEXITCODE=0
+        if($args[0] -eq 'api' -and $args[1] -like 'repos/*/commits/*'){return $global:OgpPackagedReleaseCommit}
         if($args[0] -eq 'release' -and $args[1] -eq 'view'){
-            return (@{targetCommitish=('a'*40);isDraft=$false;isPrerelease=$false}|ConvertTo-Json)
+            return (@{targetCommitish='main';isDraft=$false;isPrerelease=$false}|ConvertTo-Json)
         }
         if($args[0] -eq 'release' -and $args[1] -eq 'download'){
             $index=[Array]::IndexOf($args,'--dir')
@@ -23,6 +30,9 @@ Describe 'Packaged release launcher' {
         $global:OgpPackagedReleaseAssets=Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
         [IO.Directory]::CreateDirectory($global:OgpPackagedReleaseAssets)|Out-Null
         $global:OgpPackagedReleaseCorrupt=$false
+        $global:OgpPackagedReleaseCommit='a'*40
+        $global:OgpPackagedMissingTag=$false
+        $global:OgpPackagedAnnotatedTag=$false
         @{version='1.2.3';sourceCommit=('a'*40)}|ConvertTo-Json|Set-Content "$global:OgpPackagedReleaseAssets/release-manifest.json"
         Set-Content "$global:OgpPackagedReleaseAssets/OpenGuidePlatform-GuideSite.zip" 'guide bytes'
         Set-Content "$global:OgpPackagedReleaseAssets/OpenGuidePlatform-PlatformBuild.zip" 'platform bytes'
@@ -36,5 +46,17 @@ Describe 'Packaged release launcher' {
     It 'rejects changed published assets' {
         $global:OgpPackagedReleaseCorrupt=$true
         { & $launcher -Stage Validate -AssetsPath $global:OgpPackagedReleaseAssets -SourceCommit ('a'*40) }|Should -Throw '*differs from the tested package*'
+    }
+    It 'rejects an immutable published tag at another commit' {
+        $global:OgpPackagedReleaseCommit='b'*40
+        {& $launcher -Stage Validate -AssetsPath $global:OgpPackagedReleaseAssets -SourceCommit ('a'*40)}|Should -Throw '*Published release tag differs*'
+    }
+    It 'rejects a missing tag even when release metadata and a branch could match' {
+        $global:OgpPackagedMissingTag=$true
+        {& $launcher -Stage Validate -AssetsPath $global:OgpPackagedReleaseAssets -SourceCommit ('a'*40)}|Should -Throw '*Published release tag differs*'
+    }
+    It 'validates the peeled commit of an annotated immutable version tag' {
+        $global:OgpPackagedAnnotatedTag=$true
+        & $launcher -Stage Validate -AssetsPath $global:OgpPackagedReleaseAssets -SourceCommit ('a'*40)
     }
 }
