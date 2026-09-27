@@ -37,3 +37,6 @@ $script:CoreRoot=$PSScriptRoot
 
 . (Join-Path $PSScriptRoot 'TranslationReadiness/Get-GuideTranslationWork.ps1')
 . (Join-Path $PSScriptRoot 'TranslationReadiness/Edit-GuideTranslation.ps1')
+
+. (Join-Path $PSScriptRoot 'TranslationReadiness/Get-GuideSiteTranslationWork.ps1')
+. (Join-Path $PSScriptRoot 'ContributorManagement/Add-GuideContribution.ps1')

@@ -40,6 +40,8 @@ function Test-PlatformCandidateSample {
     # sample copy; never edit the source sample or a consumer repository.
     & (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) -NoProfile -File "$PSScriptRoot/Testing/Test-ContributorWorkflow.ps1" -WorkspaceRoot $WorkspaceRoot -CandidateRoot $candidate -OutputPath $OutputPath
     if($LASTEXITCODE -ne 0){throw 'Packaged contributor workflow failed.'}
+    & (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) -NoProfile -File "$PSScriptRoot/Testing/Test-SiteTranslationWorkflow.ps1" -WorkspaceRoot $WorkspaceRoot -CandidateRoot $candidate -OutputPath $OutputPath
+    if($LASTEXITCODE -ne 0){throw 'Packaged site translation workflow failed.'}
 }
 function Invoke-PlatformBuild {
     [CmdletBinding()]

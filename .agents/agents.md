@@ -11,6 +11,7 @@ Use the root PowerShell entry point for builds and validation.
 
 Preserve Hugo module internals and deliberate multilingual guide behavior. Internal refactoring is deferred until all consumers have adopted and been verified.
 Each guide site owns its bespoke wrapper and any number of guides. Never infer a fixed guide count.
+Translation workflow authority lives in OGP's distributed instructions, skills and Core human-operated procedure. Read the applicable installed version and Prepare evidence before advising a consumer; report missing capabilities transparently instead of improvising bypasses. Adding a language through guide.transcreate is site-scoped: production exclusion, configuration, i18n, localized wrapper and site-owned data, then eligible empty guide scaffolds. Body translation is a separately selected stage; per-edition Core boundaries do not narrow the site workflow. Preserve protected, populated and PDF-only/fallback content. Route status to guide.transstatus and source-change reconciliation to guide.transreconcile. Instructions guide all agents and people; they are not independent permission enforcement.
 Never enable Minionese in production. Preserve protected/source PDFs; do not regenerate supplied files.
 Hugo front matter must not contain lang; Pandoc receives language metadata separately.
 
@@ -35,3 +36,5 @@ Root AGENTS.md and CLAUDE.md are symbolic links to this canonical file. Keep the
 Do not create or use Git worktrees without the user's explicit permission. Work in the existing HugoGuides checkout; never place a repository checkout inside another repository.
 
 Use one working branch and one PR for the agreed work. Obtain Martin's explicit approval before creating branches. Switching between existing branches does not require approval. Do not edit another branch remotely to bypass this rule.
+
+Use the reusable [translation playbook](../system/OpenGuidePlatform.Agents.Integration/translation-playbook.md) for contributor journeys and review handoffs. Consumer documentation supplies site-specific policy and design only; reusable translation procedures belong in OGP.

@@ -68,6 +68,34 @@ Describe 'Contributor records and credits' {
     It 'reports no findings for valid data' {
         @(Find-ContributorIssues $workspace $policy|Where-Object Severity -eq blocker).Count | Should -Be 0
     }
+    It 'appends one reviewer while preserving comments, BOM, line endings and every original byte' {
+        $path=Join-Path $workspace "$data/example.fa.yml"
+        $original=[char]0xFEFF+"# Keep this comment`r`n"+[IO.File]::ReadAllText($path).Replace("`n","`r`n").TrimEnd()
+        [IO.File]::WriteAllText($path,$original,[Text.UTF8Encoding]::new($false))
+        $hash=(Get-FileHash $path).Hash
+        $candidate=$original+"`r`n- name: New Reviewer`r`n  role: reviewer`r`n  contributions: [`"$editionId`"]`r`n"
+        Add-GuideContribution $workspace $policy example fa $hash $candidate -WhatIf
+        (Get-FileHash $path).Hash | Should -Be $hash
+        $result=Add-GuideContribution $workspace $policy example fa $hash $candidate
+        $result.Status | Should -Be appended
+        [IO.File]::ReadAllBytes($path) | Should -Be ([Text.UTF8Encoding]::new($false).GetBytes($candidate))
+        @(Find-ContributorIssues $workspace $policy|Where-Object Severity -eq blocker).Count | Should -Be 0
+    }
+    It 'rejects unsafe contributor appends without changing the file' {
+        $path=Join-Path $workspace "$data/example.fa.yml"
+        $original=[IO.File]::ReadAllText($path);$hash=(Get-FileHash $path).Hash
+        $suffix="- name: New Reviewer`n  role: reviewer`n  contributions: [`"$editionId`"]`n"
+        {Add-GuideContribution $workspace $policy example fa ('0'*64) ($original+$suffix)} | Should -Throw '*changed since review*'
+        {Add-GuideContribution $workspace $policy example fa $hash ($original.Replace('Parisa','Changed')+$suffix)} | Should -Throw '*existing byte*'
+        {Add-GuideContribution $workspace $policy example fa $hash ($original+$suffix+$suffix)} | Should -Throw '*exactly one*'
+        {Add-GuideContribution $workspace $policy example fa $hash ($original+$suffix.Replace('New Reviewer','Parisa Translator'))} | Should -Throw '*identity already exists*'
+        {Add-GuideContribution $workspace $policy example fa $hash ($original+$suffix.Replace('role: reviewer','role: creator'))} | Should -Throw '*allowed translation role*'
+        {Add-GuideContribution $workspace $policy example fa $hash ($original+$suffix.Replace($editionId,'2099.9'))} | Should -Throw '*existing guide editions*'
+        {Add-GuideContribution $workspace $policy example fa $hash ($original+$suffix+"  localizedNames: wrong`n")} | Should -Throw '*localizedNames*'
+        $policy.protectedPaths=@("$data/example.fa.yml")
+        {Add-GuideContribution $workspace $policy example fa $hash ($original+$suffix)} | Should -Throw
+        (Get-FileHash $path).Hash | Should -Be $hash
+    }
     It 'reports invalid roles, unknown editions, duplicates and unknown files' {
         Write-Fixture "$data/example.es-ES.yml" "- name: Ana`n  role: Translator`n  contributions: [`"$editionId`"]`n- name: Ana`n  role: translator`n  contributions: [`"2030.1`"]`n"
         Write-Fixture "$data/unknown-guide.yml" "- name: Nobody`n  role: creator`n  contributions: [`"$editionId`"]`n"
