@@ -73,6 +73,8 @@ Set-GuideWrapperTranslation @wrapperChange
 
 A new target omits `ExpectedSha256`; creation refuses an existing destination. JSON pointers such as `/hero/title` select actual string leaves in that site's schema, not a universal field list. Existing JSON starts from the target; new JSON starts from the source so unselected values remain intact. Inspect the source and candidate together and do not refresh a stale hash merely to apply an old candidate.
 
+JSON support is text-only, not source-schema synchronization. Existing source and target must have matching object keys, array structure and scalar JSON types (string, number, boolean or null). Added or removed keys, changed array lengths and shape or type changes are reported as `unsupported-json-schema-reconciliation`, with no supported operation; the writer refuses them without changing target bytes. Invalid source or target JSON is reported as `unsupported-invalid-json`. Review schema reconciliation through a separately supported operation before applying selected text changes. Do not bypass this limitation with direct edits or claim that text reconciliation synchronized the schema.
+
 Configuration candidates instead start from the existing path and hash in `$siteWork.Configuration` (`ProductionPath`/`ProductionSha256` first, then `MainPath`/`MainSha256`). Edit only the selected language mapping and supply that configuration's hash as `ExpectedSha256` to the same writer. They are not wrapper-source entries and do not use JSON pointers.
 
 Read command help before applying a candidate and review the actual diff after each operation. Multi-file changes are not one transaction: inspect partial progress and refresh reports before resuming.

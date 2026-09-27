@@ -35,7 +35,7 @@ function Read-Relative([string]$Path){[IO.File]::ReadAllText((Resolve-GuideWorks
 # exercises JSON safety without claiming a semantic translation of real content.
 $main=Get-Content "$destination/hugo.yaml" -Raw|ConvertFrom-Yaml
 $sourceLanguage=[string]$main.defaultContentLanguage
-$language=@('de','kn','fr'|Where-Object {-not $main.languages.Contains($_)})|Select-Object -First 1
+$language=@('de','kn','fr')|Where-Object {-not $main.languages.Contains($_)}|Select-Object -First 1
 if(-not $language){throw 'Site translation acceptance needs a language absent from sample configuration.'}
 $jsonDirectory="$destination/data/site-translation-fixture"
 [IO.Directory]::CreateDirectory($jsonDirectory)|Out-Null

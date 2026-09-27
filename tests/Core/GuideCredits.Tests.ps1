@@ -81,6 +81,24 @@ Describe 'Contributor records and credits' {
         [IO.File]::ReadAllBytes($path) | Should -Be ([Text.UTF8Encoding]::new($false).GetBytes($candidate))
         @(Find-ContributorIssues $workspace $policy|Where-Object Severity -eq blocker).Count | Should -Be 0
     }
+    It 'rejects an extra YAML document in the candidate without changing the file' {
+        $path=Join-Path $workspace "$data/example.fa.yml"
+        $original=[IO.File]::ReadAllText($path);$hash=(Get-FileHash $path).Hash
+        $candidate=$original+"- name: New Reviewer`n  role: reviewer`n  contributions: [`"$editionId`"]`n---`n- name: Hidden Contributor`n"
+        {Add-GuideContribution $workspace $policy example fa $hash $candidate} | Should -Throw '*exactly one YAML document*'
+        (Get-FileHash $path).Hash | Should -Be $hash
+        [IO.File]::ReadAllText($path) | Should -BeExactly $original
+    }
+    It 'rejects an existing multi-document source without changing the file' {
+        $path=Join-Path $workspace "$data/example.fa.yml"
+        $original=[IO.File]::ReadAllText($path)+"---`n- name: Hidden Contributor`n"
+        [IO.File]::WriteAllText($path,$original)
+        $hash=(Get-FileHash $path).Hash
+        $candidate=$original+"- name: New Reviewer`n  role: reviewer`n  contributions: [`"$editionId`"]`n"
+        {Add-GuideContribution $workspace $policy example fa $hash $candidate} | Should -Throw '*exactly one YAML document*'
+        (Get-FileHash $path).Hash | Should -Be $hash
+        [IO.File]::ReadAllText($path) | Should -BeExactly $original
+    }
     It 'rejects unsafe contributor appends without changing the file' {
         $path=Join-Path $workspace "$data/example.fa.yml"
         $original=[IO.File]::ReadAllText($path);$hash=(Get-FileHash $path).Hash

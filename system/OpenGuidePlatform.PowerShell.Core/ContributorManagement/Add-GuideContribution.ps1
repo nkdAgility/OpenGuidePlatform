@@ -20,6 +20,12 @@ function Add-GuideContribution {
     $original=$encoding.GetString($originalBytes)
     if(-not $CandidateYaml.StartsWith($original,[StringComparison]::Ordinal)){throw 'Append must preserve every existing byte, including comments and order.'}
     Import-Module powershell-yaml -MinimumVersion 0.4.12 -ErrorAction Stop
+    foreach($yaml in @($original,$CandidateYaml)){
+        $stream=[YamlDotNet.RepresentationModel.YamlStream]::new()
+        $reader=[IO.StringReader]::new($yaml.TrimStart([char]0xFEFF))
+        try {$stream.Load($reader)} finally {$reader.Dispose()}
+        if($stream.Documents.Count -ne 1){throw 'Contributor source and candidate must each contain exactly one YAML document.'}
+    }
     $before=ConvertFrom-Yaml $original.TrimStart([char]0xFEFF)
     $after=ConvertFrom-Yaml $CandidateYaml.TrimStart([char]0xFEFF)
     if($before -isnot [Collections.IList] -or $after -isnot [Collections.IList] -or $after.Count -ne ($before.Count+1)){throw 'Append exactly one contributor to the existing collection.'}

@@ -55,6 +55,11 @@ function Set-GuideWrapperTranslation {
         }else{$before.languages=@{}}
         if(-not (Test-GuideWrapperValueEqual $before $after)){throw 'Candidate changes unselected languages or unrelated wrapper configuration.'}
     }elseif($catalogue){
+        $work=Get-GuideSiteTranslationWork -WorkspaceRoot $WorkspaceRoot -Policy $Policy -Language $Language
+        $discovered=@($work.Wrappers|Where-Object { $_.Kind -eq 'catalogue' })
+        if($discovered.Count -ne 1 -or $discovered[0].TargetPath -cne $RelativePath -or $discovered[0].SupportedOperation -ne 'Set-GuideWrapperTranslation'){
+            throw 'Select one uniquely discovered authoritative source and target catalogue; ambiguous catalogue extensions are unsupported.'
+        }
         $other=if($RelativePath.EndsWith('.yaml')){$RelativePath.Substring(0,$RelativePath.Length-5)+'.yml'}else{$RelativePath.Substring(0,$RelativePath.Length-4)+'.yaml'}
         if(Test-Path -LiteralPath (Resolve-GuideWorkspacePath $WorkspaceRoot $other)){throw 'Preserve one authoritative catalogue extension; both YAML extensions are ambiguous.'}
         $catalog=ConvertFrom-Yaml $CandidateContent
@@ -67,12 +72,14 @@ function Set-GuideWrapperTranslation {
         $work=Get-GuideSiteTranslationWork -WorkspaceRoot $WorkspaceRoot -Policy $Policy -Language $Language
         $selected=@($work.Wrappers|Where-Object { $_.Kind -eq 'json-text-selection-required' -and $_.TargetPath -ceq $RelativePath })
         if($selected.Count -ne 1){throw 'Select discovered source-language JSON data; arbitrary JSON paths are unsupported.'}
+        if($selected[0].State -eq 'unsupported-json-schema-reconciliation'){throw 'JSON source and target schemas differ. Schema reconciliation is unsupported by this text-only writer; review keys and array structure through a separately supported operation before selecting text leaves.'}
+        if($selected[0].State -eq 'unsupported-invalid-json'){throw 'Source or target JSON is invalid; resolve the reported resource before selecting text leaves.'}
         $sourceFile=Resolve-GuideWorkspacePath $WorkspaceRoot $selected[0].SourcePath
         if(-not $ExpectedSourceSha256 -or (Get-FileHash -LiteralPath $sourceFile).Hash -ine $ExpectedSourceSha256){throw 'JSON source changed since review or ExpectedSourceSha256 is missing.'}
         if(-not $JsonTextPaths -or @($JsonTextPaths|Sort-Object -Unique).Count -ne $JsonTextPaths.Count){throw 'Select unique reviewed JSON string pointers using JsonTextPaths.'}
-        $sourceJson=ConvertFrom-Json ([IO.File]::ReadAllText($sourceFile)) -AsHashtable -NoEnumerate
-        $baseline=if($exists){ConvertFrom-Json ([IO.File]::ReadAllText($target)) -AsHashtable -NoEnumerate}else{$sourceJson}
-        $candidateJson=ConvertFrom-Json $CandidateContent -AsHashtable -NoEnumerate
+        $sourceJson=ConvertFrom-GuideTranslationJson ([IO.File]::ReadAllText($sourceFile))
+        $baseline=if($exists){ConvertFrom-GuideTranslationJson ([IO.File]::ReadAllText($target))}else{$sourceJson}
+        $candidateJson=ConvertFrom-GuideTranslationJson $CandidateContent
         $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         function Compare-JsonText($source,$before,$after,[string]$pointer){
             if($source -is [Collections.IDictionary]){

@@ -50,6 +50,16 @@ Describe 'Human-operated translation workflows' {
         (Get-FileHash "$workspace/site/hugo.production.yaml").Hash|Should -Be $config
         (New-GuideTranslation @new).Status|Should -Be preserved
     }
+    It 'refuses explicitly excluded missing translations through both creation routes' {
+        $new=$selection.Clone();$new.Language='fa'
+        $edition.translations+=@{language='fa';intent='excluded';downloads=@()}
+        $excludedWork=Get-GuideTranslationWork @new
+        $excludedWork.CanCreateScaffold|Should -BeFalse
+        $excludedWork.Findings.Code|Should -Contain TRANSLATION_EXCLUDED
+        {New-GuideTranslation @new}|Should -Throw '*declared excluded*'
+        {New-GuideTranslationScaffold @new}|Should -Throw '*declared excluded*'
+        Test-Path "$directory/index.fa.md"|Should -BeFalse
+    }
     It 'refuses new-language creation without explicit production exclusion' {
         $selection.Language='ja'
         {New-GuideTranslation @selection}|Should -Throw '*disabled*'
