@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 546" role="img" aria-labelledby="title description">
+<title id="title">Who owns what</title>
+<desc id="description">OGP package: Shared tools and matching instructions. Then Your local site clone: Site content and proposed changes. Then Pull request: People review the exact change. Then Site repository: Maintainers control publication.</desc>
+<rect width="480" height="546" fill="white"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#334155"/></marker></defs>
+<text x="240" y="34" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#0f172a">Who owns what</text>
+<rect x="16" y="60" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="89" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">1. OGP package</text>
+<text x="240" y="117" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Shared tools and matching instructions</text>
+<path d="M240 147 V168" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="174" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="203" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">2. Your local site clone</text>
+<text x="240" y="231" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Site content and proposed changes</text>
+<path d="M240 261 V282" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="288" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="317" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">3. Pull request</text>
+<text x="240" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">People review the exact change</text>
+<path d="M240 375 V396" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="402" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="431" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">4. Site repository</text>
+<text x="240" y="459" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Maintainers control publication</text>
+</svg>

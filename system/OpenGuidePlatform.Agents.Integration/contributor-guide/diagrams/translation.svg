@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 774" role="img" aria-labelledby="title description">
+<title id="title">The translation journey</title>
+<desc id="description">Agree people and scope: Guardian, glossary and selected editions. Then Assess the actual site: Installed version and Prepare evidence. Then Add the site language: Production disabled; localize the wrapper. Then Translate selected bodies: One explicit guide edition at a time. Then Review and validate: Language, rendering, credits and eligible PDFs. Then Decide publication separately: Guardian approval and maintainer promotion.</desc>
+<rect width="480" height="774" fill="white"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#334155"/></marker></defs>
+<text x="240" y="34" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#0f172a">The translation journey</text>
+<rect x="16" y="60" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="89" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">1. Agree people and scope</text>
+<text x="240" y="117" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Guardian, glossary and selected editions</text>
+<path d="M240 147 V168" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="174" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="203" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">2. Assess the actual site</text>
+<text x="240" y="231" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Installed version and Prepare evidence</text>
+<path d="M240 261 V282" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="288" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="317" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">3. Add the site language</text>
+<text x="240" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Production disabled; localize the wrapper</text>
+<path d="M240 375 V396" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="402" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="431" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">4. Translate selected bodies</text>
+<text x="240" y="459" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">One explicit guide edition at a time</text>
+<path d="M240 489 V510" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="516" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">5. Review and validate</text>
+<text x="240" y="573" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Language, rendering, credits and eligible PDFs</text>
+<path d="M240 603 V624" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="16" y="630" width="448" height="84" rx="10" fill="#eff6ff" stroke="#1e40af" stroke-width="2"/>
+<text x="240" y="659" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#0f172a">6. Decide publication separately</text>
+<text x="240" y="687" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Guardian approval and maintainer promotion</text>
+</svg>
