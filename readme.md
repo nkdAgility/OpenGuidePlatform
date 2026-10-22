@@ -4,6 +4,8 @@
 
 OpenGuidePlatform provides the shared publishing system beneath your site. Publish one document, a collection, or a growing library. Keep past editions available, manage translations independently, and offer web and PDF access to your publications.
 
+For plain-English tasks and diagrams, start with the [Contributor guide](system/OpenGuidePlatform.Agents.Integration/contributor-guide/README.md). It ships with GuideSite; use its version-matched instructions alongside site policy.
+
 Your site owns its front end: branding, navigation, page layouts and the surrounding experience. Use the shared Hugo modules within a bespoke site, or make your guides one part of a larger website. The platform does not prescribe a single site design.
 
 It provides:

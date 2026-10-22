@@ -69,3 +69,5 @@ These notes are reference material, not executable instructions, runtime invento
 ## Report gaps to the correct owner
 
 Shared command, skill, template and rendering defects belong in OGP. Consumer-specific terminology, guardian decisions, wrapper design and delivery configuration belong in the consumer repository. Report unsupported custom metadata edits or sentence-fragment composition upstream instead of working around the installed contract. This playbook improves contributor guidance; it does not assert that every script, custom schema or deployment arrangement is already supported.
+
+For setup, plain-English task explanations and diagrams, use the [contributor guide](contributor-guide/README.md). This playbook retains the shared team journey and handoffs.

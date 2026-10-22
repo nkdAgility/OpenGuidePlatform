@@ -23,6 +23,7 @@ try {
         if(-not [IO.File]::Exists((Join-Path $destination $path))){throw "Package missing $path"}
     }
     if(Test-Path "$destination/bootstrap.ps1"){throw 'Remote bootstrap must not be installed in a package.'}
+    & "$PSScriptRoot/../Testing/Test-ContributorDocumentation.ps1" -PackageRoot $destination
     # Importability must not replace the caller's live modules with temporary copies.
     & (Get-Process -Id $PID).Path -NoProfile -Command {
         param($package)

@@ -135,3 +135,5 @@ For a permanent guide or edition exclusion, declare `artifactPrefixes` alongside
 
 
 Existing legacy aliases may be recorded in `wrapper.legacyAliases`: exact source file, language, legacy alias values and observed output targets. Prepare rejects new or missing declarations, and Validate permits only their matching duplicate output counts. This preserves existing `/download/`, `/downloads/` and `/translationsdirectory/` compatibility without assigning a new owner or extending it to new languages. Other aliases and duplicate routes receive no exemption. Populate this record from the existing site during adoption; the platform does not add aliases.
+
+For plain-English explanations and diagrams before these command examples, start with the [contributor guide](../OpenGuidePlatform.Agents.Integration/contributor-guide/README.md).
