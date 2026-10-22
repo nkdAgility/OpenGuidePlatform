@@ -2,6 +2,8 @@
 
 The goal is a complete reader experience whose wording people have reviewed. The guardian decides editorial questions; translators propose wording; reviewers check it; a technical volunteer operates commands; maintainers arrange review environments and publication. One person may have several roles.
 
+For a practical step-by-step handoff, follow [your first translation](first-translation.md). Translators and reviewers who do not run commands can start with [review wording](review-wording.md).
+
 ![Agree scope, assess the site, add the site language, translate selected guide editions, review and validate, then obtain separate publication approval.](diagrams/translation.svg)
 
 In words: agree people and terminology, inspect the actual site, introduce the language around the guides, then translate separately selected guide editions. Review rendering and language, resolve feedback, and obtain publication approval. Keep the new language excluded from production throughout preparation.

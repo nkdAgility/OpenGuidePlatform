@@ -10,7 +10,7 @@ Follow the [Core site-first procedure](../../OpenGuidePlatform.PowerShell.Core/T
 4. Refresh Prepare and create only eligible, agreed empty guide scaffolds. Do not replace existing translations or convert protected, PDF-only or fallback states.
 5. Refresh discovery, run preview and production builds and inspect the result through [validation](validation.md).
 
-Make a review table with source path, field/section, source text, proposed translation and feedback. Identify its source revision and candidate hashes. The table helps people review; the platform still checks each write.
+Use the [review-sheet template and feedback handoff](review-wording.md) for source path, field/section, source text, proposed translation and feedback, tied to source/candidate evidence. Translators can complete it without editing YAML/JSON. The technical volunteer applies agreed rows using the original reviewed hashes, lists conflicts for the guardian, and returns the rendered result for review. An old sheet must be reconciled if the source or target changed; the sheet never replaces supported checks.
 
 With an assistant: “Use guide.transcreate to add LANGUAGE, disabled in production, following the installed site-first procedure and our glossary. Localize the website and create agreed eligible empty scaffolds. Leave guide bodies untranslated. Present review text, preserved states and blockers separately.”
 

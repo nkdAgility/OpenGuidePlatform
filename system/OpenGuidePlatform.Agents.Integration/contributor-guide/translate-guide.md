@@ -8,6 +8,8 @@ Follow [select a guide body](../../OpenGuidePlatform.PowerShell.Core/Translation
 
 Translate agreed text using the glossary. Preserve headings, links, references, explicit anchors, shortcodes and meaningful formatting. Read the site's rules for adaptation markers and acknowledgements. The standard translated-document operation permits changes to `title`, `description` and `summary`; other custom metadata needs separate supported review. Do not add `lang` or copy another guide's metadata conventions.
 
+Use the same [review sheet and handoff](review-wording.md) as website wording. Work section by section when that helps reviewers, retaining the actual source and candidate evidence. The technical volunteer handles command inputs and hashes; translators can focus on text. Source conventions, licence wording and translator sections come from the site's policy and explicit guardian decisions, not an assumed copy of another translation.
+
 Run `Test-GuideTranslation` on the candidate. `blocked` means a constraint failed. `review-required` means people must still assess meaning; it is not approval. Compare source and candidate outlines and investigate findings. Have reviewers identify omissions, awkward wording and terminology conflicts before applying with the original source and target hashes.
 
 With an assistant: “Use guide.transcreate to translate GUIDE, EDITION into LANGUAGE using our glossary and the installed procedure. Prepare a candidate, present questions and check findings, and use reviewed hashes before applying. Preserve other editions.”

@@ -9,6 +9,16 @@ The goal is to open a working copy of the guide site and run its installed tools
 3. Follow the site's setup instructions to install Git, PowerShell 7.4 or later, Hugo Extended, Go and the GitHub CLI. The site's requirements may exceed the platform minimums. PDF generation needs additional tools only when you reach that task.
 4. Open PowerShell: on Windows use PowerShell 7, rather than Windows PowerShell 5.1. On macOS or Linux, open Terminal and type `pwsh`. All subsequent command blocks marked PowerShell run inside that session.
 
+## Know where to paste things
+
+Use two different inputs: commands go into the PowerShell terminal; requests beginning “Use guide…” go into your assistant's conversation. Follow prompts in the terminal when a command such as `Read-Host` asks for a value. Do not paste the surrounding prose or the three backticks that mark a code block. Run one command at a time and read its result before continuing.
+
+On a Mac, Terminal normally starts another shell, often zsh. Typing `pwsh` starts PowerShell inside it; you can then use the shared command examples unchanged. If `pwsh` is not found, complete PowerShell installation and restart Terminal first. You do not need a separate set of Mac translation procedures.
+
+Words such as LANGUAGE, GUIDE and EDITION in assistant requests are placeholders: replace them with the agreed values before sending. Do not type angle-bracket placeholders into a shell. In command examples, quoted sample identifiers such as `'your-guide'` also need replacement with discovered identifiers. Paths with spaces belong inside quotes. Do not run `guide.transcreate` as a terminal command; it names assistant instructions.
+
+## Install and check the tools
+
 If the site's instructions only list prerequisites, use these official installation pages. Choose your operating system and meet the site's version requirements; you do not need to install an AI assistant.
 
 | Tool | Installation instructions | Why it is needed |
@@ -43,7 +53,16 @@ $repositoryUrl = Read-Host 'Paste your fork HTTPS clone URL'
 git clone $repositoryUrl
 ```
 
-Git prints the directory it created. Enter it with `Set-Location`, using that actual directory name. Run `git status`: it should identify the repository and show a clean working tree. Follow the site's branch naming and approval rules before making changes. Do not create a second checkout inside another repository.
+Git prints the directory it created. Enter it using that actual directory name:
+
+```powershell
+$cloneDirectory = Read-Host 'Enter the directory Git created (or its full path)'
+Set-Location -LiteralPath $cloneDirectory
+Get-Location
+git status
+```
+
+The displayed location should be the guide-site folder, containing `build.ps1` and `.OpenGuidePlatform`. `git status` should identify that repository and show a clean working tree. Follow the site's branch naming and approval rules before making changes. Once the maintainer has agreed a branch name and authorised its creation, `git switch -c` with that name creates it; for an already existing branch, follow their instructions rather than creating another. Do not create a second checkout inside another repository.
 
 From that root folder, follow [check translation status](status.md) to resolve the installed package and run your first assessment. Success means you can identify the installed version and locate the Prepare report, even if that report identifies content work still needed.
 

@@ -3,7 +3,7 @@
 param([Parameter(Mandatory)][string]$PackageRoot)
 $ErrorActionPreference = 'Stop'
 $guide = Join-Path $PackageRoot 'system/OpenGuidePlatform.Agents.Integration/contributor-guide'
-$pages = @('README','system','setup','files','translation','status','add-language','translate-guide','update-translation','content','credits-pdfs','validation','troubleshooting')
+$pages = @('README','system','setup','files','translation','first-translation','review-wording','status','add-language','translate-guide','update-translation','content','credits-pdfs','validation','troubleshooting')
 foreach ($page in $pages) {
     $path = Join-Path $guide "$page.md"
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Contributor documentation missing: $page.md" }
