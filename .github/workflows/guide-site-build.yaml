@@ -96,7 +96,8 @@ jobs:
           extended: true
       - uses: actions/setup-go@v7
         with:
-          go-version: '>=1.24.5'
+          # Prepare and Build verify executable identities; runner caches must not select different patches.
+          go-version: '1.26.10'
           cache: false
       - name: Restore and verify OpenGuidePlatform
         id: platform
@@ -202,7 +203,8 @@ jobs:
           extended: true
       - uses: actions/setup-go@v7
         with:
-          go-version: '>=1.24.5'
+          # Prepare and Build verify executable identities; runner caches must not select different patches.
+          go-version: '1.26.10'
           cache: false
       - name: Build guide site
         run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Build -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE -Target $env:SITE_TARGET -OutputPath .processing/guide-site
