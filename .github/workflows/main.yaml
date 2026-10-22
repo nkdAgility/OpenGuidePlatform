@@ -49,7 +49,8 @@ jobs:
           extended: true
       - uses: actions/setup-go@v7
         with:
-          go-version: '>=1.24.5'
+          # Prepare and Build verify executable identities; runner caches must not select different patches.
+          go-version: '1.26.10'
           cache: false
       - name: Install build dependencies
         run: ./.build/Install-PlatformTestDependencies.ps1
