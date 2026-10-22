@@ -1,7 +1,7 @@
 ---
 title: "Guide 2 Banana Booky - Big Big Edition"
 short_title: "Guide 2 Banana Booky"
-slug: "guide-2"
+slug: "guide2"
 Type: "guide"
 Layout: "root"
 description: >

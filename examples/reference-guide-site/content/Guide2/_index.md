@@ -1,7 +1,7 @@
 ---
 title: "Guide 2 - Extended Edition"
 short_title: "Guide 2"
-slug: "guide-2"
+slug: "guide2"
 Type: "guide"
 Layout: "root"
 description: "Guide 2 is a comprehensive resource for understanding and implementing advanced practices in knowledge work contexts. It covers extended practices and real-world applications to enhance workflow efficiency and team collaboration."

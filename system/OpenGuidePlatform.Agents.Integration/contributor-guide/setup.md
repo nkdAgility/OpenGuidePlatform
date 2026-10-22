@@ -46,11 +46,13 @@ Expect version output, Hugo reporting Extended support, and the GitHub CLI repor
 
 ## Get your working copy
 
-On your fork's GitHub page, use Code to copy its HTTPS clone URL. Run:
+On Windows, enable Developer Mode or obtain equivalent symbolic-link privileges before cloning. OGP uses symbolic links for the shared contributor/agent instructions; ordinary files containing link targets are not a working substitute. The clone command below enables `core.symlinks` for this repository without changing your global Git configuration. If Windows refuses to create links, stop and resolve the prerequisite with your maintainer.
+
+On your fork's GitHub page, or the site repository when direct contributions are allowed, use Code to copy its HTTPS clone URL. Run:
 
 ```powershell
-$repositoryUrl = Read-Host 'Paste your fork HTTPS clone URL'
-git clone $repositoryUrl
+$repositoryUrl = Read-Host 'Paste the agreed repository HTTPS clone URL'
+git clone -c core.symlinks=true $repositoryUrl
 ```
 
 Git prints the directory it created. Enter it using that actual directory name:
@@ -63,6 +65,8 @@ git status
 ```
 
 The displayed location should be the guide-site folder, containing `build.ps1` and `.OpenGuidePlatform`. `git status` should identify that repository and show a clean working tree. Follow the site's branch naming and approval rules before making changes. Once the maintainer has agreed a branch name and authorised its creation, `git switch -c` with that name creates it; for an already existing branch, follow their instructions rather than creating another. Do not create a second checkout inside another repository.
+
+On Windows, also confirm `git config --get core.symlinks` prints `true` and inspect `AGENTS.md` and `CLAUDE.md` with `Get-Item`: they should be symbolic links. A clean `git status` alone does not prove links were checked out correctly. Ask the maintainer to help repair an existing incorrectly checked-out clone while preserving your work.
 
 From that root folder, follow [check translation status](status.md) to resolve the installed package and run your first assessment. Success means you can identify the installed version and locate the Prepare report, even if that report identifies content work still needed.
 

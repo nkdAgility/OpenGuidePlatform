@@ -23,4 +23,14 @@ Describe 'Distributed contributor documentation' {
         Set-Content "$guide/README.md" '![System overview](diagrams/missing.svg)'
         { & $checker -PackageRoot $fixture } | Should -Throw '*Broken contributor link*'
     }
+    It 'rejects a link to an existing file outside the package' {
+        $fixture = Join-Path $TestDrive 'escaping-link'
+        $guide = "$fixture/system/OpenGuidePlatform.Agents.Integration/contributor-guide"
+        [IO.Directory]::CreateDirectory($guide) | Out-Null
+        $outside = Join-Path $TestDrive 'outside.md'
+        Set-Content $outside '# Outside the distribution'
+        $relative = [IO.Path]::GetRelativePath($guide, $outside).Replace('\', '/')
+        Set-Content "$guide/README.md" "[Outside]($relative)"
+        { & $checker -PackageRoot $fixture } | Should -Throw '*escapes package*'
+    }
 }

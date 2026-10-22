@@ -8,7 +8,7 @@ First agree the change through the site's contribution process. Identify whether
 | Correct translated text | [Update a translation](update-translation.md) with same-edition source/target checks |
 | Localize surrounding website text | [Site-language workflow](add-language.md) for supported wrapper resources |
 | Introduce a new guide/page, restructure metadata or change routing | Agree the site-owned design and supported operation with maintainers first |
-| Create a draft edition snapshot | Review the [Core edition commands](../../OpenGuidePlatform.PowerShell.Core/README.md) and installed [historical-version skill](../skills/guide.historicalversion/SKILL.md) skill; a snapshot is not publication |
+| Create a draft edition snapshot | Review the [Core edition commands](../../OpenGuidePlatform.PowerShell.Core/README.md) and the installed [historical-version skill](../skills/guide.historicalversion/SKILL.md); a snapshot is not publication |
 
 For an existing source body, run discovery, use `Get-GuideContent` to select its actual guide, edition and source language, and save a separate candidate body. Edit that candidate in your editor, preview `Set-GuideContent` with `-WhatIf`, then apply with the original reviewed hash. Inspect `git diff` and [validate](validation.md). The linked Core workflow gives the complete runnable example.
 

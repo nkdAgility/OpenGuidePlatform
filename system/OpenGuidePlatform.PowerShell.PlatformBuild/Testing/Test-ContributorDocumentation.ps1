@@ -2,6 +2,7 @@
 [CmdletBinding()]
 param([Parameter(Mandatory)][string]$PackageRoot)
 $ErrorActionPreference = 'Stop'
+$packagePath = [IO.Path]::GetFullPath($PackageRoot)
 $guide = Join-Path $PackageRoot 'system/OpenGuidePlatform.Agents.Integration/contributor-guide'
 $pages = @('README','system','setup','files','translation','first-translation','review-wording','status','add-language','translate-guide','update-translation','content','credits-pdfs','validation','troubleshooting')
 foreach ($page in $pages) {
@@ -16,6 +17,10 @@ foreach ($page in $pages) {
         if ($link -match '^[a-z]+:') { continue }
         $parts = $link.Split('#', 2)
         $target = if ($parts[0]) { [IO.Path]::GetFullPath((Join-Path $guide $parts[0])) } else { $path }
+        $relativeTarget = [IO.Path]::GetRelativePath($packagePath, $target).Replace('\', '/')
+        if ([IO.Path]::IsPathRooted($relativeTarget) -or $relativeTarget -match '^\.\.(?:/|$)') {
+            throw "Contributor link escapes package in ${page}: $link"
+        }
         if (-not (Test-Path -LiteralPath $target -PathType Leaf)) { throw "Broken contributor link in ${page}: $link" }
         if ($parts.Count -eq 2 -and $parts[1]) {
             $headings = [regex]::Matches([IO.File]::ReadAllText($target), '(?m)^#{1,6} (.+)\r?$')
