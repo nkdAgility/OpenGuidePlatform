@@ -1,4 +1,24 @@
-# Translate or review wording without running commands
+# Review wording
+
+You can help without editing files or running commands. Your job is to check that readers get the intended meaning in natural language.
+
+## Work with an agent
+
+Ask the agent or the volunteer operating it to use [guide.transstatus](../skills/guide.transstatus/SKILL.md) to identify the actual work and source text. This read-only skill does not apply translations. If it cannot access the site, ask the maintainer to arrange a review sheet for you.
+
+> Use this site's installed **guide.transstatus** skill to inspect our agreed language and scope without changing files. Prepare a human-readable review sheet from the actual source and existing translation. Show the source, proposed wording or a blank space for my translation, and a feedback column. Record where the text came from and what version we are reviewing. Do not invent approvals or treat the sheet as permission to edit. Report missing access or unsupported work.
+
+Read each passage for meaning, omissions, consistent terms and natural wording. Give a suggested replacement and a reason, for example: “Use our agreed term for a work item; this wording means a whole project.” Ask the language reviewer to settle disagreements.
+
+**You should receive:** source and proposed words together, enough context to understand them, and a place to record questions. You do not need to calculate file fingerprints or fill in technical identifiers; the agent or volunteer supplies those.
+
+Approved website or new-guide wording is applied through [guide.transcreate](../skills/guide.transcreate/SKILL.md); existing translated-guide corrections through [guide.transreconcile](../skills/guide.transreconcile/SKILL.md). Those skills must check the actual files again. A stale review sheet must not overwrite newer text.
+
+**Next:** inspect your corrections in the prepared website through [check and submit](validation.md). Ask for a review link if you do not have one. A screenshot or successful check alone does not approve all the wording.
+
+## I do not have an agent and want to do this manually
+
+Ask the maintainer or a volunteer for the source, existing translation, agreed terms and a review sheet. Fill it in using an editor or spreadsheet; the template below explains the columns. They handle applying agreed words through the supported OGP commands. You can focus entirely on language and the viewable result.
 
 You can contribute language knowledge without installing developer tools. Ask the technical volunteer for the source text, a review sheet, the agreed glossary and, when available, the link to the rendered candidate. They operate OGP and apply agreed text; you focus on what readers will understand.
 

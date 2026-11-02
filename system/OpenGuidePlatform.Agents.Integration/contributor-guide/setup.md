@@ -1,4 +1,26 @@
-# Set up your computer
+# Get ready to work on a translation
+
+You can contribute words without installing developer tools. If you want an agent to handle the files, it needs a working copy of the guide site and the skills installed for that site.
+
+## Work with an agent
+
+Start in an agent that can work with project files. If you do not have one connected to this site, ask the maintainer which supported setup they recommend and how to open the site's files. These instructions do not assume you have bought an AI subscription or chosen a particular product.
+
+Once the site is open, paste:
+
+> Use this site's installed **guide.transstatus** skill to check whether you can inspect translation work. Do not change files. Explain the required access and missing tools in plain English. Identify the installed OGP version and the report you used, or explain why you cannot produce one. Do not install tools, create a branch or change software versions without the site's required permission.
+
+This invokes [guide.transstatus](../skills/guide.transstatus/SKILL.md), a read-only check. It does not install software. If the skill or a required tool is missing, ask the maintainer to help set it up; the agent must not invent a replacement workflow.
+
+**You decide:** the site, language and work you want to help with. Never paste passwords or access tokens into the conversation.
+
+**You should receive:** either a translation work report or a short list of specific setup problems and who can help. A list of files alone does not prove the checks ran.
+
+**Next:** [your first translation](first-translation.md), or [review wording](review-wording.md) while someone else handles setup.
+
+## I do not have an agent and want to do this manually
+
+The steps below teach the tools, where to enter commands and how to obtain a working copy. A terminal is the window where you type commands; a repository is the project and its file history. Run one step at a time and ask the maintainer if its result differs from the explanation.
 
 The goal is to open a working copy of the guide site and run its installed tools. Translators who only supply wording or review a web page can work with a technical volunteer instead of installing everything themselves.
 
@@ -69,9 +91,3 @@ The displayed location should be the guide-site folder, containing `build.ps1` a
 On Windows, also confirm `git config --get core.symlinks` prints `true` and inspect `AGENTS.md` and `CLAUDE.md` with `Get-Item`: they should be symbolic links. A clean `git status` alone does not prove links were checked out correctly. Ask the maintainer to help repair an existing incorrectly checked-out clone while preserving your work.
 
 From that root folder, follow [check translation status](status.md) to resolve the installed package and run your first assessment. Success means you can identify the installed version and locate the Prepare report, even if that report identifies content work still needed.
-
-## With an assistant
-
-Ask: “Read this site's contributor instructions. Check the required tools, repository location and installed OGP version. Explain missing prerequisites before making changes.” Paste this into the assistant's conversation, not the terminal. You do not need an AI subscription to use the manual route.
-
-**If blocked:** [troubleshooting](troubleshooting.md). **Technical reference:** [installed module loading](../../OpenGuidePlatform.PowerShell.Core/README.md#load-the-installed-commands-and-discover-content).

@@ -1,4 +1,46 @@
-# Validate, review and publish
+# Check and submit your translation
+
+Submission asks the site team to review your work. It does not publish the language. You should be able to show what changed, what people reviewed and what remains unfinished.
+
+## Work with an agent
+
+Continue with the installed skill used for the work: [guide.transcreate](../skills/guide.transcreate/SKILL.md) for adding a language or selected guide translation, or [guide.transreconcile](../skills/guide.transreconcile/SKILL.md) for updates. Their workflows include the required checks. If the agent cannot load the appropriate skill, use [setup](setup.md) with the maintainer; do not substitute another workflow.
+
+> Continue our work through this site's installed **guide.transcreate** skill. Check the exact changes we reviewed using its required preview and production checks. Do not publish anything. Explain the results, including failed or missing checks. Show how we can inspect the prepared website. Prepare a submission description with the agreed scope, source used, human review, credits, actual check results and unfinished work. Follow the site's permissions for saving or sharing changes; do not claim a submission exists until you can show its link.
+
+For an update, replace **guide.transcreate** in that request with **guide.transreconcile**. Use [guide.contributions and guide.genpdfs](credits-pdfs.md) only if credits or eligible generated PDFs are part of the agreed work.
+
+### Inspect the result together
+
+The agent should report preview and production check results separately. A production check checks the would-be live output; it does not publish it. Confirm that the new language remains excluded from the live website.
+
+Ask for the prepared website's review address. If none is available, ask the maintainer to arrange one. Inspect menus, language/edition switching, guide text, links, downloads and letters on a phone and larger screen. Review any newly generated PDF separately. The person checking language decides whether wording is right; software checks cannot do that.
+
+### Hand over the submission
+
+A **pull request**, often shortened to PR, is a submission showing proposed file changes for the site team to review. There is no separate OGP submission or publication skill. Submission uses the site's normal GitHub process and permissions, after the skills above complete their checks.
+
+If your agent is authorised and has the necessary access, it can help save and share the reviewed work through that site process. Otherwise, give the maintainer the reviewed work and evidence and ask them to make the submission. You do not need to learn terminal commands to make that handoff.
+
+Check that the submission or handoff includes:
+
+- The language, selected guide and edition, and the source used.
+- What changed, including whether guide starting pages are still empty.
+- Wording review and consented credits.
+- Actual check results, the version checked, and unresolved work.
+- A review link, or a named maintainer arranging one.
+
+Ask for the PR link and confirm the intended files appear there. Do not create a second PR if one already exists for the task. A checked website-only stage can be shared as a draft, clearly marked as incomplete guide translation. Do not claim failed checks passed.
+
+![Check the prepared work, submit for review, review wording in preview, then obtain separate publication approval.](diagrams/publication.svg)
+
+The site team arranges technical review, then language review in its preview environment. Later corrections follow the same reviewed-change process. The responsible language reviewer and maintainer make the separate publication decisions. A passing check, agent report or submitted PR is not permission to publish.
+
+**You should receive:** the submission link or an explicit maintainer handoff, the actual review arrangement, and a clear account of anything still blocking completion. If a check fails, use [troubleshooting](troubleshooting.md).
+
+## I do not have an agent and want to do this manually
+
+First follow [manual setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) and [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually). The status procedure defines the `$platform` value used below. A build turns the source files into a checkable website. The commands below check it, show proposed file changes, save the selected changes and share them for review. Each action is explained before you run it; follow site permissions and stop if the expected result does not appear.
 
 Validation checks that the site builds and behaves as intended. People approve wording and publication. Start with the reviewed candidate applied and its actual diff inspected. Use the same installed package as [Prepare](status.md).
 
@@ -29,7 +71,6 @@ In words: local checks precede a PR. A maintainer arranges the canary for techni
 
 Review `git status` and `git diff`; stage only intended source files and approved artifacts. Follow the site's commit/push permissions and PR instructions. Include scope, source/candidate revisions, build results, review findings, consented credits and remaining issues. Never commit `.processing` output. Ask maintainers for the review link if fork PRs cannot deploy; approval alone cannot override a disabled deployment caller.
 
-With an assistant: “Run the required local checks on this exact change. Report evidence, failures and unreviewed wording separately. Prepare a PR description; follow the site's permissions for commits, pushes and publication.”
 
 ## Save and submit the reviewed change
 

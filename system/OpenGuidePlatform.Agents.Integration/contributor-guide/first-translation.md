@@ -1,85 +1,61 @@
-# Your first translation, from agreement to review
+# Your first translation
 
-Use this page as the team's working checklist. The linked pages belong to the same OGP package, so everyone can use one procedure. The website may contain several guides and editions; the team chooses which bodies to translate after introducing the site language.
+You bring the language knowledge. An agent can help with the files, checks and submission. This page takes you through the work; the linked task pages give the next request to send.
 
-The **guardian** settles editorial questions, **translators** propose words, **reviewers** check them, a **technical volunteer** runs the commands, and a **maintainer** arranges review environments and publication. One person can hold several roles. Translators and reviewers can work without Git, PowerShell or an AI account: start with [reviewing wording](review-wording.md). The technical volunteer follows the command route on their behalf.
+You will prepare the website language first, then translate the guide editions the team selects. An edition is one version of a guide; choosing one does not commit you to translating its whole history.
 
-The [translation diagram](translation.md) shows the whole journey. A technical check and an editorial decision answer different questions; neither replaces the other.
+## Work with an agent
 
-## 1. Agree the people and the language
+Use an agent that can access this guide site's files and installed OGP skills. A skill is a set of task instructions, not a command you need to learn. If you have not connected an agent to the site, start with [setup](setup.md). If it cannot load a required skill, ask the maintainer for help; do not replace it with a general translation request.
 
-**Guardian and team:** use the site's contribution channel to agree the target language/variant, the people involved and the guide editions planned for later translation. Read the site's translation policy. Decide glossary terms, treatment of licences/references, acknowledgements and any meaningful source formatting. If capitals or italics do not transfer to the target script, record the question and the guardian's decision before drafting substantial passages.
+### 1. Choose the work with the site team
 
-**Hand over:** agreed scope, policy link, glossary and unresolved questions. Notes may live in the site's optional language folder described in [the journey](translation.md). Mark proposed and agreed decisions separately. Do not publish private contact details.
+Tell the team which language and regional variant you want to help with. Agree who will review the wording and who settles disagreements. Follow the site's translation policy for terminology, licences, acknowledgements and reviewer requirements. Keep questions visible when the team has not decided something.
 
-**Move on when:** the team knows who decides wording and who operates the tools. The required number and type of reviewers comes from site policy, not a universal OGP number.
+### 2. Find out what exists
 
-## 2. Set up and find out what already exists
+Paste this into the agent conversation, replacing Kannada with your language:
 
-**Technical volunteer:** follow [setup](setup.md), then [check status](status.md). Run the assessment rather than copying another language's files. Record the installed package version and Prepare report path. Report site-language work separately from guide-body work, and preserve existing translations, supplied PDFs and intentional fallback/PDF-only states.
+> Use this site's installed **guide.transstatus** skill to inspect translation work for Kannada. Do not change files. Confirm the language and its code with me. Explain website work separately from guide translations. Tell me what exists, what is missing and what help is needed. Identify the installed version and report you used. If you cannot access the files or skill, say so instead of guessing.
 
-With an assistant, paste into its conversation, replacing LANGUAGE with your agreed language and code:
+This uses [guide.transstatus](../skills/guide.transstatus/SKILL.md). Expect an understandable list, not instructions to copy another language's files. Existing text, PDFs and deliberate use of another language must be preserved.
 
-> Read this site's contributor instructions and use guide.transstatus for LANGUAGE. Report the installed version, Prepare evidence, website-language work and guide bodies separately. Do not edit. Explain prerequisites and missing capabilities in plain English.
+### 3. Prepare the website language
 
-Without an assistant, use the complete PowerShell blocks on the status page. `guide.transstatus` is a skill name, not a terminal command.
+Follow [add a language](add-language.md), which uses [guide.transcreate](../skills/guide.transcreate/SKILL.md). It covers menus, buttons, homepages and pages for finding guides. You approve proposed wording before the agent applies it. The language stays excluded from the live website.
 
-**Move on when:** discovery is valid and the next operations are supported. If the installed package lacks a capability, hand the version and missing operation to the maintainer for a coordinated update. A failed Prepare report remains failed even when valid discovery allows a specific repair.
+Before creating empty guide starting pages, the agent shows the eligible guides and editions and asks you to choose which to include. **An empty page is not a translated guide.** It must report unfinished work plainly.
 
-## 3. Prepare the website words
+### 4. Translate the guide you selected
 
-**Technical volunteer:** follow [add a site language](add-language.md) and its linked Core command examples. Disable the language in production first; then prepare language configuration, interface labels, wrapper pages and selected site-owned data. Only then create the eligible empty guide scaffolds agreed in scope. Leave body translation for step 5.
+Follow [translate a guide](translate-guide.md), also using **guide.transcreate**, for the separately selected guide and edition. You can supply the translation or ask for a draft. Use the agreed terms, compare it with the source, and have people review it. Ask questions about meaning rather than accepting software's guess.
 
-With an assistant:
+Use [review wording](review-wording.md) to give corrections a person or agent can apply. You do not need to calculate file fingerprints or edit settings.
 
-> Use guide.transcreate to add LANGUAGE to this site, disabled in production, using the installed site-first procedure and our glossary. Prepare website wording and agreed eligible empty scaffolds. Leave guide bodies untranslated. Present a review table tied to the exact source and candidate, and list preserved states, incomplete checks and unsupported operations. Follow the site's permissions for applying changes and Git actions.
+### 5. Check the words, appearance and credits
 
-**Translators and reviewers:** use [review wording](review-wording.md) to propose or check text in the review sheet. You do not need to change YAML, JSON or platform files. Ask the guardian to resolve disagreements.
+Ask the agent to run the required checks through the translation skill and show how to inspect the prepared website. Ask the maintainer for a review link if one is not available. Read navigation and guide text, follow links, and check the letters on a phone and larger screen.
 
-**Move on when:** the technical volunteer can show what was applied, what remains empty, the preview/build findings and evidence that production remains excluded. A copied English value or empty scaffold does not count as translated wording. Record incomplete checks explicitly rather than hiding them.
+Follow [credits and PDFs](credits-pdfs.md) for **guide.contributions** and, only when an eligible new PDF is needed, **guide.genpdfs**. Confirm the names people consent to publish. Supplied PDFs remain unchanged. People must inspect any newly generated PDF.
 
-## 4. Make work visible early
+### 6. Submit for review
 
-**Technical volunteer and maintainer:** use [save and submit](validation.md#save-and-submit-the-reviewed-change) to open a draft PR after the initial coherent change is locally checked. Describe it as website/scaffold work if guide bodies are still empty. Link the agreed scope and report outstanding findings honestly.
+Follow [check and submit](validation.md). Ask for a clear account of changed text, review decisions, actual check results and unresolved work. A pull request is the submission asking the site team to review changes; it does not publish them.
 
-**Maintainer:** arrange the actual canary according to site delivery policy. A fork PR may run checks without producing a deployed site. Tell reviewers where they can inspect the change; workflow approval does not override a caller that disables deployment.
+An agent's ability to submit depends on repository access and the site's permissions. There is no separate OGP submission skill. If it cannot submit, give the reviewed work and check results to the maintainer and ask them to confirm the submission link. You can share a checked website-only stage early, clearly marked as unfinished guide translation.
 
-**Move on when:** the PR and review arrangement are clear. A missing canary remains a maintainer-owned blocker for the intended canary review; it does not authorise a deployment workaround or imply that production is approved.
+The site team arranges technical and language review. Publication needs a separate decision by the responsible people. Keep the agreed terminology and source used so later volunteers can [update the translation](update-translation.md) through **guide.transreconcile**.
 
-## 5. Translate one selected guide edition
+**You are ready to hand over when:** reviewers can find the proposed words, understand what was checked, see what is unfinished, and identify the submission or the maintainer who will make it. Do not mark incomplete checks as passed.
 
-**Technical volunteer:** select the actual guide/edition/language through discovery and follow [translate a guide](translate-guide.md). Capture the exact source used, prepare a separate candidate, run its checks, and retain the reviewed source/target hashes for application. Use the complete Core examples linked from that task; they are the command route for people without an assistant too.
+## I do not have an agent and want to do this manually
 
-With an assistant:
+You can follow the same stages without an agent. If you want to work only on words, use [review wording](review-wording.md) with a volunteer who handles the files. Otherwise:
 
-> Use guide.transcreate for the body of GUIDE, EDITION into LANGUAGE, using our glossary and recorded editorial decisions. Work section by section if helpful. Present source and proposed wording for human review, preserve structural markup and other editions, and report meaning questions. Use the installed candidate checks and reviewed hashes before applying agreed text.
+1. Follow [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) to install and understand the tools.
+2. Use the manual route on [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
+3. Follow [add a language](add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually), then [translate a guide](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
+4. Review the wording, [credits and PDFs](credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
+5. Follow [check and submit](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for checks and submission.
 
-**Translators and reviewers:** check each passage against its source and glossary. Preserve source meaning and deliberate structure; follow the site's policy for references, names, numbers, adaptation markings and acknowledgement sections. [Review wording](review-wording.md) explains how to give usable feedback.
-
-**Move on when:** reviewed changes are applied to the selected edition, unresolved questions are visible and the actual diff has been checked. A candidate check does not establish language quality. Repeat this stage only for other editions separately selected by the team.
-
-## 6. Check what readers will see
-
-**Technical volunteer:** follow [validation](validation.md) for preview and production builds on the same package. Inspect navigation, language/edition switching, links, fallback and downloads. Apply reviewed corrections through the appropriate [translation update](update-translation.md) or wrapper operation.
-
-**Team and maintainer:** use [credits and PDFs](credits-pdfs.md) for consented records and eligible downloads. Check representative script shaping, meaningful emphasis, letter spacing, titles and PDF covers on actual rendered artifacts. Proposed font/CSS changes need the responsible maintainer's review; supplied PDFs remain untouched.
-
-**Move on when:** technical/design findings are resolved and the intended PR/canary review is complete. The maintainer may then merge to preview for the site's native-speaker validation. Reviewers identify the exact preview artifact and give feedback; later corrections still go through PRs. Record what was actually checked, not merely which configuration files exist.
-
-## 7. Approve publication and keep the translation current
-
-**Guardian:** approve the wording and completed language review according to site policy. **Maintainer:** separately approve and perform the site's production-promotion/release procedure, check any site-owned issue forms or publication tests affected by the language, and verify the published result. There is no universal one-line release command for every guide site. Permanent production exclusions remain in force.
-
-Keep the glossary, actual source baseline and useful review decisions for future volunteers. For a later source change, follow [update a translation](update-translation.md) with an explicitly agreed comparison revision. Do not assume the newest source commit is the one previously translated or merge unrelated work just to run a comparison.
-
-## Handoff checklist
-
-- [ ] Scope, glossary and applicable site policy are agreed; unresolved decisions are identified.
-- [ ] Installed version and valid discovery/Prepare evidence are recorded; failures are accurately labelled.
-- [ ] Website text and selected guide bodies have traceable review; empty/protected/fallback states are distinguished.
-- [ ] Consented credits and any required acknowledgement are correct; eligible PDFs have receipts and visual review.
-- [ ] Preview and production checks, rendered review and actual artifact/revision are recorded.
-- [ ] Technical and language findings are resolved or explicitly block the next decision.
-- [ ] Production promotion has its own approval and maintainer action; it is not inferred from these ticks.
-
-Tick only completed work. This checklist records the team's evidence; it is not a new permission mechanism or a replacement for the installed operations.
+Those sections explain the purpose of each step before linking to exact commands. The same site policies and human review apply with either route.

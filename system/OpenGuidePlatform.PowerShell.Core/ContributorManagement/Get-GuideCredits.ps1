@@ -1,6 +1,21 @@
 $script:GuideContributorRoles=@('creator','contributor','reviewer','involved')
-$script:GuideTranslationRoles=@('translator','reviewer')
+$script:GuideTranslationRoles=@('translator','reviewer','contributor','translation reviewer')
 $script:GuideRetiredFrontMatterKeys=@('author','translators','mainfont','sansfont','monofont','dir')
+
+function Get-GuideContributorIdentity {
+    param([Collections.IDictionary]$Record)
+    # A display name alone cannot distinguish people with distinct supplied profiles.
+    if($Record['githubUsername']){return "github:$($Record['githubUsername'])".ToLowerInvariant()}
+    if($Record['url']){
+        $url=([string]$Record['url']).Trim()
+        $parsed=$null
+        if([uri]::TryCreate($url,[UriKind]::Absolute,[ref]$parsed) -and $parsed.Scheme -in @('http','https')){
+            $url=$parsed.GetLeftPart([UriPartial]::Authority).ToLowerInvariant()+$parsed.AbsolutePath.TrimEnd('/')+$parsed.Query+$parsed.Fragment
+        }
+        return "url:$url"
+    }
+    "name:$($Record['name'])".ToLowerInvariant()
+}
 
 function Get-GuideContributionFiles {
     # Maps site/data/contributions/<guide>[.<lang>].(yml|yaml) to declared guides.
@@ -122,7 +137,7 @@ function Get-GuideContributorFindings {
         }
         try{$records=@(Read-GuideContributionFile $file.Path)}catch{Add CONTRIBUTOR_RECORD_INVALID $file.Relative $_.Exception.Message 'Correct the YAML so the file is a list of contributor records.';continue}
         $roles=if($file.Language){$script:GuideTranslationRoles}else{$script:GuideContributorRoles}
-        $seen=@{}
+        $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         for($index=0;$index -lt $records.Count;$index++){
             $record=$records[$index];$subject="$($file.Relative)#$($index+1)"
             if($record -isnot [Collections.IDictionary]){Add CONTRIBUTOR_RECORD_INVALID $subject 'Expected a contributor mapping.' 'Use name, role and contributions fields.';continue}
@@ -132,8 +147,8 @@ function Get-GuideContributorFindings {
             if(-not $editions.Count){Add CONTRIBUTOR_RECORD_INVALID $subject 'The record lists no editions in contributions.' 'List the edition identifiers this person contributed to.'}
             foreach($edition in $editions){if($edition -cnotin $editionIds){Add CONTRIBUTOR_EDITION_UNKNOWN $subject "Edition '$edition' is not an edition of $($file.GuideId)." 'Use an existing edition identifier.'}}
             if($null -ne $record['localizedNames'] -and $record['localizedNames'] -isnot [Collections.IDictionary]){Add CONTRIBUTOR_RECORD_INVALID $subject 'localizedNames must map language codes to names.' 'Use localizedNames: { fa: ... }.'}
-            $identity=if($record['githubUsername']){"github:$($record['githubUsername'])".ToLowerInvariant()}else{"name:$($record['name'])".ToLowerInvariant()}
-            if($seen.ContainsKey($identity)){Add CONTRIBUTOR_RECORD_INVALID $subject 'The same person appears more than once in this file.' 'Merge the records; list every edition in one contributions list.'}else{$seen[$identity]=$true}
+            $identity=Get-GuideContributorIdentity $record
+            if(-not $seen.Add($identity)){Add CONTRIBUTOR_RECORD_INVALID $subject 'The same person appears more than once in this file.' 'Merge the records; list every edition in one contributions list.'}
             foreach($edition in $editions){
                 if(-not $file.Language -and [string]$record['role'] -ceq 'creator'){$creatorEditions["$($file.GuideId)|$edition"]=$true}
                 if($file.Language -and [string]$record['role'] -ceq 'translator'){$translatorKeys["$($file.GuideId)|$edition|$($file.Language.ToLowerInvariant())"]=$true}

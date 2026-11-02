@@ -1,51 +1,46 @@
-# Start here
+# Help translate a guide site
 
-You can help a guide site without being a programmer. You need knowledge of the subject or language; one technical volunteer can operate the tools while other people translate and review. An AI assistant is optional.
+You bring the language knowledge. An agent can help with the files, checks and submission. People decide whether the wording is right and when it may be published.
 
-These pages explain the work. The linked Core procedures supply the exact commands for this OGP release. Use your site's contribution rules alongside them: the site decides editorial policy, contacts and publication approval.
+**Start with [your first translation](first-translation.md).** It takes you from choosing the work to submitting it for review. You do not need to learn terminal commands first.
 
-**First translation? Follow [Your first translation, from agreement to review](first-translation.md).** It tells each person what to do, what to hand over and when the team can move on. You do not need to assemble a separate procedure or know Git to review wording.
+## Work with an agent
 
-## Choose your activity
+An agent is an assistant that can work with the guide site's files. A normal chat without that access cannot complete file changes or a submission. If you are unsure what yours can access, start with this request in its conversation:
 
-| I want to… | Start with |
-|---|---|
-| Understand where things belong | [How the system fits together](system.md) |
-| Prepare my computer | [Setup](setup.md) |
-| Understand unfamiliar files and terms | [Files and changes](files.md) |
-| Organise a translation team | [Translation journey](translation.md) |
-| Complete my first translation with the team | [First translation walkthrough](first-translation.md) |
-| Translate or review wording without running commands | [Review wording](review-wording.md) |
-| Find what is missing | [Check translation status](status.md) |
-| Introduce a language | [Add a site language](add-language.md) |
-| Translate one guide edition | [Translate a guide](translate-guide.md) |
-| Update an existing translation | [Update a translation](update-translation.md) |
-| Correct or add content | [Content changes](content.md) |
-| Credit people or prepare downloads | [Credits and PDFs](credits-pdfs.md) |
-| Check and submit work | [Validation and publication](validation.md) |
-| Recover from a problem | [Troubleshooting and glossary](troubleshooting.md) |
+> I want to help translate this site. Use its installed **guide.transstatus** skill to check what you can access and what translation work is needed. Do not change files. Explain the next step in plain English. If you cannot access the site or load the skill, tell me what help I need from a maintainer instead of guessing.
 
-Each task explains the purpose, human decisions, supported route and evidence needed. Experienced contributors can go directly to [Core commands](../../OpenGuidePlatform.PowerShell.Core/README.md), the [translation procedure](../../OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md) or [assistant skill usage](../skills/USAGE.md).
+A **skill** is the set of instructions the agent follows for a task. The names below are not terminal commands. Always use the skills installed for your site; these links explain their purpose. If that version cannot do the work, the agent must report the gap rather than invent another workflow.
 
-## Read the version your site uses
+| Your task | Instructions to follow | Skill used by the agent |
+|---|---|---|
+| Find what already exists | [Check status](status.md) | [guide.transstatus](../skills/guide.transstatus/SKILL.md) |
+| Prepare a website language | [Add a language](add-language.md) | [guide.transcreate](../skills/guide.transcreate/SKILL.md) |
+| Translate a selected guide | [Translate a guide](translate-guide.md) | [guide.transcreate](../skills/guide.transcreate/SKILL.md) |
+| Update a translation | [Update a translation](update-translation.md) | [guide.transreconcile](../skills/guide.transreconcile/SKILL.md) |
+| Credit the people involved | [Credits and PDFs](credits-pdfs.md) | [guide.contributions](../skills/guide.contributions/SKILL.md) |
+| Prepare an eligible PDF | [Credits and PDFs](credits-pdfs.md) | [guide.genpdfs](../skills/guide.genpdfs/SKILL.md) |
 
-From the guide-site repository root, in PowerShell:
+**Your part:** agree the language and guide with the site team, help choose wording, and review what readers will see. The site's maintainer is the person responsible for its technical operation; its language reviewer settles wording questions according to local policy. One person may have several roles.
+
+**What you should receive:** proposed words beside their source, clear questions for people to decide, and an honest account of completed and unfinished work. A prepared page or passing software check does not prove that a translation is correct.
+
+For help, use [setup](setup.md), [review wording](review-wording.md), [submit for review](validation.md), or [troubleshooting](troubleshooting.md). [How the system fits together](system.md), [files explained](files.md), [the journey diagram](translation.md), and [other content changes](content.md) explain the supporting tasks.
+
+## I do not have an agent and want to do this manually
+
+You can use the same OGP tools yourself, or provide words while another volunteer handles the files. Start with [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for the tools, or [review wording](review-wording.md) to help without installing them. Each task page has an explicitly labelled manual route after its agent route.
+
+### Read the instructions your site actually uses
+
+The instructions on OGP's main branch may be newer than your site's tools. Ask the maintainer for its version-matched contributor-guide link. You do not need to work out release identifiers yourself. For a local build that has not been released, the maintainer can share the packaged pages and diagrams instead.
+
+To find that version yourself, from the site folder in PowerShell:
 
 ```powershell
 $platform = ./.OpenGuidePlatform/Resolve-OpenGuidePlatform.ps1 -WorkspaceRoot $PWD -UseInstalled
-Get-Content "$platform/platform.json"
-Join-Path $platform 'system/OpenGuidePlatform.Agents.Integration/contributor-guide/README.md'
-```
-
-Open the printed Markdown path in an editor with Markdown preview. The diagrams are included beside the pages. This resolves the installed package; uncached restoration may require network access and authenticated release access. If restoration fails, see [troubleshooting](troubleshooting.md).
-
-For browser reading, find the same path in the OGP GitHub repository at the immutable `sourceCommit` printed in `platform.json`. Do not assume the repository's main branch describes your installed release. A guide site can link to that revision and retain its own short policy page; it need not copy these procedures. A dedicated documentation hosting service is not required to read them on GitHub.
-
-The technical volunteer can print the exact browser link for the team:
-
-```powershell
 $packageInfo = Get-Content "$platform/platform.json" -Raw | ConvertFrom-Json
 "https://github.com/nkdAgility/OpenGuidePlatform/blob/$($packageInfo.sourceCommit)/system/OpenGuidePlatform.Agents.Integration/contributor-guide/README.md"
 ```
 
-That link works when the package source commit is available in the repository. For an unpublished local build, share the packaged Markdown instead. Site entry pages need only this version-matched link, local policy/contact links and the actual review-environment arrangements. Language notes retain glossary and editorial decisions; they do not need another copy of the workflow.
+PowerShell is the command tool explained in [setup](setup.md). The printed link points to the source used for this installed package. An unreleased local build may need the packaged files instead of a browser link.
