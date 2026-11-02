@@ -29,18 +29,19 @@ For help, use [setup](setup.md), [review wording](review-wording.md), [submit fo
 
 ## I do not have an agent and want to do this manually
 
-You can use the same OGP tools yourself, or provide words while another volunteer handles the files. Start with [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for the tools, or [review wording](review-wording.md) to help without installing them. Each task page has an explicitly labelled manual route after its agent route.
+### Before you start
 
-### Read the instructions your site actually uses
+Agree the language and work with the site team. You can supply words without operating the tools, or run the whole manual process. These pages do not assume you know Git or PowerShell.
 
-The instructions on OGP's main branch may be newer than your site's tools. Ask the maintainer for its version-matched contributor-guide link. You do not need to work out release identifiers yourself. For a local build that has not been released, the maintainer can share the packaged pages and diagrams instead.
+### Run the PowerShell steps
 
-To find that version yourself, from the site folder in PowerShell:
+1. Follow [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) to make your fork/local copy and install the module. That page states the current publication limitation; do not assume Gallery installation is already available.
+2. [Check what needs translating](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
+3. [Prepare the website language](add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually), then [translate selected guide editions](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
+4. [Review credits and eligible PDFs](credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually), then [check and submit](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
 
-```powershell
-$platform = ./.OpenGuidePlatform/Resolve-OpenGuidePlatform.ps1 -WorkspaceRoot $PWD -UseInstalled
-$packageInfo = Get-Content "$platform/platform.json" -Raw | ConvertFrom-Json
-"https://github.com/nkdAgility/OpenGuidePlatform/blob/$($packageInfo.sourceCommit)/system/OpenGuidePlatform.Agents.Integration/contributor-guide/README.md"
-```
+Where a task command is supported, the pages show what to run and what its result means. Where support is incomplete, they give an explicit maintainer handoff instead. The module handles the site's selected version and file checks internally. It does not upgrade the site just because you install newer commands.
 
-PowerShell is the command tool explained in [setup](setup.md). The printed link points to the source used for this installed package. An unreleased local build may need the packaged files instead of a browser link.
+### Check the result
+
+A completed handoff includes reviewed words, actual check results and a PR link or a named maintainer making the submission. It does not mean the language has been published. Ask the maintainer for the instructions matching the site's installed release; for an unreleased build, use its supplied package rather than assuming OGP's main branch matches it.

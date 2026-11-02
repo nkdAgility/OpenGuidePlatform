@@ -15,9 +15,27 @@ $stage=Join-Path $output 'package'
 foreach($path in @('build.ps1','LICENSE','readme.md')){
     Copy-Item -LiteralPath (Join-Path $root $path) -Destination $stage -Recurse
 }
-$guideComponents=@('OpenGuidePlatform.Hugo.Guides','OpenGuidePlatform.PowerShell.Core','OpenGuidePlatform.PowerShell.GuideSiteBuild','OpenGuidePlatform.PowerShell.GuideSiteAdoption','OpenGuidePlatform.PowerShell.AgentControls','OpenGuidePlatform.Agents.Integration')
+$guideComponents=@('OpenGuidePlatform.Hugo.Guides','OpenGuidePlatform.PowerShell.Core','OpenGuidePlatform.PowerShell.GuideSiteBuild','OpenGuidePlatform.PowerShell.GuideSiteAdoption','OpenGuidePlatform.PowerShell.AgentControls','OpenGuidePlatform.Agents.Integration','OpenGuidePlatform.PowerShell.Contributor')
 [IO.Directory]::CreateDirectory("$stage/system")|Out-Null
 foreach($component in $guideComponents){Copy-Item "$root/system/$component" "$stage/system/" -Recurse}
+# Package the installable command module with its existing restoration transport.
+# The runtime still comes exclusively from the site's coordinated installation.
+$contributor="$stage/system/OpenGuidePlatform.PowerShell.Contributor"
+[IO.Directory]::CreateDirectory("$contributor/Runtime")|Out-Null
+Copy-Item "$root/system/OpenGuidePlatform.PowerShell.GuideSiteAdoption/Resolve-OpenGuidePlatform.ps1" "$contributor/Runtime/"
+Copy-Item "$root/LICENSE" "$contributor/LICENSE"
+$moduleManifest="$contributor/OpenGuidePlatform.psd1"
+. "$PSScriptRoot/ConvertTo-GalleryModuleVersion.ps1"
+$moduleVersion=ConvertTo-GalleryModuleVersion $Version
+$numericVersion=$moduleVersion.ModuleVersion
+$prerelease=$moduleVersion.Prerelease
+# Preserve authored metadata and deterministic bytes: Update-ModuleManifest
+# regenerates date/user comments, making reruns depend on the build machine.
+$manifestText=[IO.File]::ReadAllText($moduleManifest).Replace("ModuleVersion = '0.0.0'","ModuleVersion = '$numericVersion'")
+if($prerelease){$manifestText=$manifestText.Replace('Tags = @(',"Prerelease = '$prerelease'`n        Tags = @(")}
+[IO.File]::WriteAllText($moduleManifest,$manifestText,[Text.UTF8Encoding]::new($false))
+$galleryVersion=$moduleVersion.GalleryVersion
+[ordered]@{schemaVersion=1;version=$Version;galleryVersion=$galleryVersion;sourceCommit=$commit}|ConvertTo-Json|Set-Content "$contributor/ogp-module.json"
 $metadata=[ordered]@{schemaVersion=1;product='OpenGuidePlatform';version=$Version;sourceCommit=$commit;channel=if($Version.Contains('-')){'preview'}else{'stable'};hugoModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'}
 $metadata.nativeHugoModule=[ordered]@{path=$metadata.hugoModule;version="v$Version";tag="system/OpenGuidePlatform.Hugo.Guides/v$Version";sourceCommit=$commit}
 $metadata.workflow=[ordered]@{repository='nkdAgility/OpenGuidePlatform';path='.github/workflows/guide-site-build.yaml';version="v$Version";sourceCommit=$commit}
@@ -44,6 +62,9 @@ $platformStage=Join-Path $output 'platform-build'
 [IO.Directory]::CreateDirectory("$platformStage/system")|Out-Null
 Copy-Item "$root/system/OpenGuidePlatform.PowerShell.PlatformBuild" "$platformStage/system/" -Recurse
 Copy-Item "$root/system/OpenGuidePlatform.PowerShell.PlatformBuild/Release/release.ps1" "$platformStage/release.ps1"
+# Retain the exact tested installable module in the existing engineering asset.
+[IO.Directory]::CreateDirectory("$platformStage/system/OpenGuidePlatform.PowerShell.PlatformBuild/Distribution")|Out-Null
+Copy-Item $contributor "$platformStage/system/OpenGuidePlatform.PowerShell.PlatformBuild/Distribution/OpenGuidePlatform" -Recurse
 $dependency=[ordered]@{version=$Version;sha256=$guideHash}
 $platformMetadata=[ordered]@{schemaVersion=1;product='OpenGuidePlatform';package='PlatformBuild';version=$Version;sourceCommit=$commit;dependencies=@{GuideSite=$dependency}}
 [IO.File]::WriteAllText("$platformStage/platform-build.json",($platformMetadata|ConvertTo-Json -Depth 10))

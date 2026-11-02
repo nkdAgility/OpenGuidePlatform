@@ -22,6 +22,23 @@ Describe 'Reviewed contributor updates' {
         Test-Path (Join-Path $folder 'example.yml') | Should -BeFalse
         @(Get-ChildItem $folder).Count | Should -Be 1
     }
+    It 'returns a coherent public contributor snapshot including its existing BOM' {
+        $bytes=[Text.UTF8Encoding]::new($false).GetBytes([string][char]0xFEFF+$original)
+        [IO.File]::WriteAllBytes($path,$bytes)
+        $work=Get-GuideContributionWork -WorkspaceRoot $workspace -Policy $policy -GuideId example
+        $work.Path | Should -Be 'site/data/contributions/example.yaml'
+        $work.Content[0] | Should -Be ([char]0xFEFF)
+        $work.Sha256 | Should -Be (Get-FileHash $path).Hash.ToLowerInvariant()
+        $work.WriteAllowed | Should -BeTrue
+        [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($work.Content)) | Should -Be ([Convert]::ToBase64String($bytes))
+    }
+    It 'reports a missing translation-team file without creating it' {
+        $work=Get-GuideContributionWork -WorkspaceRoot $workspace -Policy $policy -GuideId example -Language fr
+        $work.Exists | Should -BeFalse
+        $work.Content | Should -BeNullOrEmpty
+        $work.Path | Should -Be 'site/data/contributions/example.fr.yml'
+        Test-Path (Join-Path $workspace $work.Path) | Should -BeFalse
+    }
     It 'refuses stale reviewed input without touching the file' {
         [IO.File]::AppendAllText($path,"# other edit`n")
         $changed=(Get-FileHash $path).Hash

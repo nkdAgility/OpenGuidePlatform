@@ -5,9 +5,11 @@ function Invoke-GuideSiteBuild {
         [ValidateSet('auto','local','canary','preview','production')][string]$Target='auto',
         [string]$WorkspaceRoot=$PWD,[string]$PolicyPath,[string]$SourcePath='site',
         [string]$OutputPath,[string]$Version,
+        [ValidateSet('AllUsers','CurrentUser')][string]$DependencyScope='AllUsers',
         [string]$DeliveryContextPath,[int]$PullRequestNumber,[string]$BaseUrl,[string]$DeploymentUrl,[string]$DeploymentEnvironment,[switch]$Deploy,[string]$DeploymentAdapter
     )
     $ErrorActionPreference='Stop'
+    if($Stage -eq 'Dependencies'){Install-GuideBuildDependencies -WorkspaceRoot $WorkspaceRoot -Deployment:$Deploy -Scope $DependencyScope;return}
     $platformRoot=Split-Path (Split-Path $script:GuideBuildModuleRoot -Parent) -Parent
     $settings=if(Test-Path (Join-Path $WorkspaceRoot '.OpenGuidePlatform/settings.yaml')){& "$platformRoot/system/OpenGuidePlatform.PowerShell.GuideSiteAdoption/Resolve-OpenGuidePlatform.ps1" -WorkspaceRoot $WorkspaceRoot -ReadSettings}
     if($settings){$SourcePath=[string]$settings.site.source}
@@ -16,7 +18,6 @@ function Invoke-GuideSiteBuild {
         $Version=if(Test-Path -LiteralPath $metadata){(Get-Content $metadata -Raw|ConvertFrom-Json).version}else{'0.0.0-local'}
     }
     if(-not $OutputPath){$OutputPath='.processing/guidesite/'+[guid]::NewGuid().ToString('N')}
-    if($Stage -eq 'Dependencies'){Install-GuideBuildDependencies -WorkspaceRoot $WorkspaceRoot -Deployment:$Deploy;return}
     $contextPath=Join-Path $WorkspaceRoot "$OutputPath/delivery-context.json"
     $delivery=$null
     if($DeliveryContextPath){$contextPath=Join-Path $WorkspaceRoot $DeliveryContextPath}

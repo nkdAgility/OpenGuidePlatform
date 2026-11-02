@@ -40,81 +40,89 @@ The site team arranges technical review, then language review in its preview env
 
 ## I do not have an agent and want to do this manually
 
-First follow [manual setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) and [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually). The status procedure defines the `$platform` value used below. A build turns the source files into a checkable website. The commands below check it, show proposed file changes, save the selected changes and share them for review. Each action is explained before you run it; follow site permissions and stop if the expected result does not appear.
+### Before you start
 
-Validation checks that the site builds and behaves as intended. People approve wording and publication. Start with the reviewed candidate applied and its actual diff inspected. Use the same installed package as [Prepare](status.md).
+Complete [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) first. The contributor module must be installed and PowerShell must be open in the local folder of your fork, containing `build.ps1`. Start at the first block on this page and keep the same window open; every value used below is set on this page. If you closed the window, reopen that folder and repeat the blocks you need. Apply only the wording people reviewed. Ask the maintainer for the agreed task-branch name, destination site repository and destination branch for the submission. A repository is the project and its history; a branch keeps this task's changes together. Read [files and changes](files.md#i-do-not-have-an-agent-and-want-to-do-this-manually) if those terms are new.
 
-## Check locally
+### Run the PowerShell steps
 
-From the site root in the same PowerShell session:
+#### Check locally
 
 ```powershell
-./build.ps1 -Target preview -PlatformSource Path -PlatformPath $platform
-./build.ps1 -Target production -PlatformSource Path -PlatformPath $platform
+Test-OGPSite
 ```
 
-Require successful exit codes and inspect reports; explain warnings and resolve errors. A production build checks the production output without publishing. Confirm the new language is excluded there. Use the output paths printed by the build to find reports and rendered files; do not assume an old artifact belongs to this change.
+This checks preview and production—the review and would-be live outputs—without publishing either. **You should see:** each target's validation result. Look for `Validate: pass`. A clean passing check prints `Artifact checks passed.`; a report with findings prints a table instead. Read those findings even when the outcome is pass. Failed or unavailable checks must not be described as passed.
 
-For interactive local inspection, the site development server is:
+To inspect the website:
 
 ```powershell
-./build.ps1 -Stage Serve -Target local
+Show-OGPSite
 ```
 
-Open its printed address and stop it with Ctrl+C when done. A development server does not replace the two full builds. Inspect homepage/navigation, language and version switching, history, fallback, links, downloads, narrow/wide layouts and representative script rendering. Check any generated PDF separately. Record the revision or exact candidate, package version, target and artifact inspected.
+Copy the local address it prints into your browser. Keep PowerShell open while inspecting, then return there and press **Ctrl+C** to stop the server. Inspect navigation, language/edition switching, wording, links, downloads and how letters look on small and large screens. Open any generated PDF separately. If you cannot produce a review site, ask the maintainer to arrange one and record that visual review is still missing.
 
-## Share reviewed work
+#### Save and submit the reviewed change
 
-![Local checks lead to a pull-request canary for technical review, preview for language review, and production only after separate approval.](diagrams/publication.svg)
+A **commit** saves selected changes on your computer. A **push** shares those commits with your GitHub fork. A **pull request**, or PR, asks the site team to review and merge them. None publishes the translation by itself. You may hand reviewed words and check results to the maintainer instead of doing these Git steps yourself.
 
-In words: local checks precede a PR. A maintainer arranges the canary for technical/design review. After technical review, merge to preview for native-speaker validation. Resolve later corrections through PRs, then obtain guardian approval and a separate production-promotion decision. Actual deployment depends on the site's configured workflow and access.
-
-Review `git status` and `git diff`; stage only intended source files and approved artifacts. Follow the site's commit/push permissions and PR instructions. Include scope, source/candidate revisions, build results, review findings, consented credits and remaining issues. Never commit `.processing` output. Ask maintainers for the review link if fork PRs cannot deploy; approval alone cannot override a disabled deployment caller.
-
-
-## Save and submit the reviewed change
-
-The technical volunteer performs these actions after the site's required checks/review and Git authorisation. A commit saves locally; push shares it; a PR requests review. Translators who only supply text do not need to run them.
-
-First inspect the branch and changes:
+Only continue when the site's checks/review requirements and permissions allow saving and sharing. First run:
 
 ```powershell
+$expectedBranch = Read-Host 'Enter the task-branch name agreed with the maintainer'
 git branch --show-current
 git status --short
 git diff
 ```
 
-Confirm the branch is the agreed task branch. Stop if it changed unexpectedly. Check every changed file against scope. `git diff` shows tracked edits; open new files listed by status separately. Do not include `.processing`, credentials or unrelated work. Reviewed generated PDFs/receipts are included only when explicitly part of this task; supplied/protected PDFs stay unchanged.
+**You should see:** the agreed branch and only the intended edits. If the branch differs, stop and ask; do not switch it back automatically. In status, `M` marks a changed tracked file and `??` a new file. They are labels, not part of the file path. `git diff` shows changes to existing files; open new files in your editor too.
 
-Select one intended repository-relative file at a time, then review the whole staged change:
+Choose one reviewed file at a time:
 
 ```powershell
-$reviewedPath = Read-Host 'Enter one reviewed file path to include'
+$reviewedPath = Read-Host 'Copy one intended file path from status, without its M or ?? label'
 git add -- $reviewedPath
 git diff --cached
 git status --short
 ```
 
-Repeat selection only for additional intended files. If the staged diff is wrong, stop and correct the selection before committing. When it is correct and committing is authorised:
+`git add` selects the file for your next commit; it is normally silent on success. `git diff --cached` shows the selected changes. Repeat only for additional intended files. Exclude `.processing` drafts/reports, private data and unrelated work. Include generated PDFs only when explicitly reviewed as part of the task; preserve supplied originals. If the selection is wrong, ask for help before committing rather than saving an accidental selection.
+
+When the selected changes are correct and committing is authorised:
 
 ```powershell
-$commitMessage = Read-Host 'Enter a short description of this reviewed change'
-git commit -m $commitMessage
+$message = Read-Host 'Enter a short description of the reviewed change'
+git commit -m $message
+git rev-parse --short HEAD
 git status --short --branch
 ```
 
-Confirm Git reports a successful commit and account for anything still uncommitted. If a hook or command fails, report it and resolve the cause; do not bypass checks. When pushing is authorised under the site's rules, verify that `origin` is the expected fork or repository and that the current branch is still the agreed task branch:
+**You should see:** a successful commit and its short identifier. Account for any files still uncommitted. If Git needs your public author name/email or a hook fails, follow the site's setup/check instructions; do not invent identity details or turn checks off.
+
+Before pushing, inspect the destination:
 
 ```powershell
 git remote -v
 git branch --show-current
-$agreedBranch = Read-Host 'Enter the agreed task branch name shown above'
-if ((git branch --show-current) -cne $agreedBranch) { throw 'Branch changed; stop and check with the maintainer.' }
-git push -u origin $agreedBranch
 ```
 
-Open the site's GitHub repository in your browser and choose the option to create a pull request from the pushed branch. Select the intended destination repository/base branch and your fork/task branch as the comparison. Review the displayed changed files, link the agreed discussion and include the validation evidence and unresolved questions. Select a draft PR while work or review is still in progress. Do not create another PR if the task already has one; subsequent pushes update it. Follow the site's contribution agreement and review requirements when GitHub requests them.
+`origin` is the saved address where the next push sends the work. It should be the expected fork or repository agreed with the maintainer. If the address or branch is wrong, stop and ask; do not change it by guesswork. When pushing is authorised and both are correct:
 
-Success here is a PR that shows the intended changes and their actual status. A draft PR can make website/scaffold work visible before guide bodies are translated; say so explicitly. Maintainers then arrange canary/preview review. Creating a PR does not merge it or publish a release.
+```powershell
+if ((git branch --show-current) -cne $expectedBranch) { throw 'Branch changed; ask the maintainer before pushing.' }
+git push -u origin $expectedBranch
+```
 
-**Success:** checks and human decisions are traceable to the reviewed revision. Passing automation, preview availability and an assistant report are not publication approval. **If a check fails:** use [troubleshooting](troubleshooting.md), retain the failure and rerun affected checks after correction.
+Git should report the branch was sent successfully. If sign-in or the push fails, preserve the error and ask the team; do not claim the work has been submitted.
+
+#### Open the pull request on GitHub
+
+Open the original guide site's GitHub repository. After a successful push, GitHub may offer **Compare & pull request**. Use **compare across forks** to choose the original site and agreed destination branch, then your fork and task branch. The destination is where the team will receive your work; the source is where you pushed it. Follow [GitHub's illustrated fork-submission steps](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request-from-a-fork) if you cannot locate the controls.
+
+Check the changed-files view before submitting. Include language/guide/edition, source and comparison version if used, wording review, consented credits, actual check results and unfinished work. Choose a draft submission if text or review remains incomplete. If this task already has a PR, later pushes to its branch update it; do not open another.
+
+### Check the result
+
+Open the submitted PR link and confirm its intended files and actual status. Ask the maintainer for a temporary review website if fork submissions cannot deploy one. The team completes technical review before language review in preview. Later corrections still go through review. Guardian wording approval and maintainer production approval remain separate; keep permanent exclusions intact. [Command reference](../../OpenGuidePlatform.PowerShell.Contributor/README.md#check-and-submit).
+
+If a command fails, stop at that step. Send the maintainer the page, step, expected result and exact visible error. Include the printed report folder if available; leave out passwords and access tokens. Do not change software versions, delete existing files or bypass a refusal to make the command continue.

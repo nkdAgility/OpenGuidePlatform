@@ -6,6 +6,12 @@ These commands run in the **OpenGuidePlatform repository**. For an installed gui
 
 Install the tools listed in the README and Node.js 20 or newer and npm (for real browser validation tests), then the platform test dependencies:
 
+Run dependency installation from an authorised administrator PowerShell window
+on Windows. Local module installation defaults to `AllUsers`; return to your
+ordinary window for builds. Hosted runner adapters explicitly select their
+supported `CurrentUser` scope with `-DependencyScope CurrentUser`; this is not
+the installation procedure for a computer where that scope is disabled.
+
 ```powershell
 ./build.ps1 Dependencies
 ./build.ps1 -Versions
@@ -15,6 +21,48 @@ Install the tools listed in the README and Node.js 20 or newer and npm (for real
 Without a version override, the platform calculates GitVersion using the same module operation as Actions. The repository uses GitVersion 6 configuration; Dependencies installs a compatible 6.x tool beneath `.processing/tools/` without changing a global GitVersion installation. `-Version` remains an explicit override.
 
 The platform build runs preparation, tests, packaging and package verification. It writes to a fresh directory under `.processing/platform/`, then builds and validates the sample in preview and production from the exact package ZIP it produced. It does not publish a release or deploy the sample by default; the opt-in commands below add those operations. Pester is a platform-development dependency, not an everyday guide-site requirement.
+
+Package acceptance also publishes the contributor module and its YAML dependency
+to a disposable local feed, restores them with `Save-Module`, then exercises real
+tasks and both builds in a disposable site using its installation record. A
+local Go file proxy supplies the candidate's native dependency without claiming
+remote publication. This is separate from an actual `Install-Module` check.
+
+On a clean administrator account, the optional install check uses `AllUsers`
+and removes only its own verified module installation afterwards:
+
+```powershell
+./system/OpenGuidePlatform.PowerShell.PlatformBuild/Testing/Test-ContributorModule.ps1 -WorkspaceRoot $PWD.Path -CandidateRoot <restored-candidate-directory> -OutputPath <package-evidence-directory> -Install
+```
+
+Replace both placeholders with the paths returned by your candidate build. The
+check refuses to overwrite an existing contributor-module installation.
+
+## Contributor module publication
+
+The tested, version-stamped `OpenGuidePlatform` module is retained under
+`system/OpenGuidePlatform.PowerShell.PlatformBuild/Distribution/OpenGuidePlatform`
+inside the existing PlatformBuild ZIP. Its release version and source commit
+are recorded in `ogp-module.json`. Stable module versions equal the coordinated
+release version. For previews, Gallery's SemVer 1-compatible prerelease label
+is an order-preserving `pre` encoding of OGP's dot-separated identifiers:
+numeric identifiers sort before text and encode their digit length before
+value; text identifiers use ASCII hex with zero terminators. The original
+version remains recorded. This preserves identity and numeric rollover
+ordering, so Preview.10 sorts after Preview.9. Contributors use
+`-AllowPrerelease` rather than calculating that mapping.
+
+Gallery publication is opt-in after the existing GitHub release verification.
+The repository needs `OGP_PUBLISH_POWERSHELL_MODULE=true` as an Actions variable
+and `OGP_PSGALLERY_API_KEY` as an Actions secret authorised to publish the module.
+These are external maintainer configuration; this change does not create them
+or establish that Gallery publication has occurred. The packaged `release.ps1
+-Stage PublishModule` verifies the existing immutable release before invoking
+the owning publisher. Existing Gallery versions are never overwritten.
+The publisher installs any missing manifest dependencies before validating the
+module. Its local default is AllUsers; the hosted release step explicitly
+selects the runner's CurrentUser scope. Dependencies from the earlier build job
+are not assumed to exist on a fresh release runner.
 
 ## Complete execution and publication
 

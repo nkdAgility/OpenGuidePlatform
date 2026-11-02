@@ -87,6 +87,28 @@ function Select-GuideCredits {
     @($selected|Sort-Object Weight,Position|ForEach-Object {ConvertTo-GuideCredit $_.Record $Language})
 }
 
+function Get-GuideContributionWork {
+    <# .SYNOPSIS
+    Read one contributor file and its exact reviewed bytes without writing it.
+    .DESCRIPTION
+    Resolves existing YAML naming through Core and returns one coherent content
+    and SHA-256 snapshot, including a UTF-8 BOM when present. An absent file is
+    a proposed creation path. WriteAllowed is inspection, not write approval.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$WorkspaceRoot,[Parameter(Mandatory)][Collections.IDictionary]$Policy,[Parameter(Mandatory)][string]$GuideId,[string]$Language)
+    $selection=Resolve-GuideContributionsPath $WorkspaceRoot $Policy $GuideId $Language
+    $exists=[IO.File]::Exists($selection.Path)
+    $bytes=[byte[]]::new(0)
+    if($exists){$bytes=[IO.File]::ReadAllBytes($selection.Path)}
+    [pscustomobject]@{
+        Path=$selection.Relative;Exists=$exists
+        Content=if($exists){[Text.UTF8Encoding]::new($false,$true).GetString($bytes)}else{$null}
+        Sha256=if($exists){[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([byte[]]$bytes)).ToLowerInvariant()}else{$null}
+        WriteAllowed=(Test-GuideWritePolicy -Policy $Policy -RelativePath $selection.Relative).Allowed
+    }
+}
+
 function Get-GuideCredits {
     <#
     Resolves the authors, contributors and translators of one guide edition in one

@@ -53,7 +53,7 @@ jobs:
           go-version: '1.26.10'
           cache: false
       - name: Install build dependencies
-        run: ./.build/Install-PlatformTestDependencies.ps1
+        run: ./.build/Install-PlatformTestDependencies.ps1 -DependencyScope CurrentUser
       - name: Calculate release version
         id: gitversion
         run: ./.build/Get-PlatformVersion.ps1
@@ -111,3 +111,10 @@ jobs:
           PLATFORM_VERSION: ${{ needs.build.outputs.version }}
           PLATFORM_COMMIT: ${{ needs.build.outputs.source-commit }}
         run: ./.processing/platform-release/tools/release.ps1 -Stage Validate -AssetsPath .processing/platform-release -SourceCommit $env:PLATFORM_COMMIT -ReleaseTag "v$env:PLATFORM_VERSION"
+      - name: Publish installable PowerShell module
+        if: ${{ vars.OGP_PUBLISH_POWERSHELL_MODULE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLATFORM_COMMIT: ${{ needs.build.outputs.source-commit }}
+          OGP_PSGALLERY_API_KEY: ${{ secrets.OGP_PSGALLERY_API_KEY }}
+        run: ./.processing/platform-release/tools/release.ps1 -Stage PublishModule -AssetsPath .processing/platform-release -SourceCommit $env:PLATFORM_COMMIT -DependencyScope CurrentUser

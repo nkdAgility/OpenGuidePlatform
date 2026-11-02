@@ -19,8 +19,12 @@ Describe 'Guide build dependency repository setup' {
         Install-GuideBuildDependencies -WorkspaceRoot $TestDrive
         Should -Invoke Register-PSRepository -Times 0 -Exactly
         Should -Invoke Install-Module -Times 1 -Exactly -ParameterFilter {
-            $Name -eq 'powershell-yaml' -and $Repository -eq 'PSGallery' -and $MinimumVersion -eq '0.4.12'
+            $Name -eq 'powershell-yaml' -and $Repository -eq 'PSGallery' -and $MinimumVersion -eq '0.4.12' -and $Scope -eq 'AllUsers'
         }
+    }
+    It 'allows the hosted runner adapter to select its supported scope explicitly' {
+        Install-GuideBuildDependencies -WorkspaceRoot $TestDrive -Scope CurrentUser
+        Should -Invoke Install-Module -Times 1 -Exactly -ParameterFilter {$Scope -eq 'CurrentUser'}
     }
     It 'registers the default repository before installing on a fresh runner' {
         Mock Get-PSRepository { $null }

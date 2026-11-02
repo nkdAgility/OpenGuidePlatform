@@ -75,22 +75,125 @@ You can also [submit this stage for review](validation.md) first. Explain that t
 
 ## I do not have an agent and want to do this manually
 
-You can complete the same work using an editor and OGP's commands.
+### Before you start
 
-Start with [computer setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) if these tools are unfamiliar. It explains what to install and where commands go. Alternatively, you can [supply and review wording](review-wording.md) while another volunteer handles the files.
+Complete [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) first. The contributor module must be installed and PowerShell must be open in the local folder of your fork, containing `build.ps1`. Start at the first block on this page and keep the same window open; every value used below is set on this page. If you closed the window, reopen that folder and repeat the blocks you need. Agree the language, preferred terms and reviewers with the site team. This task prepares website wording and selected empty guide starting pages; it does not translate guide bodies. If the language is already configured, agree only the missing work with the maintainer. Do not disable an existing published language just to repeat setup.
 
-Follow the same order:
+### Run the PowerShell steps
 
-1. [Check what already exists](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
-2. Exclude the language from the live website **before** adding its main language settings. Preserve unrelated settings.
-3. Prepare and review the website wording: messages, homepages, guide-finding pages and supported site-owned text.
-4. Create only the agreed, eligible empty guide starting pages. Preserve existing translations, protected content, supplied PDFs and deliberate alternative-language/PDF-only arrangements. Leave guide bodies untranslated.
-5. Run the preview and production checks and inspect the prepared website. These checks do not publish it.
+#### 1. Find the actual language settings
 
-Keep links and software placeholders unchanged. For example, translate “Download” in `Download {{ .Site.Title }}`, but leave `{{ .Site.Title }}` intact.
+```powershell
+$language = Read-Host 'Enter the language code agreed with the team'
+$work = Get-OGPTranslationStatus -Language $language
+$work.Configuration | Format-List
+```
 
-For each file, review a separate proposed version before using OGP's supported command to apply it. The commands check that the original has not changed while you worked. If it has, review again rather than overwrite newer work.
+**You should see:** `ProductionPath` and `MainPath`, identifying the site's actual settings files. If either is missing, ask the maintainer to repair setup. Do not create a guessed configuration file.
 
-The [step-by-step command reference](../../OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md#add-a-language-across-the-site) provides the exact commands, including refreshing the work report after changes and resuming interrupted work. Use the reference supplied with your site's installed OGP release. If an operation is unsupported or a check fails, retain the result and ask the maintainer for help; do not bypass the supported commands.
+#### 2. Keep the language off the live website first
 
-Then return to **Review what readers will see** above.
+```powershell
+$draft = New-OGPWrapperDraft -Language $language -RelativePath $work.Configuration.ProductionPath
+$draft | Format-List Path, SourcePath, Next
+$originalSettings = Join-Path $PWD.Path $work.Configuration.ProductionPath
+$originalSettings
+```
+
+**You should see:** a full draft `Path`, then the full path of the original settings file. `SourcePath` identifies the original settings file; the last line also prints that original path for comparison. The live settings file has not changed. Ask the maintainer for the reviewed language entry and exactly where it belongs. It must keep this new language disabled in production—the live website. If YAML settings are unfamiliar, ask the maintainer to prepare or check that entry with you; do not infer settings from another language.
+
+Open your plain-text editor—the editor agreed during setup—and choose **File → Open**. Paste the full `Path` printed by the command. That is your draft, not the website's current file. Open `SourcePath` in another tab to read the original beside the draft. For language settings, this is the current settings file selected in the report. Compare it without editing the original. If an expected file cannot be opened, give its printed path to the maintainer instead of editing a different file.
+
+Save the words in your editor and have the agreed language reviewer check them. Saving in the editor changes only the draft. It does not yet apply the words to the website.
+
+Apply the reviewed settings through these same two commands:
+
+```powershell
+Save-OGPDraft -Path $draft.Path -Reviewed -WhatIf
+```
+
+`-Reviewed` says you reviewed this exact draft. `-WhatIf` prints a preview naming the intended file without applying it; translation previews can also return `Status: planned`. A website-settings preview may print only the WhatIf message, with no result object. Temporary reports can still be written. If the command throws an error, stop and resolve it with the maintainer. This preview does not certify meaning: complete the agreed human wording review before the real save.
+
+When the wording and preview have been reviewed and you are authorised to apply them, run:
+
+```powershell
+Save-OGPDraft -Path $draft.Path -Reviewed
+```
+
+**You should see:** an applied result of `updated`, or `unchanged` when the same content is already present. Check its destination is the file you intended. If a source, target or site version changed while you worked, create a fresh draft from the latest files, carry across only the still-agreed wording, and review again. Do not change the stored check information to force the old draft through.
+
+#### 3. Add the main language settings
+
+Refresh the report after changing settings:
+
+```powershell
+$work = Get-OGPTranslationStatus -Language $language
+$draft = New-OGPWrapperDraft -Language $language -RelativePath $work.Configuration.MainPath
+$draft | Format-List Path, SourcePath, Next
+$originalSettings = Join-Path $PWD.Path $work.Configuration.MainPath
+$originalSettings
+```
+
+Ask the maintainer for the approved main language entry, including its name, reading direction and any site-specific choices. Open the returned draft, apply only that entry, save it and review it. Run the two `Save-OGPDraft` commands in step 2 again using this new `$draft`. Confirm the production exclusion remains in place.
+
+#### 4. Translate the website words
+
+```powershell
+$work = Get-OGPTranslationStatus -Language $language
+$work.Wrappers | Format-Table Kind, SourcePath, TargetPath, State, SupportedOperation -Wrap
+$file = Read-Host 'Copy one agreed supported TargetPath from the website-wording table'
+```
+
+Find that selected row's `Kind` and `SupportedOperation` in the table. If no supported operation is shown, stop and ask the maintainer. **If its kind is `json-text-selection-required`, skip the next block** and use the JSON steps below. All other supported rows use this ordinary draft block:
+
+```powershell
+$draft = New-OGPWrapperDraft -Language $language -RelativePath $file
+$draft | Format-List Path, SourcePath, Next
+```
+
+**For JSON rows only:** ask the maintainer for the exact field selector before creating the draft. It identifies one translatable value inside that site's file; you do not need to derive it. The command refuses JSON text work without this selection. For one selector supplied by the maintainer:
+
+```powershell
+$field = Read-Host 'Paste one exact text-field selector supplied by the maintainer'
+$draft = New-OGPWrapperDraft -Language $language -RelativePath $file -JsonTextPaths $field
+$draft | Format-List Path, SourcePath, Next
+```
+
+After the appropriate block returns a draft, open its printed `Path` and read `SourcePath` alongside it. Work on the homepage, guide landing pages, messages, history and translation listings identified by the report. Translate reader-facing words, preserving keys, links and placeholders such as `{{ .Site.Title }}`. For JSON, change only the selected value. Review and apply the draft with the two save commands from step 2. Repeat with a fresh draft for another agreed value. Existing populated translations must not be replaced unless that update was agreed; unsupported work goes to the maintainer.
+
+#### 5. Choose empty guide starting pages
+
+```powershell
+$work = Get-OGPTranslationStatus -Language $language
+$work.Guides | Format-Table GuideId, EditionId, State, Intent, CanCreateScaffold -Wrap
+```
+
+Choose eligible guide editions with the team. Do not automatically select every old edition. For one agreed row where `CanCreateScaffold` is true:
+
+```powershell
+$guide = Read-Host 'Copy the agreed GuideId from that row'
+$edition = Read-Host 'Copy its EditionId'
+New-OGPTranslation -GuideId $guide -EditionId $edition -Language $language -WhatIf
+```
+
+Read the preview and confirm it names the intended guide. After approval, create that empty page:
+
+```powershell
+New-OGPTranslation -GuideId $guide -EditionId $edition -Language $language
+```
+
+**You should see:** a `created` result for the selected starting page. Its body stays empty. Do not use this to replace an existing translation, protected content, a PDF-only guide or a deliberate fallback to another language.
+
+### Check the result
+
+```powershell
+Get-OGPTranslationStatus -Language $language
+Test-OGPSite
+Show-OGPSite
+```
+
+The first command refreshes the work report. The next checks preview and production without publishing. The last prints a local website address: copy it into your browser, keep PowerShell open while reviewing, and press **Ctrl+C** there when finished. If no review site can be started, ask the maintainer for an arrangement instead of claiming it was inspected.
+
+Check the agreed website words, menus and links on a phone-sized and larger view. Confirm the selected guide bodies are still empty, supplied PDFs and existing translations are intact, and the new language remains off the live website. Resolve failures before calling this stage ready. Continue to [translate a selected guide](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually), or [submit the website-only stage](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually) clearly marked as unfinished guide translation. [Command reference](../../OpenGuidePlatform.PowerShell.Contributor/README.md#prepare-the-website-language).
+
+If a command fails, stop at that step. Send the maintainer the page, step, expected result and exact visible error. Include the printed report folder if available; leave out passwords and access tokens. Do not change software versions, delete existing files or bypass a refusal to make the command continue.

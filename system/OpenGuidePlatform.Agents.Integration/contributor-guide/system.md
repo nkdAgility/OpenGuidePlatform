@@ -18,22 +18,16 @@ The agent can handle supported file operations; you and the language reviewers a
 
 ## I do not have an agent and want to do this manually
 
-You can perform the same operations with the installed commands. [Manual setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) teaches the tools first. This background explains who owns the files and decisions; it does not grant permission to publish.
+### Before you start
 
-OpenGuidePlatform (OGP) supplies shared building and publishing tools. A guide site owns its content, design choices and publication decisions. Your computer holds a working copy of that site's repository, called a clone.
+This page explains responsibility; it does not require commands or installation. A maintainer handles the site's technical operation. The site's language reviewer or guardian settles editorial decisions according to its policy.
 
-![OGP supplies tools to the local clone; reviewed site changes travel through a pull request to the site repository.](diagrams/ownership.svg)
+### Choose your next step
 
-In words: the installed OGP package supplies commands and matching instructions. You use those commands against the local site files. You submit the reviewed changes to the site's repository through a pull request. Site maintainers decide when those changes reach readers.
+OGP supplies shared commands and skills. The guide site owns its content, layout, local policy and publication decisions. People propose and review the words. The website around a guide includes menus, homepages, history and translation listings; translating a guide body alone does not translate those pages.
 
-| Owner | What belongs there |
-|---|---|
-| OGP | Reusable procedures, commands, validation, shared templates and these diagrams |
-| Guide site | Guide content, wrapper design, editorial rules, guardian contacts and delivery configuration |
-| Translation team | Proposed text, glossary decisions and review findings |
+For actual work, start with [manual setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) and [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually). Commands use the runtime already selected by the site. If it lacks a capability, ask the maintainer to update that installation and provide matching instructions. Installing a newer contributor module must not silently upgrade it.
 
-The wrapper is the website around a guide: homepages, navigation, buttons, history and translation listings. Translating a guide body alone does not translate that experience. A site may have any number of guides and editions.
+### Check the result
 
-Build output goes under `.processing` and is temporary. Do not commit it or edit downloaded platform files. Platform fixes belong in OGP; maintainers adopt a released fix through the coordinated update procedure.
-
-**Next:** [set up your computer](setup.md), or [choose a task](README.md).
+You know who reviews language, who helps with files, and who decides publication. A report or draft does not replace any of those people or their actual approval.

@@ -18,24 +18,25 @@ For example, in `Download {{ .Site.Title }}`, translate “Download” but keep 
 
 ## I do not have an agent and want to do this manually
 
-Use this background when you want to handle files yourself. Markdown stores text with simple heading/link marks; YAML and JSON store structured settings and messages. A separate proposed version is called a candidate. The following explanations show why file checks and review are separate steps.
+### Before you start
 
-A guide page is usually Markdown: plain text with marks for headings, emphasis and links. A front matter block at its beginning stores settings. YAML and JSON hold settings and interface messages. You translate agreed reader-facing values while preserving identifiers, addresses and placeholders that the software uses.
+This is optional background, not another software task. You can review words without editing files.
 
-For example, in `Download {{ .Site.Title }}`, translate “Download” but keep `{{ .Site.Title }}` intact. In `[Read the guide](guide-url)`, translate the label and preserve the destination. A custom field is not automatically editable just because it contains English.
+### Choose your next step
 
-## Why use a candidate?
+| Term | What it means for your work |
+|---|---|
+| Fork | Your copy of the site's project on GitHub. |
+| Local copy / clone | The folder on your computer copied from that fork. Commands run here. |
+| Draft | A separate proposed file to review before applying it to the site. |
+| Page settings / front matter | The section between `---` lines at the start of a page. Preserve unselected settings. |
+| Branch | The line of work agreed for this task. |
+| Commit / push / pull request | Save selected changes locally / share them with GitHub / ask the site team to review them. |
 
-A candidate is a separate proposed version. Review it before asking the platform to replace the existing file. A hash (SHA-256 fingerprint) identifies the exact source or target bytes you reviewed. If another person changes a file, the old fingerprint no longer matches; reconcile the change rather than substituting a new hash blindly.
+In `Download {{ .Site.Title }}`, translate “Download” and preserve `{{ .Site.Title }}`: software fills it in. In `[Read the guide](guide-url)`, the label may be translated while the destination stays intact. A setting containing English is not automatically a word you should translate.
 
-![Read source and target, prepare a candidate, review and check, then apply only while the reviewed fingerprints still match.](diagrams/candidate.svg)
+OGP keeps working drafts and reports under `.processing`. Apply reviewed words through the task command before submitting the resulting site-file changes; do not submit that temporary folder or edit its check records. The module checks whether source/destination files changed while you worked. A refusal means review again, not change the recorded fingerprint to force a save.
 
-In words: read the actual source and destination; prepare a candidate; have people review it and run the supported check; preview the operation with `-WhatIf`; apply against the original reviewed hashes; inspect the diff and build. A stale hash returns you to reading and reconciliation. A check does not approve the translation's meaning.
+### Check the result
 
-## What gets shared?
-
-`git diff` shows edits you have not yet selected for a commit. `git diff --cached` shows the selected (staged) edits. `git status --short` also lists new, untracked files, which neither diff includes until you stage them. A commit saves a selected set of changes locally. A push sends commits to GitHub. A pull request asks the site team to review and merge them. These are separate actions, and none alone approves production publication.
-
-Keep `.processing`, private coordination, raw assistant logs and unconsented personal information out of commits. Preserve protected PDFs, routing metadata, explicit anchors and intentional formatting. Do not add `lang`, fonts or attribution fields to guide front matter; follow [credits and PDFs](credits-pdfs.md).
-
-**Next:** [translation journey](translation.md) or [content changes](content.md). **Recovery:** [stale files and other failures](troubleshooting.md).
+You should know which words you are changing and which identifiers/settings must remain intact. Ask the maintainer about an uncertain field. Continue to [translate a guide](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually) or [update a translation](update-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually).

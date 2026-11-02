@@ -1,9 +1,9 @@
 #Requires -Version 7.4
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$WorkspaceRoot)
+param([Parameter(Mandatory)][string]$WorkspaceRoot,[ValidateSet('AllUsers','CurrentUser')][string]$Scope='AllUsers')
 $ErrorActionPreference='Stop'
-Install-Module Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -Repository PSGallery
-Install-Module powershell-yaml -MinimumVersion 0.4.12 -Scope CurrentUser -Force -Repository PSGallery
+Install-Module Pester -RequiredVersion 5.7.1 -Scope $Scope -Force -Repository PSGallery
+Install-Module powershell-yaml -MinimumVersion 0.4.12 -Scope $Scope -Force -Repository PSGallery
 
 . (Join-Path $PSScriptRoot '../../OpenGuidePlatform.PowerShell.GuideSiteBuild/Versioning/GitVersion.ps1')
 Install-GuideGitVersion -WorkspaceRoot $WorkspaceRoot

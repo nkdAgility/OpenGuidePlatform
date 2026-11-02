@@ -27,39 +27,41 @@ After the cause is understood, repairs stay with the appropriate installed skill
 
 ## I do not have an agent and want to do this manually
 
-If you are running the tools yourself, start with [manual setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually). Read the first useful error and the report printed by the command. The table below explains common messages; the glossary defines terms used by the technical references. Do not keep retrying without understanding the failure.
+### Before you start
 
-Read the first actionable failure and its report before retrying. Share the command, installed OGP version, report path and relevant error with the maintainer. Omit credentials, private conversations and raw assistant logs. A failed or missing check stays failed/unknown until verified again.
+Stop at the first unexpected result. Keep the page and step you were following and the exact visible error. You do not need to diagnose software yourself.
 
-| Symptom | What to do |
+### Choose your next step
+
+Send the maintainer: “I am following PAGE, step STEP. I expected RESULT but saw ERROR. What should I do next?” Replace those words with your actual situation. Include the printed version/report folder if the command produced them; say unavailable if it did not. Leave out passwords, tokens and private conversations.
+
+| What happened | What to do next |
 |---|---|
-| `./build.ps1` gives shell syntax errors or permission denied | In macOS/Linux Terminal, start `pwsh`, then run the PowerShell instructions from the repository root. |
-| Tool is not found | Complete the site's setup, restart the shell if needed and check its version. |
-| Release cannot be restored | Check network access, `gh auth status` and access to the selected release. Do not switch OGP versions to bypass it. |
-| Output directory already exists | Choose a fresh `.processing` directory; status examples use a unique identifier. Preserve earlier evidence. |
-| Prepare fails | Read `prepare/assessment.md` if present. Valid discovery can support repairs; absent/invalid discovery blocks dependent operations. |
-| Command or playbook is missing | Report the installed version and missing capability. Maintainers use coordinated Update on a review branch. |
-| Stale hash | Reread source/target, reconcile the candidate and review again. Do not just refresh the hash. |
-| JSON schema reconciliation is unsupported | Report the path and schema change. Text selection cannot add/remove keys or change structure. |
-| A translation shows English | Check declared fallback, actual populated text and Prepare findings. English is not proof of complete translation. |
-| Missing interface labels | Check effective catalogue findings and rendered output. Preserve placeholders; report sentence-fragment composition to OGP. |
-| No PR canary link | Ask the maintainer to check delivery policy, caller configuration and access. Do not invent a deployment workaround. |
-| Broken script rendering or stale PDF receipt | Use the explicit PDF/font workflow and human visual review; preserve supplied PDFs. |
+| The module cannot be found during installation | Confirm publication and the approved package with the maintainer. Do not pick another similarly named module. |
+| Installation requests permissions you do not have | Ask an authorised administrator to complete AllUsers installation. CurrentUser scope is disabled; do not use it or relocate folders as a workaround. |
+| A command is not recognised | Confirm setup completed in PowerShell 7.4 or later. Ask the maintainer for the installed module/version; do not substitute an invented command. |
+| GitHub sign-in or a release download fails | Follow the setup sign-in step and share the exact failure if it persists. |
+| A draft is refused because a file or runtime changed | Keep the draft, ask for the actual changes, create a fresh draft and review affected text again. |
+| A report says a file or setting is unsupported | Give the maintainer its path and requested action. Do not edit around the refusal. |
+| English still appears | Ask whether wording is missing or the site deliberately uses another language there. |
+| No review website is available | Ask the maintainer to arrange one; record visual review as incomplete. |
+| Letters or PDF pages look wrong | Identify the actual page, reviewed version and visible problem. Preserve supplied PDFs; ask for the relevant rendering review. |
 
-## Words you will see
+If you can safely repeat the read-only check, use [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually). If it cannot start, report that instead of guessing a version or report path. Do not rerun a write blindly.
 
-| Word | Meaning |
+### Check the result
+
+You should receive a specific next action and a person responsible for help. A failed or unavailable check stays failed or unknown until it is actually rerun and verified. Return to the task only when that prerequisite is resolved.
+
+### Words the software may print
+
+| Word | Plain meaning |
 |---|---|
-| Repository / fork / clone | Shared file history / your GitHub copy / your local copy |
-| Branch / commit / PR | A line of work / saved snapshot / request to review and merge changes |
-| Edition | One version of a guide, independently translated |
-| Wrapper / i18n | Website around the guides / interface-message catalogue |
-| Front matter | Page settings before its Markdown body |
-| Candidate / hash | Proposed replacement / fingerprint of exact reviewed bytes |
-| Prepare / discovery | Assessment stage / its generated inventory of the actual site |
-| Scaffold / fallback | Empty translation starting point / use of another declared language |
-| Canary / preview / production | PR review environment / pre-publication review / public reader environment |
-| Guardian | Person authorised by the site to resolve translation editorial decisions |
-| Receipt | Recorded evidence tying a generated PDF to inputs and generation conditions |
-
-**Next:** return to [your task](README.md). Shared command/template defects belong in OGP; editorial decisions, wrapper design and delivery arrangements belong with site maintainers.
+| Prepare / discovery / inventory | Assess the actual site files / inspect them / the resulting work list. |
+| Wrapper / catalogue | Website pages around the guide / the list of interface messages. |
+| Scaffold / fallback | Empty guide starting page / deliberate use of another language. |
+| Candidate / hash | Proposed file / exact-file fingerprint used internally to detect changes. |
+| Artifact / canary | Built website or PDF result / temporary website for technical review of a pull request. |
+| Baseline / provenance | Earlier version chosen for comparison / evidence of what source was used. |
+| Coordinated update | The maintainer's procedure for updating the site's selected OGP package together. |
+| Receipt | A record connecting a draft or generated PDF to the inputs checked. |

@@ -26,23 +26,91 @@ The skill can generate only downloads explicitly configured for generation. Agre
 
 ## I do not have an agent and want to do this manually
 
-Credits are structured lists of people; their approved details belong there rather than in guide page settings. Ask the maintainer which record to select before editing it. PDF generation is a separate task with extra tools. The references below explain both procedures; [manual setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) covers the ordinary tools first. Never regenerate a supplied original just to complete a checklist.
+### Before you start
 
-Credits recognise people; PDFs are published artifacts that need their own checks. Neither should be an accidental side effect of a text edit.
+Complete [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) first. The contributor module must be installed and PowerShell must be open in the local folder of your fork, containing `build.ps1`. Start at the first block on this page and keep the same window open; every value used below is set on this page. If you closed the window, reopen that folder and repeat the blocks you need. Agree the guide, edition and translated language. Obtain each person's consent for the exact published name, role and optional account link. Preserve existing credits and any acknowledgement required by site policy. The add command below is for new translation-team members; source-author credits and corrections to existing records need the maintainer's reviewed procedure. Adding credits does not regenerate PDFs.
 
-## Credit people with consent
+### Run the PowerShell steps
 
-Ask people which name and optional profile link they consent to publish. Guide creator/contributor records and translation-team records are separate. Use [contributor commands](../../OpenGuidePlatform.PowerShell.Core/README.md#guide-credits) or the installed [contributions skill](../skills/guide.contributions/SKILL.md) for the supported operation. Adding a person and updating an existing record have different contracts.
+#### 1. Select the guide and inspect its credits
 
-Structured credits do not replace any acknowledgement section required by the site's editorial policy. Preserve existing people and roles; report unsupported removals, renames or reordering instead of using an unrelated operation. Review the displayed website and PDF credits, not only YAML syntax.
+```powershell
+$language = Read-Host 'Enter the language code agreed with the team, for example kn'
+$work = Get-OGPTranslationStatus -Language $language
+$work.Guides | Format-Table GuideId, EditionId, State, Intent, CanCreateScaffold -Wrap
+$guide = Read-Host 'Copy the GuideId of the guide you selected from the table'
+$edition = Read-Host 'Copy its EditionId from that same row'
+```
 
-## Prepare eligible downloads
+**You should see:** the actual guides and editions for this language. The names are identifiers: copy them exactly, including capitals. An edition is a version of a guide. Do not copy identifiers from another site's example. If the selected row is protected, excluded, deliberately uses another language or only provides a PDF, ask the maintainer; do not convert it into a new web translation.
 
-Ask the maintainer whether the selected download is generated or supplied/protected. Only explicitly eligible generated PDFs may be generated. Preserve supplied originals and their filenames/bytes.
+```powershell
+$credits = Get-OGPCredits -GuideId $guide -EditionId $edition -Language $language
+$credits.Authors | Format-Table name, role, url -Wrap
+$credits.Contributors | Format-Table name, role, url -Wrap
+$credits.Translators | Format-Table name, role, url -Wrap
+```
 
-Follow the [PDF skill](../skills/guide.genpdfs/SKILL.md) and [Core PDF reference](../../OpenGuidePlatform.PowerShell.Core/README.md#pdf-configuration): inspect the plan, diagnose fonts and tools, agree configuration, generate the selected artifact, visually inspect actual pages and record the required receipt. A receipt records generation evidence; it does not approve appearance. Ordinary site builds do not generate PDFs automatically.
+**You should see:** the selected edition's guide credits and translation-team records, with roles shown. Check whether the person is already credited. Do not add a duplicate to correct an existing record; ask the maintainer for its reviewed update procedure.
 
-Inspect representative text and titles: glyphs, conjunct shaping, reading direction, italics/adaptation marks, page breaks, links, cover fit and attribution. A font name is not proof of correct rendering. Keep font choices in PDF configuration, not guide front matter. For scripts such as Kannada, the guardian must decide how source conventions transfer before the maintainer chooses and checks presentation.
+#### 2. Add one consented translator or reviewer
 
+```powershell
+$name = Read-Host 'Enter the exact name this person agreed to publish'
+$role = Read-Host 'Enter the agreed role: translator or reviewer'
+$username = Read-Host 'Enter the GitHub username they supplied for publication, or press Enter for none'
+New-OGPContribution -GuideId $guide -EditionId $edition -Language $language -Name $name -Role $role -GitHubUsername $username -ConsentConfirmed -WhatIf
+```
 
-**Success:** correct consented attribution is visible, eligible downloads have generation evidence and human visual review, and [Prepare/build checks](validation.md) agree. **If tools or approved fonts are missing:** report them before generation; do not silently substitute fonts or regenerate protected files.
+Type the role exactly as shown, in lower case. `-ConsentConfirmed` states that consent has actually been obtained; it does not obtain it. The preview should show the proposed operation without adding the person. If the name, role or edition is wrong, correct the values and preview again. When approved:
+
+```powershell
+New-OGPContribution -GuideId $guide -EditionId $edition -Language $language -Name $name -Role $role -GitHubUsername $username -ConsentConfirmed
+$credits = Get-OGPCredits -GuideId $guide -EditionId $edition -Language $language
+$credits.Translators | Format-Table name, role, url -Wrap
+```
+
+Confirm the new record and unchanged existing people. A blank username leaves that optional account link out. Do not guess an account or substitute a different name after a duplicate/ambiguity error. Other profile-link changes need the maintainer's supported procedure; do not invent a command parameter.
+
+#### 3. Find out whether a PDF can be generated
+
+```powershell
+$work = Get-OGPTranslationStatus -Language $language
+$work.Guides | ForEach-Object { $_.Downloads } | Format-List
+```
+
+Ask the maintainer which exact declared download belongs to this guide, edition and language. An existing supplied/protected PDF must stay unchanged. If the team confirms a new declared generated PDF is needed:
+
+```powershell
+$download = Read-Host 'Paste the exact declared download path confirmed by the maintainer'
+$plan = Get-OGPPdfPlan -GuideId $guide -EditionId $edition -Language $language -DownloadPath $download
+$plan | Format-List
+$plan.Output
+```
+
+**You should see:** the selected input, output file, settings and font/tool requirements. A refusal for supplied or protected content means stop. Ask the maintainer to resolve missing tools/fonts or presentation choices; do not silently substitute fonts or invent a download declaration.
+
+#### 4. Arrange complete generation evidence
+
+After the plan and requirements are reviewed, you can preview an eligible new PDF without generating it:
+
+```powershell
+New-OGPPdf -GuideId $guide -EditionId $edition -Language $language -DownloadPath $download -WhatIf
+```
+
+Before generating, ask the maintainer to confirm that this download declares both an approved fonts/tool environment and a location for its generation receipt—the record needed to check how the PDF was made. The command cannot establish those decisions for you. If either is missing, stop and ask for the [reviewed generation and receipt procedure](../../OpenGuidePlatform.PowerShell.Core/README.md#retain-generated-pdf-evidence). If a PDF or receipt already exists, preserve it and ask for the reviewed regeneration procedure; do not delete either to force generation.
+
+Once the maintainer confirms those declarations and you approve the preview, run generation separately:
+
+```powershell
+$result = New-OGPPdf -GuideId $guide -EditionId $edition -Language $language -DownloadPath $download
+$result | Format-List Status, Path, ReceiptPath, VisualReviewRequired, ValidationRequired
+```
+
+**You should see:** the new PDF path and its saved receipt path, with visual review and validation still required. If saving the receipt fails, a PDF may already have been created. Stop and send the error to the maintainer; do not rerun or delete files to bypass it.
+
+### Check the result
+
+After the maintainer completes generation and the required receipt, open the actual output path in a PDF viewer. With reviewers, check the title, letters, reading direction, links, names, meaningful emphasis and page breaks. A generated file is not proof that these are right. Submit the reviewed generated PDF and its required receipt together; PDF covers can select different credit roles according to site settings. Follow [check and submit](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually). [Command reference](../../OpenGuidePlatform.PowerShell.Contributor/README.md#credits-and-pdfs).
+
+If a command fails, stop at that step. Send the maintainer the page, step, expected result and exact visible error. Include the printed report folder if available; leave out passwords and access tokens. Do not change software versions, delete existing files or bypass a refusal to make the command continue.

@@ -20,19 +20,59 @@ Use [review wording](review-wording.md) to give corrections. If this is an exist
 
 ## I do not have an agent and want to do this manually
 
-Use an editor to prepare a separate proposed translation, then the documented commands to check and apply it. A candidate means that proposed file. A hash is its exact file fingerprint: the commands use it to avoid replacing text someone else changed. [Setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) explains the tools; [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually) supplies the actual guide and edition identifiers. The examples linked below give runnable commands for this release.
+### Before you start
 
-Choose one guide, edition and language explicitly. Adding the site language is a prerequisite; it does not mean every historical edition must be translated. Use [status](status.md) to discover actual identifiers and preserve existing protected or PDF-only publications.
+Complete [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) first. The contributor module must be installed and PowerShell must be open in the local folder of your fork, containing `build.ps1`. Start at the first block on this page and keep the same window open; every value used below is set on this page. If you closed the window, reopen that folder and repeat the blocks you need. The [website-language stage](add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually) must be ready first. Agree the guide, edition, language, preferred terms and reviewer. You can write the translation yourself; no agent is needed.
 
-## Prepare, review and apply
+### Run the PowerShell steps
 
-Follow [select a guide body](../../OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md#select-a-guide-body-for-a-separate-translation-stage), then its candidate/check/application examples. Start from the existing target; create an eligible empty target through the documented operation only when absent. Record the actual source used.
+#### 1. Select the guide and edition
 
-Translate agreed text using the glossary. Preserve headings, links, references, explicit anchors, shortcodes and meaningful formatting. Read the site's rules for adaptation markers and acknowledgements. The standard translated-document operation permits changes to `title`, `description` and `summary`; other custom metadata needs separate supported review. Do not add `lang` or copy another guide's metadata conventions.
+```powershell
+$language = Read-Host 'Enter the language code agreed with the team, for example kn'
+$work = Get-OGPTranslationStatus -Language $language
+$work.Guides | Format-Table GuideId, EditionId, State, Intent, CanCreateScaffold -Wrap
+$guide = Read-Host 'Copy the GuideId of the guide you selected from the table'
+$edition = Read-Host 'Copy its EditionId from that same row'
+```
 
-Use the same [review sheet and handoff](review-wording.md) as website wording. Work section by section when that helps reviewers, retaining the actual source and candidate evidence. The technical volunteer handles command inputs and hashes; translators can focus on text. Source conventions, licence wording and translator sections come from the site's policy and explicit guardian decisions, not an assumed copy of another translation.
+**You should see:** the actual guides and editions for this language. The names are identifiers: copy them exactly, including capitals. An edition is a version of a guide. Do not copy identifiers from another site's example. If the selected row is protected, excluded, deliberately uses another language or only provides a PDF, ask the maintainer; do not convert it into a new web translation.
 
-Run `Test-GuideTranslation` on the candidate. `blocked` means a constraint failed. `review-required` means people must still assess meaning; it is not approval. Compare source and candidate outlines and investigate findings. Have reviewers identify omissions, awkward wording and terminology conflicts before applying with the original source and target hashes.
+If an eligible starting page is missing, create it through step 5 of [add a language](add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually). For an existing translation, keep its current words and skip creation.
 
+#### 2. Make a separate draft
 
-**Success:** reviewed wording is applied to the intended document only, the diff agrees with scope, and [build and visual checks](validation.md) are recorded. Native speakers still establish language quality. **If hashes changed:** reconcile your candidate with the new files; never just replace the expected hash. **Next:** [credits/PDFs](credits-pdfs.md), then [review](validation.md).
+```powershell
+$draft = New-OGPTranslationDraft -GuideId $guide -EditionId $edition -Language $language
+$draft | Format-List Path, SourcePath, Next
+```
+
+**You should see:** the proposed file's `Path` and the current source's `SourcePath`. Neither original is changed by making the draft.
+
+Open your plain-text editor—the editor agreed during setup—and choose **File → Open**. Paste the full `Path` printed by the command. That is your draft, not the website's current file. Open `SourcePath` in another tab to read the source beside the draft without editing the original. If an expected file cannot be opened, give its printed path to the maintainer instead of editing a different file.
+
+Save the words in your editor and have the agreed language reviewer check them. Saving in the editor changes only the draft. It does not yet apply the words to the website.
+
+The section between `---` lines at the top contains page settings. Translate only agreed `title`, `description` and `summary` wording there; preserve other settings. Translate the body after that section, keeping headings, references, links, deliberate emphasis and software placeholders. Ask the language reviewer how source conventions should transfer. [Files explained](files.md#i-do-not-have-an-agent-and-want-to-do-this-manually) shows simple examples.
+
+#### 3. Preview and apply the reviewed words
+
+```powershell
+Save-OGPDraft -Path $draft.Path -Reviewed -WhatIf
+```
+
+`-Reviewed` says you reviewed this exact draft. `-WhatIf` prints a preview naming the intended file without applying it; the translation preview returns `Status: planned`. Temporary reports can still be written. If the command throws an error, stop and resolve it with the maintainer. This preview does not certify meaning: complete the agreed human wording review before the real save.
+
+When the wording and preview have been reviewed and you are authorised to apply them, run:
+
+```powershell
+Save-OGPDraft -Path $draft.Path -Reviewed
+```
+
+**You should see:** an applied result of `updated`, or `unchanged` when the same content is already present. Check its destination is the file you intended. If a source, target or site version changed while you worked, create a fresh draft from the latest files, carry across only the still-agreed wording, and review again. Do not change the stored check information to force the old draft through.
+
+### Check the result
+
+The intended guide should contain your reviewed translation. An empty page or unreviewed proposal is not complete. Follow [credits and PDFs](credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually), then [check and submit](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually). Those steps include viewing the website, not just saving text. [Command reference](../../OpenGuidePlatform.PowerShell.Contributor/README.md#translate-separately-selected-guides).
+
+If a command fails, stop at that step. Send the maintainer the page, step, expected result and exact visible error. Include the printed report folder if available; leave out passwords and access tokens. Do not change software versions, delete existing files or bypass a refusal to make the command continue.

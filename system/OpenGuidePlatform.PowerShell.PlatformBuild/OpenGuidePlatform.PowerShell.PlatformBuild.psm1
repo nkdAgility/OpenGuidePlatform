@@ -3,7 +3,7 @@
 # Platform engineering depends on the consumer Build module, never the reverse.
 function Invoke-PlatformBuildOperation {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][string]$Operation,[Parameter(Mandatory)][string]$WorkspaceRoot,[string]$OutputPath,[string]$Version,[string]$Repository='nkdAgility/OpenGuidePlatform')
+    param([Parameter(Mandatory)][string]$Operation,[Parameter(Mandatory)][string]$WorkspaceRoot,[string]$OutputPath,[string]$Version,[string]$Repository='nkdAgility/OpenGuidePlatform',[ValidateSet('AllUsers','CurrentUser')][string]$DependencyScope='AllUsers')
     $operations=@{
         'Test-PlatformContracts'='Testing';'Test-PlatformCore'='Testing';'Test-HugoTranslationProbe'='Testing';'Test-DistributedSkills'='Testing'
         'Package-OpenGuidePlatform'='Packaging';'Test-OpenGuidePlatformPackage'='Packaging'
@@ -14,6 +14,7 @@ function Invoke-PlatformBuildOperation {
     if($PSBoundParameters.ContainsKey('OutputPath')){$arguments.OutputPath=$OutputPath}
     if($PSBoundParameters.ContainsKey('Version')){$arguments.Version=$Version}
     if($Operation -eq 'Publish-PlatformRelease'){$arguments.Repository=$Repository}
+    if($Operation -eq 'Install-PlatformTestDependencies'){$arguments.Scope=$DependencyScope}
     if($Operation -eq 'Test-PlatformCore'){
         & (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) -NoProfile -File "$PSScriptRoot/Testing/Test-PlatformCore.ps1" -WorkspaceRoot $WorkspaceRoot
         if($LASTEXITCODE -ne 0){throw 'Platform Core acceptance failed.'}
@@ -42,13 +43,15 @@ function Test-PlatformCandidateSample {
     if($LASTEXITCODE -ne 0){throw 'Packaged contributor workflow failed.'}
     & (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) -NoProfile -File "$PSScriptRoot/Testing/Test-SiteTranslationWorkflow.ps1" -WorkspaceRoot $WorkspaceRoot -CandidateRoot $candidate -OutputPath $OutputPath
     if($LASTEXITCODE -ne 0){throw 'Packaged site translation workflow failed.'}
+    & (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) -NoProfile -File "$PSScriptRoot/Testing/Test-ContributorModule.ps1" -WorkspaceRoot $WorkspaceRoot -CandidateRoot $candidate -OutputPath $OutputPath
+    if($LASTEXITCODE -ne 0){throw 'Installable contributor module workflow failed.'}
 }
 function Invoke-PlatformBuild {
     [CmdletBinding()]
     param([ValidateSet('All','Prepare','Build','Package','Sample','Release','Validate','Version','Dependencies')][string]$Stage='All',
         [Parameter(Mandatory)][string]$WorkspaceRoot,[string]$OutputPath,[string]$Version,[string]$ReleaseTag,[switch]$Versions,
         [switch]$Publish,[switch]$DeploySample,[string]$DeploymentEnvironment,[string]$DeploymentUrl,[string]$DeploymentAdapter,
-        [string]$Repository='nkdAgility/OpenGuidePlatform')
+        [string]$Repository='nkdAgility/OpenGuidePlatform',[ValidateSet('AllUsers','CurrentUser')][string]$DependencyScope='AllUsers')
     $ErrorActionPreference='Stop'
     if(-not $OutputPath){$OutputPath='.processing/platform/'+[guid]::NewGuid().ToString('N')}
     if($Versions){
@@ -64,10 +67,10 @@ function Invoke-PlatformBuild {
         return
     }
     if($Stage -eq 'Dependencies'){
-        Invoke-PlatformBuildOperation -Operation Install-PlatformTestDependencies -WorkspaceRoot $WorkspaceRoot
+        Invoke-PlatformBuildOperation -Operation Install-PlatformTestDependencies -WorkspaceRoot $WorkspaceRoot -DependencyScope $DependencyScope
         if($DeploySample -and -not $DeploymentAdapter){
             Import-Module "$PSScriptRoot/../OpenGuidePlatform.PowerShell.GuideSiteBuild/OpenGuidePlatform.PowerShell.GuideSiteBuild.psm1"
-            Install-GuideBuildDependencies -WorkspaceRoot $WorkspaceRoot -Deployment
+            Install-GuideBuildDependencies -WorkspaceRoot $WorkspaceRoot -Deployment -Scope $DependencyScope
         }
         return
     }

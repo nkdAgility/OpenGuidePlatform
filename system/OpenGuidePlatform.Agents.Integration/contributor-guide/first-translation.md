@@ -50,12 +50,23 @@ The site team arranges technical and language review. Publication needs a separa
 
 ## I do not have an agent and want to do this manually
 
-You can follow the same stages without an agent. If you want to work only on words, use [review wording](review-wording.md) with a volunteer who handles the files. Otherwise:
+### Before you start
 
-1. Follow [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) to install and understand the tools.
-2. Use the manual route on [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
-3. Follow [add a language](add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually), then [translate a guide](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
-4. Review the wording, [credits and PDFs](credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
-5. Follow [check and submit](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for checks and submission.
+Agree the language and regional variant, guide editions, reviewers and preferred terms with the site team. Ask who settles wording disagreements. Follow local requirements for licences, acknowledgements and review; there is no universal reviewer count.
 
-Those sections explain the purpose of each step before linking to exact commands. The same site policies and human review apply with either route.
+### Run the PowerShell steps
+
+Follow these manual task pages in order. Each explains what to open, run, expect and do next:
+
+1. [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for your fork, local folder and module installation. Publication is still pending; use the maintainer-confirmed installation route.
+2. [Status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually) to find actual work without changing text.
+3. [Add a website language](add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually) if needed, keeping a new language off the live site. Preserve an already configured language and agree only its missing work. Choose eligible empty guide pages; they are not translated bodies.
+4. [Translate one selected guide edition](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually), reviewing the words against their source.
+5. [Credits and PDFs](credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually), with consent and preservation of supplied originals.
+6. [Check and submit](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for technical checks, visual review and the PR or maintainer handoff.
+
+You can instead use [review wording](review-wording.md#i-do-not-have-an-agent-and-want-to-do-this-manually) while another volunteer handles the commands. For later source changes, use [update a translation](update-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually) with an explicitly agreed comparison version.
+
+### Check the result
+
+Reviewers can find the proposed words and source, agreed decisions, credits, actual checks and unfinished work. Confirm a submission link or explicit maintainer handoff. Technical review, native-speaker review and publication are separate decisions; neither an empty page nor passing software checks completes them.

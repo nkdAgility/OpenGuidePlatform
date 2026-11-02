@@ -24,26 +24,16 @@ If you are not yet using an agent with site access, start with [setup](setup.md)
 
 ## I do not have an agent and want to do this manually
 
-The same stages work without an agent. Use the manual sections on each linked task page, starting with [setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually). The background below explains team responsibilities and notes to retain. A guardian means the person authorised by your site to settle language decisions; it is not a software role you must configure.
+### Before you start
 
-The goal is a complete reader experience whose wording people have reviewed. The guardian decides editorial questions; translators propose wording; reviewers check it; a technical volunteer operates commands; maintainers arrange review environments and publication. One person may have several roles.
+This page is a journey map. Agree language, regional variant, selected guide editions, preferred terms and reviewers with the site team. Discuss source conventions such as meaningful capitals or italics before assuming how they transfer.
 
-For a practical step-by-step handoff, follow [your first translation](first-translation.md). Translators and reviewers who do not run commands can start with [review wording](review-wording.md).
+### Choose your next step
 
-![Agree scope, assess the site, add the site language, translate selected guide editions, review and validate, then obtain separate publication approval.](diagrams/translation.svg)
+Follow [the complete manual journey](first-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually): setup → status → website wording → selected guide text → credits/PDFs → checks and submission. That page links to the commands and expected results for each task. If you only want to supply words, use [review wording](review-wording.md#i-do-not-have-an-agent-and-want-to-do-this-manually) with a volunteer handling the files.
 
-In words: agree people and terminology, inspect the actual site, introduce the language around the guides, then translate separately selected guide editions. Review rendering and language, resolve feedback, and obtain publication approval. Keep the new language excluded from production throughout preparation.
+Keep useful agreed terms, reviewer decisions, source version and unanswered questions for the next volunteer. Someone handling the files can maintain optional notes under `docs/translations/LANGUAGE/`; creating that folder is not a prerequisite for you to translate. Keep personal/private material out of public notes.
 
-## Before translating sentences
+### Check the result
 
-Agree language and regional variant, guide editions, reviewers and the person who resolves disagreements. Build a glossary. Discuss conventions that may not survive translation: meaningful capitals, adaptation italics, reading direction and fonts. Record unresolved choices rather than letting software decide them. Follow the site's rules for licences, acknowledgements, consent and minimum reviewer counts; these are not universal OGP rules.
-
-Use the [translation playbook](../translation-playbook.md) for team handoffs and scoped assistant requests. Then follow:
-
-1. [Assess readiness](status.md).
-2. [Add the site language](add-language.md), leaving guide bodies for the next stage.
-3. [Translate selected guides](translate-guide.md).
-4. [Record credits and prepare eligible PDFs](credits-pdfs.md).
-5. [Validate and submit](validation.md).
-
-An optional `docs/translations/LANGUAGE/` folder in the site can retain the glossary, proposed/agreed decisions, source revisions and review notes. Link actual approvals and identify the exact candidate or rendered artifact. These notes are context, not an inventory or automatic permission to publish. Later use [reconciliation](update-translation.md).
+The team can trace reviewed words and unresolved work to the actual source and submitted changes. The language stays off the live site while being prepared. Technical review, language approval and publication remain separate.

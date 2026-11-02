@@ -6,7 +6,7 @@ BeforeAll {
         $integration = 'system/OpenGuidePlatform.Agents.Integration'
         [IO.Directory]::CreateDirectory("$fixture/system") | Out-Null
         Copy-Item "$root/$integration" "$fixture/system" -Recurse
-        foreach ($relative in @('system/OpenGuidePlatform.PowerShell.Core/README.md','system/OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md')) {
+        foreach ($relative in @('system/OpenGuidePlatform.PowerShell.Core/README.md','system/OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md','system/OpenGuidePlatform.PowerShell.Contributor/README.md')) {
             [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName("$fixture/$relative")) | Out-Null
             Copy-Item "$root/$relative" "$fixture/$relative"
         }
