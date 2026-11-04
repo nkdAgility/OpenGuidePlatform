@@ -30,7 +30,16 @@ Describe 'Thin PowerShell workflow adapters' {
         $workflow.on.workflow_call.inputs['deployment-environment'].type|Should -Be string
         $workflow.on.workflow_call.inputs['deployment-environment'].required|Should -BeFalse
         $workflow.on.workflow_call.inputs['deployment-environment'].default|Should -Be ''
-        $step.with.deployment_environment|Should -Be '${{ inputs.deployment-environment || github.event.pull_request.number }}'
-        $workflow.jobs.close.if|Should -Be '${{ github.event_name == ''pull_request'' && github.event.action == ''closed'' }}'
+        $step.with.deployment_environment|Should -Be '${{ inputs.deployment-environment || github.event.pull_request.number || inputs.closed-pull-request }}'
+        $workflow.jobs.close.if|Should -Be '${{ (github.event_name == ''pull_request'' && github.event.action == ''closed'') || (github.event_name == ''workflow_dispatch'' && inputs.closed-pull-request != '''') }}'
+    }
+    It 'requires validated closed PR selection before manual sample cleanup' {
+        $workflow=Get-Content "$root/.github/workflows/sample-close-pr.yaml" -Raw|ConvertFrom-Yaml
+        $workflow.on.workflow_dispatch.inputs['pull-request'].required|Should -BeTrue
+        $workflow.jobs.close.needs|Should -Be resolve
+        $workflow.jobs.close.with['closed-pull-request']|Should -Be '${{ needs.resolve.outputs.pull-request }}'
+        $step=@($workflow.jobs.resolve.steps|Where-Object {$_['id'] -eq 'resolve'})[0]
+        $step.run|Should -Be './.build/Resolve-PreviewCleanup.ps1'
+        $step.env.CLEANUP_PULL_REQUEST|Should -Be '${{ github.event.pull_request.number || inputs.pull-request }}'
     }
 }
