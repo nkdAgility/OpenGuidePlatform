@@ -67,18 +67,22 @@ try {
     # resolver mocks, changed consumer sites, or claiming remote publication.
     $canonical=[string]$release.nativeHugoModule.path;$tag=[string]$release.nativeHugoModule.version
     $escaped=[regex]::Replace($canonical,'[A-Z]',{param($m)'!'+$m.Value.ToLowerInvariant()})
+    $escapedTag=[regex]::Replace($tag,'[A-Z]',{param($m)'!'+$m.Value.ToLowerInvariant()})
     $proxy="$scratch/go-proxy";$versions="$proxy/$escaped/@v"
     [IO.Directory]::CreateDirectory($versions)|Out-Null
     $native="$CandidateRoot/system/OpenGuidePlatform.Hugo.Guides"
-    Copy-Item "$native/go.mod" "$versions/$tag.mod"
-    @{Version=$tag;Time='2020-01-01T00:00:00Z'}|ConvertTo-Json|Set-Content "$versions/$tag.info"
+    Copy-Item "$native/go.mod" "$versions/$escapedTag.mod"
+    @{Version=$tag;Time='2020-01-01T00:00:00Z'}|ConvertTo-Json|Set-Content "$versions/$escapedTag.info"
     [IO.File]::WriteAllText("$versions/list","$tag`n")
-    $zip=[IO.Compression.ZipFile]::Open("$versions/$tag.zip",[IO.Compression.ZipArchiveMode]::Create)
+    $zip=[IO.Compression.ZipFile]::Open("$versions/$escapedTag.zip",[IO.Compression.ZipArchiveMode]::Create)
     try { foreach($file in Get-ChildItem $native -File -Recurse){
         $relative=[IO.Path]::GetRelativePath($native,$file.FullName).Replace('\','/')
         $null=[IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip,$file.FullName,"$canonical@$tag/$relative")
     }} finally {$zip.Dispose()}
-    $env:GOPROXY=([uri]([IO.Path]::GetFullPath($proxy)+[IO.Path]::DirectorySeparatorChar)).AbsoluteUri
+    $proxyUri=[UriBuilder]::new()
+    $proxyUri.Scheme='file';$proxyUri.Host='';$proxyUri.Port=-1
+    $proxyUri.Path=[IO.Path]::GetFullPath($proxy)+[IO.Path]::DirectorySeparatorChar
+    $env:GOPROXY=$proxyUri.Uri.AbsoluteUri
     $env:GOSUMDB='off';$env:GOMODCACHE="$scratch/go-cache"
     [IO.File]::AppendAllText("$site/site/go.mod","`nrequire $canonical $tag`n")
     & go -C "$site/site" mod download $canonical
