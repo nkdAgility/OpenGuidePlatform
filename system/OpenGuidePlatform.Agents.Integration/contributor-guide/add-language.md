@@ -2,7 +2,7 @@
 
 Readers need menus, buttons and introductory pages in their language too. This page helps you prepare those parts of the website.
 
-**Translating the guide itself comes afterwards.** The language stays off the live website while the work is prepared and reviewed.
+**Translating the guide itself comes afterwards.** A new language stays off the live website while the work is prepared and reviewed. If the language already exists, use the status report to agree only its missing website text. Do not disable a live language or recreate its existing pages; if no website work is needed, go to [translate a guide](translate-guide.md).
 
 ## Work with an agent
 
@@ -37,13 +37,13 @@ Make a short list of preferred translations for recurring terms. You can supply 
 >
 > First show the proposed website wording beside its source in this conversation. Do not change files until I approve the proposals.
 >
-> Keep the language excluded from the live website while we work. Preserve existing translations, PDFs and deliberate language arrangements. Before creating any empty guide starting pages, show the eligible guides and editions and wait for me to choose which to include. Leave guide bodies untranslated.
+> If this is a new website language, keep it excluded from the live website while we work. If it already exists, preserve its current availability and prepare only our agreed missing wording for review. Preserve existing translations, PDFs and deliberate language arrangements. Before creating any empty guide starting pages, show the eligible guides and editions and wait for me to choose which to include. Leave guide bodies untranslated.
 >
 > Run the required checks and explain the results. If the skill cannot complete a step, report what is missing and ask for maintainer help; do not invent another way.
 
 The agent handles the work in this order:
 
-1. Keep the language excluded from the live website, then add its language settings.
+1. For a new language, exclude it from the live website before adding its language settings. For an existing language, preserve its settings and availability unless a separate change was agreed.
 2. Prepare the website wording: menus, buttons, homepages and pages for finding guides, editions and translations.
 3. Prepare any other supported reader-facing website text.
 4. Show which guides and editions can have empty starting pages. You choose which to include; only then does the agent create them for later guide translation.
@@ -61,7 +61,7 @@ The agent should report:
 - What changed and what was preserved.
 - Which guide starting pages remain empty.
 - Which checks passed, failed or have not been completed.
-- Whether the language remains excluded from the live website.
+- Whether a new language remains excluded from the live website, or an existing language's availability was preserved.
 
 Passing software checks does not establish that the translation reads correctly.
 

@@ -22,6 +22,8 @@ A **pull request**, often shortened to PR, is a submission showing proposed file
 
 If your agent is authorised and has the necessary access, it can help save and share the reviewed work through that site process. Otherwise, give the maintainer the reviewed work and evidence and ask them to make the submission. You do not need to learn terminal commands to make that handoff.
 
+For a handoff, return to the same site discussion you used to agree the work. Send: “Our reviewed translation of [guide and edition] into [language] is ready for submission. Here are the reviewed words or working branch, the source used, consented credits, check results and remaining questions: [links/details]. Please confirm who will open the pull request and reply here with its link. Please also provide a website review link, or say which review is still unavailable.” The [setup contacts](setup.md#find-the-team-for-your-guide-site) take you back to either site's team. Keep passwords, private contact information and unreviewed agent logs out of public discussion.
+
 Check that the submission or handoff includes:
 
 - The language, selected guide and edition, and the source used.
@@ -123,6 +125,6 @@ Check the changed-files view before submitting. Include language/guide/edition, 
 
 ### Check the result
 
-Open the submitted PR link and confirm its intended files and actual status. Ask the maintainer for a temporary review website if fork submissions cannot deploy one. The team completes technical review before language review in preview. Later corrections still go through review. Guardian wording approval and maintainer production approval remain separate; keep permanent exclusions intact. [Command reference](../../OpenGuidePlatform.PowerShell.Contributor/README.md#check-and-submit).
+Open the submitted PR link and confirm its intended files and actual status. Ask the maintainer for a temporary review website if fork submissions cannot deploy one. The team completes technical review before language review in preview. Later corrections still go through review. The person authorised by site policy to approve wording (sometimes called the translation guardian) and the maintainer responsible for publication make separate decisions; keep permanent exclusions intact. [Command reference](../../OpenGuidePlatform.PowerShell.Contributor/README.md#check-and-submit).
 
 If a command fails, stop at that step. Send the maintainer the page, step, expected result and exact visible error. Include the printed report folder if available; leave out passwords and access tokens. Do not change software versions, delete existing files or bypass a refusal to make the command continue.

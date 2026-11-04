@@ -18,7 +18,7 @@ If you are not yet using an agent with site access, start with [setup](setup.md)
 
 **You decide:** the language, selected guides, preferred terms and wording, with the site's reviewers. Discuss source conventions such as meaningful italics or capitals rather than assuming software knows how they should transfer.
 
-**You should receive:** proposed words beside their source, clear human decisions, a viewable result or a maintainer arranging one, actual check results and a submission or explicit handoff. Keep the language excluded from the live site throughout preparation. Existing translations and PDFs stay intact.
+**You should receive:** proposed words beside their source, clear human decisions, a viewable result or a maintainer arranging one, actual check results and a submission or explicit handoff. Keep a new language excluded from the live site throughout preparation. Preserve an existing language's availability and working pages. Existing translations and PDFs stay intact.
 
 **Next:** [your first translation](first-translation.md). You can also [review wording](review-wording.md) while someone else operates the skills.
 
@@ -36,4 +36,4 @@ Keep useful agreed terms, reviewer decisions, source version and unanswered ques
 
 ### Check the result
 
-The team can trace reviewed words and unresolved work to the actual source and submitted changes. The language stays off the live site while being prepared. Technical review, language approval and publication remain separate.
+The team can trace reviewed words and unresolved work to the actual source and submitted changes. A new language stays off the live site while being prepared; an existing language's availability is preserved. Technical review, language approval and publication remain separate.

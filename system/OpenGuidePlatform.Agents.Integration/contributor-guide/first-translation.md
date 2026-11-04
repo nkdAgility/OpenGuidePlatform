@@ -2,7 +2,7 @@
 
 You bring the language knowledge. An agent can help with the files, checks and submission. This page takes you through the work; the linked task pages give the next request to send.
 
-You will prepare the website language first, then translate the guide editions the team selects. An edition is one version of a guide; choosing one does not commit you to translating its whole history.
+First check what already exists. For a new website language, prepare its menus and introductory pages before translating a guide. For an existing language, keep its working pages and translate or update only the agreed missing text. An edition is one version of a guide; choosing one does not commit you to translating its whole history.
 
 ## Work with an agent
 
@@ -10,7 +10,9 @@ Use an agent that can access this guide site's files and installed OGP skills. A
 
 ### 1. Choose the work with the site team
 
-Tell the team which language and regional variant you want to help with. Agree who will review the wording and who settles disagreements. Follow the site's translation policy for terminology, licences, acknowledgements and reviewer requirements. Keep questions visible when the team has not decided something.
+Return to the guide site's translation page and use its **Start here** contact link. Send the request provided there: it tells the team your language, selected guide and whether you need help with the tools. Keep that discussion open throughout the work. If you arrived directly at OGP, [find your guide site's contact](setup.md#find-the-team-for-your-guide-site).
+
+Agree who will review the wording and who settles disagreements. Follow the site's translation policy for terminology, licences, acknowledgements and reviewer requirements. Keep questions visible when the team has not decided something.
 
 ### 2. Find out what exists
 
@@ -22,13 +24,15 @@ This uses [guide.transstatus](../skills/guide.transstatus/SKILL.md). Expect an u
 
 ### 3. Prepare the website language
 
-Follow [add a language](add-language.md), which uses [guide.transcreate](../skills/guide.transcreate/SKILL.md). It covers menus, buttons, homepages and pages for finding guides. You approve proposed wording before the agent applies it. The language stays excluded from the live website.
+If the status report says this website language is missing or incomplete, open [add a language → Work with an agent](add-language.md#work-with-an-agent) and paste that page's requests into the same conversation. It uses [guide.transcreate](../skills/guide.transcreate/SKILL.md) for menus, buttons, homepages and pages for finding guides. You approve proposed wording before the agent applies it. A new language stays excluded from the live website.
+
+If the website language is already ready, go straight to step 4. Do not disable an existing live language or recreate its pages.
 
 Before creating empty guide starting pages, the agent shows the eligible guides and editions and asks you to choose which to include. **An empty page is not a translated guide.** It must report unfinished work plainly.
 
 ### 4. Translate the guide you selected
 
-Follow [translate a guide](translate-guide.md), also using **guide.transcreate**, for the separately selected guide and edition. You can supply the translation or ask for a draft. Use the agreed terms, compare it with the source, and have people review it. Ask questions about meaning rather than accepting software's guess.
+Open [translate a guide → Work with an agent](translate-guide.md#work-with-an-agent) and paste its request into the same conversation for the separately selected guide and edition. This uses **guide.transcreate**. If you are updating an existing translation because its source changed, instead open [update a translation](update-translation.md#work-with-an-agent), which uses **guide.transreconcile**. You can supply the translation or ask for a draft. Use the agreed terms, compare it with the source, and have people review it. Ask questions about meaning rather than accepting software's guess.
 
 Use [review wording](review-wording.md) to give corrections a person or agent can apply. You do not need to calculate file fingerprints or edit settings.
 
@@ -40,7 +44,7 @@ Follow [credits and PDFs](credits-pdfs.md) for **guide.contributions** and, only
 
 ### 6. Submit for review
 
-Follow [check and submit](validation.md). Ask for a clear account of changed text, review decisions, actual check results and unresolved work. A pull request is the submission asking the site team to review changes; it does not publish them.
+Open [check and submit → Work with an agent](validation.md#work-with-an-agent) and paste its request into the same conversation. Ask for a clear account of changed text, review decisions, actual check results and unresolved work. A pull request is the submission asking the site team to review changes; it does not publish them.
 
 An agent's ability to submit depends on repository access and the site's permissions. There is no separate OGP submission skill. If it cannot submit, give the reviewed work and check results to the maintainer and ask them to confirm the submission link. You can share a checked website-only stage early, clearly marked as unfinished guide translation.
 

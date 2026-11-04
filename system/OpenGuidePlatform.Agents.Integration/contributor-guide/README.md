@@ -2,7 +2,7 @@
 
 You bring the language knowledge. An agent can help with the files, checks and submission. People decide whether the wording is right and when it may be published.
 
-**Start with [your first translation](first-translation.md).** It takes you from choosing the work to submitting it for review. You do not need to learn terminal commands first.
+**Start with [your first translation](first-translation.md).** If you need a person to help you start, [find your guide site’s team](setup.md#find-the-team-for-your-guide-site). It takes you from choosing the work to submitting it for review. You do not need to learn terminal commands first.
 
 ## Work with an agent
 

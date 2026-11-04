@@ -1,6 +1,6 @@
 # Translate a guide
 
-Choose the guide, edition (version) and language with the site team. If the website has not been prepared for this language, first follow [add a language](add-language.md). You do not need to translate every older edition.
+Choose the guide, edition (version) and language with the site team. Use the status report to check whether the website language is ready. If it is missing or incomplete, first follow [add a language](add-language.md). Preserve an existing live language and its working pages. You do not need to translate every older edition.
 
 ## Work with an agent
 

@@ -4,9 +4,26 @@ You can contribute words without installing developer tools. If you want an agen
 
 ## Work with an agent
 
-Start in an agent that can work with project files. If you do not have one connected to this site, ask the maintainer which supported setup they recommend and how to open the site's files. These instructions do not assume you have bought an AI subscription or chosen a particular product.
+### Find the team for your guide site
 
-Once the site is open, paste:
+Use the **Start here** contact on the guide site's translation page. For these sites, the public contact is:
+
+- **Kanban Guides:** [translation help and discussions](https://github.com/KanbanGuides/KanbanGuides/discussions). Follow its [local translation policy](https://github.com/KanbanGuides/KanbanGuides/blob/main/docs/translations.md).
+- **ScrumExpansion:** [translation help and discussions](https://github.com/ScrumGuides/ScrumGuide-ExpansionPack/discussions). Follow its [local translation policy](https://github.com/ScrumGuides/ScrumGuide-ExpansionPack/blob/main/docs/translations.md).
+
+A GitHub account lets you post and reply; no tools need installing to ask for help. Search for your language and join its existing discussion. If there is none, choose **New discussion**. For another guide site, use its own contribution contact rather than either team above.
+
+Send this, filling in the words in square brackets:
+
+> I want to translate [guide name] into [language and regional variant]. I am new to the tools. Please identify the person who can approve the work and the person who will review the wording. I want to use an agent. Please tell me which supported agent setup to use, how to make and open my own working copy, and how to check that this site's OGP skills are available. If setup cannot be provided, please arrange a review sheet and someone to handle the files and submission.
+
+### Open the project in your agent
+
+The maintainer is the person responsible for the site's technical operation. Ask them to supply the supported agent's name, its opening instructions, your own fork's address and the full path of its local folder, plus confirmation that the site's tools and OGP skills are ready. A fork is your copy on GitHub; the local folder is its copy on your computer. You do not need to buy a subscription or select an unfamiliar product by guesswork.
+
+Open that supported agent and use its supplied instructions to open the exact local folder. Check that its project view shows `build.ps1` and `.agents/skills/guide.transstatus/SKILL.md`. A normal chat with uploaded documents alone is not connected to the project. Do not paste a password or access token to connect it. If you cannot open the folder or see those files, reply in the same site discussion with what you can see and ask for setup help.
+
+Once the site is open, paste this into the agent conversation:
 
 > Use this site's installed **guide.transstatus** skill to check whether you can inspect translation work. Do not change files. Explain the required access and missing tools in plain English. Identify the installed OGP version and the report you used, or explain why you cannot produce one. Do not install tools, create a branch or change software versions without the site's required permission.
 
@@ -24,9 +41,15 @@ This invokes [guide.transstatus](../skills/guide.transstatus/SKILL.md), a read-o
 
 Ask the site team for its GitHub address, contribution policy, supported tool versions and the person who can help with setup. A **fork** is your copy on GitHub. A **local copy** is the folder on your computer where commands run. A **branch** keeps one piece of work together.
 
-**Publication status:** the contributor module is being implemented and verified. It is not yet published to PowerShell Gallery. Do not expect the installation command below to work until the maintainer confirms publication, or supplies a separately verified installation route. Do not choose an unrelated module with a similar name.
+**Before installing anything:** use the site contact above and send: “I want to follow the manual translation steps for [guide] in [language]. Please confirm the contributor module's published version, the supported tool versions, who can perform the administrator installation, and who will help if setup fails.” Wait for that information before continuing. You can [supply and review words without installing tools](review-wording.md#i-do-not-have-an-agent-and-want-to-do-this-manually) while setup is arranged.
+
+**Publication status for this unreleased documentation:** the contributor module has been implemented and locally verified, but its PowerShell Gallery publication has not been verified. Do not expect the installation command below to work until the maintainer confirms publication, or supplies a separately verified installation route. Do not choose an unrelated module with a similar name.
 
 ### Prepare access and tools
+
+This setup is only for someone running the commands themselves. For [wording-only participation](review-wording.md#i-do-not-have-an-agent-and-want-to-do-this-manually), another volunteer handles these tools and submits the reviewed files for you.
+
+The tools have separate jobs: **Git** copies and shares the project; **PowerShell** runs the OGP commands; **Hugo Extended** makes the review website; **Go** supplies its shared website components; **GitHub CLI** signs in from the command window. Ask the setup volunteer to check which are already installed and install only what is missing, using the supported versions. You do not need to learn their internals to translate.
 
 1. Create a GitHub account, open the guide site's GitHub page and choose **Fork**. Confirm the resulting project is under your account. Keep the original site's address too: the submission goes back there later.
 2. Install the versions the site team supports: [Git](https://git-scm.com/install/), [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell), [Hugo Extended](https://gohugo.io/installation/), [Go](https://go.dev/doc/install) and [GitHub CLI](https://cli.github.com/). PowerShell must be 7.4 or later. Ask the team to install any tool you are not authorised to install. PDF generation needs extra tools only if you reach that task.
