@@ -4,41 +4,16 @@ name: Close PR
 on:
   pull_request:
     types: [closed]
-  workflow_dispatch:
-    inputs:
-      pull-request:
-        description: Closed same-repository PR whose obsolete preview should be removed
-        required: true
-        type: string
 permissions:
   contents: read
   pull-requests: write
 concurrency:
-  group: open-guide-platform-${{ github.event.pull_request.number || inputs.pull-request }}
+  group: open-guide-platform-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 jobs:
-  resolve:
-    name: Validate closed PR
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
-    outputs:
-      pull-request: ${{ steps.resolve.outputs.pull-request }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Resolve closed PR preview
-        id: resolve
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CLEANUP_PULL_REQUEST: ${{ github.event.pull_request.number || inputs.pull-request }}
-        run: ./.build/Resolve-PreviewCleanup.ps1
-        shell: pwsh
   close:
     name: Close PR preview
-    needs: resolve
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     uses: ./.github/workflows/guide-site-close-pr.yaml
-    with:
-      closed-pull-request: ${{ needs.resolve.outputs.pull-request }}
     secrets:
       static-web-app-token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_FIELD_06CEA8C03 }}

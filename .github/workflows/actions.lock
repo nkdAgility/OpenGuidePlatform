@@ -18,8 +18,6 @@ workflows:
         - 'actions/upload-artifact@v7'
         - 'gittools/actions@v4'
         - 'peaceiris/actions-hugo@v3'
-    '.github/workflows/sample-close-pr.yaml':
-        - 'actions/checkout@v7'
 dependencies:
     'actions/checkout@v7':
         ref: 'v7'

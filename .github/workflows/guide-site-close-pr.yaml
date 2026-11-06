@@ -4,11 +4,6 @@ name: GuideSite Close PR
 on:
   workflow_call:
     inputs:
-      closed-pull-request:
-        description: Validated closed PR number for manually retried cleanup
-        type: string
-        required: false
-        default: ''
       deployment-environment:
         description: Exact Azure environment to close; defaults to the pull request number.
         type: string
@@ -23,7 +18,7 @@ permissions:
 jobs:
   close:
     name: Close PR preview
-    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'closed') || (github.event_name == 'workflow_dispatch' && inputs.closed-pull-request != '') }}
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
     runs-on: ubuntu-latest
     steps:
       - name: Close Azure PR environment
@@ -32,7 +27,7 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.static-web-app-token }}
           repo_token: ${{ github.token }}
           action: close
-          deployment_environment: ${{ inputs.deployment-environment || github.event.pull_request.number || inputs.closed-pull-request }}
+          deployment_environment: ${{ inputs.deployment-environment || github.event.pull_request.number }}
           app_location: ''
           skip_app_build: true
           skip_api_build: true

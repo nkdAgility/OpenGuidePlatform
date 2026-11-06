@@ -143,9 +143,9 @@ git diff -- .github/workflows
 
 For an offline coverage check, run `gh actions-lock --verify-local`. Full `--verify` checks upstream pins and requires GitHub access. Commit generated workflow headers and the lockfile together. The initial lockfile was generated with extension v0.1.6 (format v0.0.2); this is technical-preview tooling, so consult the [official documentation](https://github.com/github/gh-actions-lock) when upgrading it.
 
-All four workflows are scanned and have external dependencies recorded. Local reusable calls retain their existing syntax. Successful CLI verification is local evidence, not proof of GitHub runtime enforcement or reusable-workflow execution.
+All four workflows are scanned. The generator records the three workflows with external dependencies; `sample-close-pr.yaml` only calls the local `guide-site-close-pr.yaml`, whose Azure action is locked. Local reusable calls retain their existing syntax. Successful CLI verification is local evidence, not proof of GitHub runtime enforcement or reusable-workflow execution.
 
-The Azure cleanup action uses the official `v1-self-hosted` reference, locked to its reviewed commit. This is a necessary exception to version tags: Azure's `v1` branch and tag identify different commits, which GitHub's lockfile enforcement rejects as ambiguous. The old `v1` tag also predates named deployment-environment support. The official variant runs the Azure client container on GitHub-hosted runners; its name does not require a self-hosted runner. Review the generated Azure dependency change with its action definition; its upstream client container remains mutable, as it was in the previous action.
+The Azure cleanup action uses the official `v1-self-hosted` reference, locked to its reviewed commit. This is a necessary exception to version tags: Azure's `v1` branch and tag identify different commits, which GitHub's lockfile enforcement rejects as ambiguous. The old `v1` tag also predates named deployment-environment support. The official variant runs the Azure client container on GitHub-hosted runners; its name does not require a self-hosted runner. Its upstream client container remains mutable, as it was in the previous action. Cleanup runs on the original closed-PR event; manual dispatch is not supported by Azure's event-dependent close client.
 
 Repository administrators can separately enable **Settings → Actions → Policies → Require lockfile**. Adding these files does not enable that setting. Evaluate the policy and verify PR, manual, merge-queue and cleanup runs before enforcing it. Consumer repositories and their policies are managed separately.
 
@@ -158,14 +158,6 @@ Repository administrators can separately enable **Settings → Actions → Polic
 | Production destination | https://blue-field-06cea8c03.6.azurestaticapps.net/ |
 
 These are configured destinations, not a claim that each environment is deployed. PR 35 uses [its own preview](https://blue-field-06cea8c03-35.westeurope.6.azurestaticapps.net/). The sample's production deployment is disabled. [PR cleanup](../.github/workflows/sample-close-pr.yaml) cancels the matching run and closes that PR's preview environment.
-
-To retry cleanup after a failed closed-PR workflow, use the existing checkout's reviewed ref and the obsolete PR number:
-
-```powershell
-gh workflow run sample-close-pr.yaml --ref <reviewed-ref> -f pull-request=58
-```
-
-The workflow checks GitHub for the exact closed, same-repository PR before passing its numeric environment name to the shared cleanup action. Open PRs, fork PRs, arbitrary names and production aliases are rejected. Run it once per obsolete preview, inspect the cleanup result, then rerun failed deployment jobs. Do not manually delete Azure environments or remove resource locks. A dispatch requires the workflow to be registered on the default branch; the sample workflow already exists there.
 
 ## Installer changes before publication
 
