@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Close Azure PR environment
-        uses: Azure/static-web-apps-deploy@v1
+        uses: Azure/static-web-apps-deploy@v1-self-hosted # v1 tag is ambiguous; this official ref supports named environments
         with:
           azure_static_web_apps_api_token: ${{ secrets.static-web-app-token }}
           repo_token: ${{ github.token }}

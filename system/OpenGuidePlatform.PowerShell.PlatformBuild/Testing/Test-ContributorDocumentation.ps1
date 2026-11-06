@@ -28,6 +28,19 @@ foreach ($page in $pages) {
             if ($parts[1] -cnotin $anchors) { throw "Broken contributor anchor in ${page}: $link" }
         }
     }
+    # The distributed entry pages must not send volunteers into commands first.
+    $agentHeading = $text.IndexOf('## Work with an agent', [StringComparison]::Ordinal)
+    $manualHeading = $text.IndexOf('## I do not have an agent and want to do this manually', [StringComparison]::Ordinal)
+    if ($agentHeading -lt 0 -or $manualHeading -le $agentHeading) {
+        throw "Contributor page must put the agent route before the manual alternative: $page"
+    }
+    $primaryRoute = $text.Substring(0, $manualHeading)
+    if ($primaryRoute -match '(?m)^ {0,3}(?:`{3,}|~{3,})' -or $primaryRoute -match '\]\([^)]*OpenGuidePlatform\.PowerShell\.Core/') {
+        throw "Contributor page sends the primary route into commands or Core references: $page"
+    }
+    if ($primaryRoute -notmatch '\]\(\.\./skills/guide\.[a-z]+/SKILL\.md\)') {
+        throw "Contributor agent route must link an actual OGP skill: $page"
+    }
 }
 foreach ($name in @('ownership','candidate','translation','publication')) {
     $path = Join-Path $guide "diagrams/$name.svg"

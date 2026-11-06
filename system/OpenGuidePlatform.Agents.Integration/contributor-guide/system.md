@@ -1,19 +1,33 @@
-# How the system fits together
+# How the work fits together
 
-OpenGuidePlatform (OGP) supplies shared building and publishing tools. A guide site owns its content, design choices and publication decisions. Your computer holds a working copy of that site's repository, called a clone.
+The guide site owns the words and publication decisions. OpenGuidePlatform (OGP) supplies shared tools and instructions. Your agent follows the skills installed for that site.
 
-![OGP supplies tools to the local clone; reviewed site changes travel through a pull request to the site repository.](diagrams/ownership.svg)
+## Work with an agent
 
-In words: the installed OGP package supplies commands and matching instructions. You use those commands against the local site files. You submit the reviewed changes to the site's repository through a pull request. Site maintainers decide when those changes reach readers.
+Start with [setup](setup.md) if the agent cannot access the site. Then ask:
 
-| Owner | What belongs there |
-|---|---|
-| OGP | Reusable procedures, commands, validation, shared templates and these diagrams |
-| Guide site | Guide content, wrapper design, editorial rules, guardian contacts and delivery configuration |
-| Translation team | Proposed text, glossary decisions and review findings |
+> Use this site's installed **guide.transstatus** skill to inspect our chosen language without changing files. Explain which work belongs to the website, which belongs to the guide, and what needs a maintainer or language reviewer. Identify the installed version and actual report used. If you cannot inspect them, say so rather than guessing.
 
-The wrapper is the website around a guide: homepages, navigation, buttons, history and translation listings. Translating a guide body alone does not translate that experience. A site may have any number of guides and editions.
+This uses [guide.transstatus](../skills/guide.transstatus/SKILL.md). **You should receive:** a map of the actual work and who can help, not a demand that you learn the site's software architecture.
 
-Build output goes under `.processing` and is temporary. Do not commit it or edit downloaded platform files. Platform fixes belong in OGP; maintainers adopt a released fix through the coordinated update procedure.
+![OGP supplies skills and tools; your team proposes words; the site team reviews the submission and decides publication.](diagrams/ownership.svg)
 
-**Next:** [set up your computer](setup.md), or [choose a task](README.md).
+The agent can handle supported file operations; you and the language reviewers assess meaning. A maintainer handles site access and review arrangements. Ask them for missing access or capabilities instead of accepting an invented workaround.
+
+**Next:** [your first translation](first-translation.md). The extra background below is for people who want to understand or operate the files themselves.
+
+## I do not have an agent and want to do this manually
+
+### Before you start
+
+This page explains responsibility; it does not require commands or installation. A maintainer handles the site's technical operation. The site's language reviewer or guardian settles editorial decisions according to its policy.
+
+### Choose your next step
+
+OGP supplies shared commands and skills. The guide site owns its content, layout, local policy and publication decisions. People propose and review the words. The website around a guide includes menus, homepages, history and translation listings; translating a guide body alone does not translate those pages.
+
+For actual work, start with [manual setup](setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) and [status](status.md#i-do-not-have-an-agent-and-want-to-do-this-manually). Commands use the runtime already selected by the site. If it lacks a capability, ask the maintainer to update that installation and provide matching instructions. Installing a newer contributor module must not silently upgrade it.
+
+### Check the result
+
+You know who reviews language, who helps with files, and who decides publication. A report or draft does not replace any of those people or their actual approval.

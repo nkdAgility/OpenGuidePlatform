@@ -1,12 +1,16 @@
 # Add a site language and translate selected guides
 
-These workflows work in PowerShell without an agent. A person supplies translated Markdown through their editor; an agent may propose the same candidate. Both use the same discovery, checks, hash protections and builds.
+This is the **technical Core reference for maintainers and installed skills**. For the beginner manual journey, use [add a language](../../OpenGuidePlatform.Agents.Integration/contributor-guide/add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually), [translate a guide](../../OpenGuidePlatform.Agents.Integration/contributor-guide/translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually), or [update a translation](../../OpenGuidePlatform.Agents.Integration/contributor-guide/update-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually). Those pages use the contributor module's task commands and explain their publication prerequisite. Normal contributors do not need to copy the runtime-loading and file-fingerprint code below.
+
+Both the contributor module and installed agent skills use these same Core operations. A person supplies translated Markdown through an editor; an agent may propose the same draft. The same file checks, protection rules and builds apply.
 
 ## Add a language across the site
 
 Adding a language is a site-scoped operation: configuration, interface catalogue, localized wrapper and site-owned data come first, then empty eligible guide scaffolds. The `guide.transcreate` skill follows this same procedure. Body translation is a separately selected stage. A request to edit one existing guide body remains scoped to that edition; that command boundary does not reduce a new-language request to one edition.
 
-Start from the adopted repository root in PowerShell 7.4 or later:
+First follow [computer setup](../../OpenGuidePlatform.Agents.Integration/contributor-guide/setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually): create your fork on GitHub and copy it to your computer. Open PowerShell 7.4 or later in that local copy's folder—the folder containing `build.ps1`. Commands run on your computer, not on the GitHub page.
+
+Copy only the lines inside each PowerShell code block. Run the blocks in order and keep the same window open: later blocks use values set by earlier ones. This first block loads the site's selected OGP version and creates a report of the actual files and work needed. It does not change the translation:
 
 ```powershell
 $workspace = $PWD.Path

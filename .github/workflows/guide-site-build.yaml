@@ -105,7 +105,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./.processing/platform-installer/.build/Restore-OpenGuidePlatform.ps1 -FromWorkflow -OutputPath .processing/platform
       - name: Install guide-site preparation dependencies
-        run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Dependencies -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE
+        run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Dependencies -DependencyScope CurrentUser -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE
       - name: Determine delivery context
         id: delivery
         env:

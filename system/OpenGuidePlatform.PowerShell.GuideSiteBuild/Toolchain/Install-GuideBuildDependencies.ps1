@@ -1,11 +1,11 @@
 function Install-GuideBuildDependencies {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][string]$WorkspaceRoot,[switch]$Deployment)
+    param([Parameter(Mandatory)][string]$WorkspaceRoot,[switch]$Deployment,[ValidateSet('AllUsers','CurrentUser')][string]$Scope='AllUsers')
     # Fresh runners may have PowerShellGet without its default repository registration.
     if(-not (Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue)){
         Register-PSRepository -Default -ErrorAction Stop
     }
-    Install-Module powershell-yaml -MinimumVersion 0.4.12 -Scope CurrentUser -Force -Repository PSGallery -ErrorAction Stop
+    Install-Module powershell-yaml -MinimumVersion 0.4.12 -Scope $Scope -Force -Repository PSGallery -ErrorAction Stop
     if(Test-Path (Join-Path $WorkspaceRoot '.github/GitVersion.yml')){
         Install-GuideGitVersion -WorkspaceRoot $WorkspaceRoot
     }

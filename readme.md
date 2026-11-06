@@ -6,6 +6,8 @@ OpenGuidePlatform provides the shared publishing system beneath your site. Publi
 
 For plain-English tasks and diagrams, start with the [Contributor guide](system/OpenGuidePlatform.Agents.Integration/contributor-guide/README.md). It ships with GuideSite; use its version-matched instructions alongside site policy.
 
+The [installable PowerShell contributor module](system/OpenGuidePlatform.PowerShell.Contributor/README.md) provides task commands with internal runtime loading and discovery. Its instructions distinguish the prepared interface from actual Gallery publication; do not assume a module is available before a maintainer confirms publication.
+
 Your site owns its front end: branding, navigation, page layouts and the surrounding experience. Use the shared Hugo modules within a bespoke site, or make your guides one part of a larger website. The platform does not prescribe a single site design.
 
 It provides:
@@ -23,11 +25,18 @@ Installation and updates support published preview and production releases. Firs
 
 Work from the root of your **guide-site repository**, using PowerShell 7.4 or newer. You need Git, [GitHub CLI](https://cli.github.com/), Hugo Extended 0.146 or newer, and Go 1.24.5 or newer (or the newer version required by your site's modules).
 
-Sign in and install the currently required PowerShell YAML dependency:
+Sign in from your ordinary PowerShell window:
 
 ```powershell
 gh auth login
-Install-Module powershell-yaml -MinimumVersion 0.4.12 -Scope CurrentUser
+```
+
+Install the currently required PowerShell YAML dependency from an administrator
+PowerShell window (or ask your administrator), then return to the ordinary
+window for website work:
+
+```powershell
+Install-Module powershell-yaml -MinimumVersion 0.4.12 -Scope AllUsers
 ```
 
 On Windows, enable **Developer Mode** or use an account with symbolic-link privileges, then run this before cloning:

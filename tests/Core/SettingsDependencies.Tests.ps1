@@ -12,6 +12,6 @@ Describe 'Settings YAML dependency compatibility' {
         Mock Install-Module {} -ParameterFilter {$Name -eq 'powershell-yaml'}
         $settings=& $resolver -WorkspaceRoot $TestDrive -ReadSettings
         $settings.platform.version|Should -Be v1
-        Should -Invoke Install-Module -Times $installs -Exactly -ParameterFilter {$Name -eq 'powershell-yaml' -and $MinimumVersion -eq '0.4.12'}
+        Should -Invoke Install-Module -Times $installs -Exactly -ParameterFilter {$Name -eq 'powershell-yaml' -and $MinimumVersion -eq '0.4.12' -and $Scope -eq 'AllUsers'}
     }
 }

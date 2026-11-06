@@ -1,11 +1,12 @@
 #Requires -Version 7.4
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][ValidateSet('Release','Validate')][string]$Stage,
+    [Parameter(Mandatory)][ValidateSet('Release','Validate','PublishModule')][string]$Stage,
     [Parameter(Mandatory)][string]$AssetsPath,
     [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{40}$')][string]$SourceCommit,
     [string]$ReleaseTag,
-    [string]$Repository='nkdAgility/OpenGuidePlatform'
+    [string]$Repository='nkdAgility/OpenGuidePlatform',
+    [ValidateSet('AllUsers','CurrentUser')][string]$DependencyScope='AllUsers'
 )
 $ErrorActionPreference='Stop'
 $assets=[IO.Path]::GetFullPath($AssetsPath)
@@ -32,3 +33,8 @@ foreach($name in @('release-manifest.json','OpenGuidePlatform-GuideSite.zip','Op
     if((Get-FileHash (Join-Path $verify $name)).Hash -cne (Get-FileHash (Join-Path $assets $name)).Hash){throw "Published $name differs from the tested package."}
 }
 Write-Host "Verified published release $tag from $SourceCommit."
+if($Stage -eq 'PublishModule'){
+    if([string]::IsNullOrWhiteSpace($env:OGP_PSGALLERY_API_KEY)){throw 'Gallery publication requires OGP_PSGALLERY_API_KEY. The GitHub release remains published; no Gallery publication was attempted.'}
+    $module="$PSScriptRoot/system/OpenGuidePlatform.PowerShell.PlatformBuild/Distribution/OpenGuidePlatform"
+    & "$PSScriptRoot/system/OpenGuidePlatform.PowerShell.PlatformBuild/Release/Publish-ContributorModule.ps1" -ModulePath $module -ExpectedVersion $manifest.version -ExpectedCommit $SourceCommit -DependencyScope $DependencyScope -NuGetApiKey $env:OGP_PSGALLERY_API_KEY
+}

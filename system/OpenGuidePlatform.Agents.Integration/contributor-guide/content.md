@@ -1,19 +1,41 @@
 # Correct or add content
 
-First agree the change through the site's contribution process. Identify whether you are editing an existing source-language guide body, a translation, website text, or introducing a new page/edition. They have different owners and supported operations.
+Agree what you want to change with the site team first. A typo in a translation, a new guide and a new edition are different jobs. This page helps you choose a supported route instead of asking an agent to improvise file changes.
 
-| Change | Supported route |
+## Work with an agent
+
+If you need help accessing the site and installed skills, start with [setup](setup.md). Use the route matching the work:
+
+| Your change | Installed skill and task page |
 |---|---|
-| Correct or add paragraphs in an existing source guide | [Core correct-an-existing-guide workflow](../../OpenGuidePlatform.PowerShell.Core/README.md#correct-an-existing-guide) |
-| Correct translated text | [Update a translation](update-translation.md) with same-edition source/target checks |
-| Localize surrounding website text | [Site-language workflow](add-language.md) for supported wrapper resources |
-| Introduce a new guide/page, restructure metadata or change routing | Agree the site-owned design and supported operation with maintainers first |
-| Create a draft edition snapshot | Review the [Core edition commands](../../OpenGuidePlatform.PowerShell.Core/README.md) and the installed [historical-version skill](../skills/guide.historicalversion/SKILL.md); a snapshot is not publication |
+| Correct existing translated guide wording | [guide.transreconcile](../skills/guide.transreconcile/SKILL.md), through [update a translation](update-translation.md) |
+| Prepare website text in a new language or translate a selected guide | [guide.transcreate](../skills/guide.transcreate/SKILL.md), through [add a language](add-language.md) or [translate a guide](translate-guide.md) |
+| Create a draft snapshot of a selected edition | [guide.historicalversion](../skills/guide.historicalversion/SKILL.md), with the maintainer's agreed source and new edition |
+| Correct source-language guide text, create an unrelated page or redesign site structure | No dedicated skill is supplied for this task; ask the maintainer to use the documented manual operation or identify the missing capability |
 
-For an existing source body, run discovery, use `Get-GuideContent` to select its actual guide, edition and source language, and save a separate candidate body. Edit that candidate in your editor, preview `Set-GuideContent` with `-WhatIf`, then apply with the original reviewed hash. Inspect `git diff` and [validate](validation.md). The linked Core workflow gives the complete runnable example.
+For a draft edition, paste:
 
-Do not guess a path from another site's guide count or copy an edition directory manually as a substitute for a supported workflow. Source correction preserves front matter and protected resources. If your request includes unsupported metadata or new resource types, report that boundary; an existing-body writer cannot create arbitrary pages.
+> Use this site's installed **guide.historicalversion** skill for the source edition and new edition we agree with the maintainer. Confirm the selections and show the plan first. Preserve the original and its resources. Keep the new edition a draft. Report conflicting paths, unsupported work and check results. Do not publish it or invent another workflow.
 
-With an assistant: “Read the site's instructions and use installed Core discovery to select the source body for GUIDE, EDITION. Prepare the agreed correction as a candidate, preserve metadata and resources, show the diff and run the required builds.”
+**You decide:** the editorial change and intended edition, with the content owner. **You should receive:** a clear supported scope, an unchanged original for a snapshot, and actual verification results. A snapshot is not a newly written or published guide.
 
-**Success:** the diff contains the agreed addition/correction in the intended component, other content remains intact, and local verification is recorded. Follow site editorial review before publication. A PDF may need explicit regeneration if its generated receipt becomes stale; supplied PDFs remain protected.
+There is no generic “edit anything” skill. Do not stretch a translation or snapshot skill to cover source corrections, arbitrary metadata or new site designs. The manual commands below support existing source-body corrections, but that is not a claim that a dedicated agent skill exists.
+
+**Next:** [review wording](review-wording.md) and [check and submit](validation.md).
+
+## I do not have an agent and want to do this manually
+
+### Before you start
+
+Agree the change with the content owner. A correction in a translated guide, a source-language correction, a new page and a new edition are different tasks. Do not treat them as a general request to rewrite files.
+
+### Run the PowerShell steps
+
+- For a translated guide, follow [translate existing wording](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually) or [compare source changes](update-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually). Those pages use the contributor module's supported draft/save commands.
+- For website wording in a selected language, follow [prepare the website language](add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
+- For an existing **source-language** guide body, no beginner contributor-module draft command is currently supplied. Send the maintainer the guide, edition, page/section, existing words and proposed replacement with a reason. Ask them to apply the agreed correction through [the source-body Core procedure](../../OpenGuidePlatform.PowerShell.Core/README.md#correct-an-existing-guide). That link is the technical maintainer procedure, not a claim that you must understand its internal loading or hashes.
+- For a new page, edition snapshot or changed site design, ask the maintainer to agree the supported procedure first. Do not use a translation command to create arbitrary content or copy a directory as a workaround.
+
+### Check the result
+
+Ask for the applied file/change and a viewable result. Confirm the intended words changed and unrelated guide text, metadata, protected content and PDFs remain intact. Follow [check and submit](validation.md#i-do-not-have-an-agent-and-want-to-do-this-manually) or ask the maintainer to make that handoff. A missing command or unclear approval remains visible; do not claim unsupported work is complete.

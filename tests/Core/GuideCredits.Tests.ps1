@@ -68,6 +68,59 @@ Describe 'Contributor records and credits' {
     It 'reports no findings for valid data' {
         @(Find-ContributorIssues $workspace $policy|Where-Object Severity -eq blocker).Count | Should -Be 0
     }
+    It 'preserves same-name team members with distinct supplied profiles and historical roles' {
+        $team=@(
+            @{name='Same Name';url='https://example.test/first';role='reviewer';weight=1;contributions=@($editionId)},
+            @{name='Same Name';url='https://example.test/First';role='reviewer';weight=2;contributions=@($editionId)},
+            @{name='Team Contributor';githubUsername='helper';role='contributor';weight=3;contributions=@($editionId)},
+            @{name='Team Reviewer';role='translation reviewer';weight=4;contributions=@($editionId)}
+        )
+        New-GuideContributions $workspace $policy example $team -Language es-ES
+        @(Find-ContributorIssues $workspace $policy|Where-Object Severity -eq blocker).Count | Should -Be 0
+        $credits=Get-GuideCredits $workspace $policy example $editionId es-ES -TranslatorRoles @('translator','reviewer','contributor','translation reviewer')
+        @($credits.Translators.name) | Should -Be @('Same Name','Same Name','Team Contributor','Team Reviewer')
+        @($credits.Translators.role) | Should -Be @('reviewer','reviewer','contributor','translation reviewer')
+        @($credits.Translators[0..2] | ForEach-Object { $_['url'] }) | Should -Be @('https://example.test/first','https://example.test/First','https://github.com/helper')
+        $credits.Translators[3].Contains('url') | Should -BeFalse -Because 'a missing supplied profile must not be invented'
+        @(Get-GuideCredits $workspace $policy example $editionId es-ES|ForEach-Object Translators).Count | Should -Be 0 -Because 'default PDF role selection remains translator-only'
+        $path=Join-Path $workspace "$data/example.es-ES.yml"
+        $original=[IO.File]::ReadAllText($path);$hash=(Get-FileHash $path).Hash
+        {Update-GuideContributions $workspace $policy example 'Same Name' $hash $original -Language es-ES} | Should -Throw '*exactly one*'
+        (Get-FileHash $path).Hash | Should -Be $hash
+    }
+    It 'uses identical duplicate rules for assessment and append with <Identifier>' -ForEach @(
+        @{Identifier='url';First='https://example.test/person';Second='HTTPS://EXAMPLE.TEST/person/'},
+        @{Identifier='githubUsername';First='helper';Second='HELPER'}
+    ) {
+        $path=Join-Path $workspace "$data/example.fa.yml"
+        $original="- name: Original Name`n  ${Identifier}: $First`n  role: translator`n  contributions: [`"$editionId`"]`n"
+        [IO.File]::WriteAllText($path,$original);$hash=(Get-FileHash $path).Hash
+        $candidate=$original+"- name: Different Name`n  ${Identifier}: $Second`n  role: contributor`n  contributions: [`"$editionId`"]`n"
+        {Add-GuideContribution $workspace $policy example fa $hash $candidate} | Should -Throw '*identity already exists*'
+        (Get-FileHash $path).Hash | Should -Be $hash
+        [IO.File]::WriteAllText($path,$candidate)
+        @(Find-ContributorIssues $workspace $policy|Where-Object Message -like '*same person*').Count | Should -Be 1
+    }
+    It 'appends a same-name team contributor with a distinct profile without changing existing bytes' {
+        $path=Join-Path $workspace "$data/example.fa.yml"
+        $original="- name: Same Name`n  url: https://example.test/first`n  role: reviewer`n  contributions: [`"$editionId`"]`n"
+        [IO.File]::WriteAllText($path,$original);$hash=(Get-FileHash $path).Hash
+        $candidate=$original+"- name: Same Name`n  url: https://example.test/First`n  role: contributor`n  contributions: [`"$editionId`"]`n"
+        (Add-GuideContribution $workspace $policy example fa $hash $candidate).Status | Should -Be appended
+        [IO.File]::ReadAllText($path) | Should -BeExactly $candidate
+        @(Find-ContributorIssues $workspace $policy|Where-Object Severity -eq blocker).Count | Should -Be 0
+    }
+    It 'preserves distinct query and fragment content in profile identities for <First>' -ForEach @(
+        @{First='https://example.test/profile?next=';Second='https://example.test/profile?next=/'},
+        @{First='https://example.test/profile#section';Second='https://example.test/profile#section/'}
+    ) {
+        $path=Join-Path $workspace "$data/example.fa.yml"
+        $original="- name: Same Name`n  url: $First`n  role: translator`n  contributions: [`"$editionId`"]`n"
+        [IO.File]::WriteAllText($path,$original)
+        $candidate=$original+"- name: Same Name`n  url: $Second`n  role: translation reviewer`n  contributions: [`"$editionId`"]`n"
+        (Add-GuideContribution $workspace $policy example fa (Get-FileHash $path).Hash $candidate).Status | Should -Be appended
+        @(Find-ContributorIssues $workspace $policy|Where-Object Severity -eq blocker).Count | Should -Be 0
+    }
     It 'appends one reviewer while preserving comments, BOM, line endings and every original byte' {
         $path=Join-Path $workspace "$data/example.fa.yml"
         $original=[char]0xFEFF+"# Keep this comment`r`n"+[IO.File]::ReadAllText($path).Replace("`n","`r`n").TrimEnd()

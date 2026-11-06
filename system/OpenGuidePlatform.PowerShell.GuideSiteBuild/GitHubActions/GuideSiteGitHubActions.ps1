@@ -63,7 +63,7 @@ function Invoke-GuideSiteGitHubAction {
             }
             Write-Host "Prepare selected $($context.target): $($context.baseUrl) (site version $($context.siteVersion))."
         }
-        InstallDeploymentDependencies { Install-GuideBuildDependencies -WorkspaceRoot $PWD -Deployment }
+        InstallDeploymentDependencies { Install-GuideBuildDependencies -WorkspaceRoot $PWD -Deployment -Scope CurrentUser }
         Deploy {
             $result=Invoke-GuideArtifactDeployment -DeploymentRoot (Join-Path $PWD 'deployment') -WorkspaceRoot $PWD -SourceCommit $env:EXPECTED_COMMIT -Target $env:EXPECTED_TARGET -DeploymentEnvironment $env:DEPLOYMENT_ENVIRONMENT -ExpectedUrl $env:SITE_BASE_URL
             if($env:GITHUB_OUTPUT){[IO.File]::AppendAllText($env:GITHUB_OUTPUT,"url=$($result.url)`n")}

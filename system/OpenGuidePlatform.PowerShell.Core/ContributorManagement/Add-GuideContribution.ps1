@@ -38,9 +38,9 @@ function Add-GuideContribution {
     $contributions=@($added.contributions|Where-Object {$null -ne $_})
     if(-not $contributions.Count -or @($contributions|Where-Object {[string]$_ -cnotin $editions}).Count){throw 'The appended record must reference existing guide editions in contributions.'}
     if($null -ne $added['localizedNames'] -and $added['localizedNames'] -isnot [Collections.IDictionary]){throw 'localizedNames must map language codes to names.'}
-    $identity=if($added['githubUsername']){"github:$($added['githubUsername'])".ToLowerInvariant()}else{"name:$($added['name'])".ToLowerInvariant()}
+    $identity=Get-GuideContributorIdentity $added
     foreach($person in $before){
-        $existingIdentity=if($person['githubUsername']){"github:$($person['githubUsername'])".ToLowerInvariant()}else{"name:$($person['name'])".ToLowerInvariant()}
+        $existingIdentity=Get-GuideContributorIdentity $person
         if($identity -ceq $existingIdentity){throw 'The appended contributor identity already exists; update that record instead.'}
     }
     if($PSCmdlet.ShouldProcess($selection.Path,'Append reviewed translation contributor')){

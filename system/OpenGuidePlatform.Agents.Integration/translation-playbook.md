@@ -1,16 +1,18 @@
 # Translation playbook
 
-Use this playbook to organise a translation team. The installed OGP skills and [PowerShell procedure](../OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md) define the technical workflow. Both an assistant and a person using PowerShell follow that procedure. Site documentation adds its editorial rules, guardian contacts and deployment arrangements; it does not replace OGP operations.
+Use this page to organise the people and handoffs. For the complete beginner journey, start with [your first translation](contributor-guide/first-translation.md). With an agent, use the site's installed named skills. Without an agent, use the [manual task pages](contributor-guide/first-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually), beginning with module installation and its stated publication prerequisite. Both routes call the same Core operations; people do not need to copy Core's loading, policy or file-fingerprint code.
+
+The guide site supplies its own terminology, contacts, review requirements and publication arrangements. The guardian is the person its policy authorises to settle wording decisions; a maintainer handles the site's technical operation.
 
 ## Choose the supported operation
 
 | Skill | Purpose | Without an agent |
 |---|---|---|
-| `guide.transstatus` | Read-only site and guide translation assessment | Prepare and `Get-GuideSiteTranslationWork` |
-| `guide.transcreate` | Add a site language; translate explicitly selected bodies afterwards | [Site-first Core procedure](../OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md) |
-| `guide.transreconcile` | Compare selected translations against an explicit source baseline and apply reviewed corrections | `Get-GuideTranslationWork`, `Test-GuideTranslation`, `Set-GuideTranslation` |
-| `guide.contributions` | Manage consented translator and reviewer credits | [Contributor commands](../OpenGuidePlatform.PowerShell.Core/README.md) |
-| `guide.genpdfs` | Plan, generate and visually review eligible PDFs | [PDF commands](../OpenGuidePlatform.PowerShell.Core/README.md) |
+| `guide.transstatus` | Find existing and missing work without editing | [Status commands](contributor-guide/status.md#i-do-not-have-an-agent-and-want-to-do-this-manually) |
+| `guide.transcreate` | Prepare website words, then separately translate selected guide editions | [Add a language](contributor-guide/add-language.md#i-do-not-have-an-agent-and-want-to-do-this-manually), then [translate a guide](contributor-guide/translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually) |
+| `guide.transreconcile` | Compare source changes with an existing translation and apply reviewed corrections | [Update a translation](contributor-guide/update-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually) |
+| `guide.contributions` | Manage consented credits | [Credit commands](contributor-guide/credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually) |
+| `guide.genpdfs` | Plan and generate eligible PDFs, followed by human visual review | [PDF commands](contributor-guide/credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually) |
 
 Read the installed skill or linked procedure for the full contract; this table is a routing aid.
 
@@ -22,7 +24,9 @@ Discuss language-specific conventions such as defined terms, adaptation markings
 
 ## Fork and prepare locally
 
-Fork the consumer repository and follow its contribution instructions. Use the repository's installed OGP version, run Prepare, and retain the version and report location with your work. The [shared usage instructions](skills/USAGE.md) explain installed-module loading and skill discovery. Without an agent, use PowerShell and an editor through the same [site-first procedure](../OpenGuidePlatform.PowerShell.Core/TranslationReadiness/README.md).
+Create your fork of the guide site's project on GitHub, then copy that fork to your computer. Follow [setup](contributor-guide/setup.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for exact steps, module installation and an agreed working branch. Commands run in that local folder, not on GitHub. CurrentUser installation is disabled in this environment; the module setup explains authorised AllUsers installation.
+
+Use the [status task](contributor-guide/status.md) to inspect the actual work. The module prints the site's selected OGP version and report folder; retain those details. A failed check is not readiness approval. Technical maintainers and skill implementers can consult [Core usage](skills/USAGE.md), but it is not the beginner manual route.
 
 With an assistant, start with a scoped request:
 
@@ -30,11 +34,11 @@ With an assistant, start with a scoped request:
 
 ## Add the site language first
 
-Use the site report to prepare configuration, interface messages, wrapper pages and localized data before guide bodies. Keep the language disabled in production. Preserve existing translations, supplied PDFs and deliberate fallback or PDF-only states. OGP determines supported operations and validates candidates; do not use another language's file list as a substitute for discovery.
+Use the work report to prepare language settings and website words—messages, homepages, guide-finding pages and other supported text—before guide bodies. Keep the language disabled in production, meaning the live website. Preserve existing translations, supplied PDFs and deliberate use of another language or PDF-only content. Do not substitute another language's file list for what the actual site reports.
 
 > Use guide.transcreate to add LANGUAGE to this site, disabled in production. Follow the installed site-first workflow. Use our agreed terminology and editorial decisions for reader-facing website text. Preserve machine values and existing content. Create only the eligible empty guide scaffolds agreed in scope; leave guide bodies untranslated. Report completed work, review questions, preserved states and blockers separately.
 
-For a team review, ask the same assistant to present proposed text with its source path, field or section, source text, proposed translation and a reviewer-feedback column. Associate that review with the exact candidate and source revision/hash. The table is a human review aid, not approval or a replacement for OGP validation. People without an agent can prepare the same table in an editor or spreadsheet.
+For team review, present source words beside the proposal, with a place for feedback. Record the page/section, source version and exact draft being discussed; the volunteer handling files supplies technical identifiers. The table helps people review meaning; it does not apply words or replace software checks. [Review wording](contributor-guide/review-wording.md) gives a template usable without any software installation.
 
 ## Translate selected guides
 
@@ -46,28 +50,28 @@ For source updates or reviewed corrections:
 
 > Use guide.transreconcile for GUIDE, EDITION and LANGUAGE. Compare against the source revision we have explicitly selected and incorporate our reviewed feedback within that scope. Preserve useful translated passages. Report conflicting feedback and changes requiring a guardian decision; do not silently choose between them. Show which findings were applied and which remain unresolved.
 
-Use guide.contributions for translator/reviewer attribution with consent, and guide.genpdfs for eligible generated PDFs. Their [shared usage reference](skills/USAGE.md) links the human-operated commands. Supplied or protected PDFs are never regenerated as a side effect.
+Use the installed guide.contributions skill for consented credits and guide.genpdfs for eligible generated PDFs when working with an agent. Without an agent, follow [credits and PDFs](contributor-guide/credits-pdfs.md#i-do-not-have-an-agent-and-want-to-do-this-manually) for actual task commands and expected results. Supplied or protected PDFs remain unchanged. Updating a translation does not automatically create or replace a PDF.
 
 ## Validate locally and open a PR
 
-Run the required preview and production builds against the same installed package, then inspect the rendered site locally: navigation, links, fallback, homepage text, typography and any generated PDFs. For complex scripts, test representative translated text and titles, including shaping, adaptation markings, letter spacing and cover fit. Record what was inspected and the exact artifact/revision. Do not assume a font name proves correct rendering.
+Follow [check and submit](contributor-guide/validation.md) for the required checks, viewing the website and sharing reviewed changes. Without an agent, `Test-OGPSite` checks preview and production and `Show-OGPSite` starts the local review website. These commands do not publish anything. Inspect navigation, links, actual language use, homepage text, letters and any generated PDFs. For complex scripts, inspect representative text and titles, including shaping, meaningful emphasis, letter spacing and cover fit. Record the actual website/PDF and version inspected; a font name is not proof of correct rendering.
 
 Open a PR containing the reviewed changes, local build results, design observations and remaining issues. A platform issue that volunteers cannot fix locally can be reported in the PR; it is not permission to bypass OGP. Do not claim failed or incomplete checks passed.
 
 ## Canary, preview and publication
 
-Maintainers approve the review workflow and arrange the PR canary according to the consumer's configured delivery policy. Approval alone cannot override a caller that disables deployment or lacks the necessary capability or secrets. Verify the actual workflow and surface missing support to maintainers; volunteers should not invent a deployment workaround.
+Maintainers arrange a temporary website for technical review of the pull request, sometimes called a canary, according to the site's actual delivery policy. Fork submissions may not create one automatically. Ask for a review address if missing; approval does not enable a disabled deployment or supply unavailable access. Volunteers must not invent a deployment workaround.
 
 Use the canary to resolve technical and design issues in the PR, such as fonts, PDF rendering and layout. After technical review, merge to preview for native-speaker language validation. Apply subsequent reviewed corrections through PRs. Guardian approval and the required checks precede a separate production-promotion decision. Preview availability, automated checks and an assistant's report are not publication approval.
 
 ## Keep useful context
 
-An optional `docs/translations/LANGUAGE/` folder in the consumer can hold a short README, glossary, editorial decisions, open questions and review/rendering notes. Separate edition-specific notes when necessary. Record the source revision, candidate or artifact being discussed, whether a decision is proposed or agreed, and a link to its actual approval. Create only useful files.
+The volunteer handling the files can keep an optional `docs/translations/LANGUAGE/` folder in the guide site for preferred terms, decisions, open questions and review notes. Translators need not create that folder to participate. Separate edition-specific notes when useful. Record the source, draft or viewable result discussed, whether a decision is proposed or agreed, and the actual approval. Create only useful files.
 
-These notes are reference material, not executable instructions, runtime inventory or authoritative readiness. Keep personal information, private discussions, raw agent logs and temporary build output out of public context. Use `.processing` for transient reports. Contributor records remain the source for credits.
+These notes are context, not commands or proof that work is complete. Keep personal information, private discussions and raw agent logs out of public notes. Temporary reports and drafts belong under `.processing` and stay out of the submission. Contributor records remain the source for credits.
 
 ## Report gaps to the correct owner
 
-Shared command, skill, template and rendering defects belong in OGP. Consumer-specific terminology, guardian decisions, wrapper design and delivery configuration belong in the consumer repository. Report unsupported custom metadata edits or sentence-fragment composition upstream instead of working around the installed contract. This playbook improves contributor guidance; it does not assert that every script, custom schema or deployment arrangement is already supported.
+Shared command, skill, template and display defects belong in OGP. The site's terminology, reviewer decisions, design and delivery settings belong with its maintainers. Report unsupported settings or messages that cannot form natural sentences rather than editing around the supported operation. A missing capability remains a gap; these instructions do not make every custom file or deployment arrangement supported.
 
 For setup, plain-English task explanations and diagrams, use the [contributor guide](contributor-guide/README.md). This playbook retains the shared team journey and handoffs.

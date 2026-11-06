@@ -1,21 +1,42 @@
 # Understand files and changes
 
-A guide page is usually Markdown: plain text with marks for headings, emphasis and links. A front matter block at its beginning stores settings. YAML and JSON hold settings and interface messages. You translate agreed reader-facing values while preserving identifiers, addresses and placeholders that the software uses.
+You can review words without learning the site's file formats. The agent or a volunteer can handle them while you focus on what readers will understand.
 
-For example, in `Download {{ .Site.Title }}`, translate “Download” but keep `{{ .Site.Title }}` intact. In `[Read the guide](guide-url)`, translate the label and preserve the destination. A custom field is not automatically editable just because it contains English.
+## Work with an agent
 
-## Why use a candidate?
+Use [guide.transstatus](../skills/guide.transstatus/SKILL.md) to identify the selected work without editing. If the agent cannot access the project or skill, start with [setup](setup.md).
 
-A candidate is a separate proposed version. Review it before asking the platform to replace the existing file. A hash (SHA-256 fingerprint) identifies the exact source or target bytes you reviewed. If another person changes a file, the old fingerprint no longer matches; reconcile the change rather than substituting a new hash blindly.
+> Use this site's installed **guide.transstatus** skill to identify the files involved in our agreed translation. Do not change files. Explain which words readers see, which settings must stay intact, and what is still unknown. Use actual findings, not another site's file list. Explain unfamiliar terms as they arise.
 
-![Read source and target, prepare a candidate, review and check, then apply only while the reviewed fingerprints still match.](diagrams/candidate.svg)
+**You should receive:** a short explanation connected to your chosen language and guide. You do not need to supply technical file identifiers yourself.
 
-In words: read the actual source and destination; prepare a candidate; have people review it and run the supported check; preview the operation with `-WhatIf`; apply against the original reviewed hashes; inspect the diff and build. A stale hash returns you to reading and reconciliation. A check does not approve the translation's meaning.
+For example, in `Download {{ .Site.Title }}`, translate “Download” but keep `{{ .Site.Title }}` intact: the software fills that part in. In a link, the words may change while the address stays the same.
 
-## What gets shared?
+**You decide:** the proposed words, not whether an unfamiliar software setting should be translated. Ask the agent to flag uncertain fields. Approved file changes must use the appropriate installed skill on [add a language](add-language.md), [translate a guide](translate-guide.md) or [update a translation](update-translation.md).
 
-`git diff` shows edits you have not yet selected for a commit. `git diff --cached` shows the selected (staged) edits. `git status --short` also lists new, untracked files, which neither diff includes until you stage them. A commit saves a selected set of changes locally. A push sends commits to GitHub. A pull request asks the site team to review and merge them. These are separate actions, and none alone approves production publication.
+**Next:** return to [your first translation](first-translation.md). The explanation below is optional background, not a prerequisite for wording review.
 
-Keep `.processing`, private coordination, raw assistant logs and unconsented personal information out of commits. Preserve protected PDFs, routing metadata, explicit anchors and intentional formatting. Do not add `lang`, fonts or attribution fields to guide front matter; follow [credits and PDFs](credits-pdfs.md).
+## I do not have an agent and want to do this manually
 
-**Next:** [translation journey](translation.md) or [content changes](content.md). **Recovery:** [stale files and other failures](troubleshooting.md).
+### Before you start
+
+This is optional background, not another software task. You can review words without editing files.
+
+### Choose your next step
+
+| Term | What it means for your work |
+|---|---|
+| Fork | Your copy of the site's project on GitHub. |
+| Local copy / clone | The folder on your computer copied from that fork. Commands run here. |
+| Draft | A separate proposed file to review before applying it to the site. |
+| Page settings / front matter | The section between `---` lines at the start of a page. Preserve unselected settings. |
+| Branch | The line of work agreed for this task. |
+| Commit / push / pull request | Save selected changes locally / share them with GitHub / ask the site team to review them. |
+
+In `Download {{ .Site.Title }}`, translate “Download” and preserve `{{ .Site.Title }}`: software fills it in. In `[Read the guide](guide-url)`, the label may be translated while the destination stays intact. A setting containing English is not automatically a word you should translate.
+
+OGP keeps working drafts and reports under `.processing`. Apply reviewed words through the task command before submitting the resulting site-file changes; do not submit that temporary folder or edit its check records. The module checks whether source/destination files changed while you worked. A refusal means review again, not change the recorded fingerprint to force a save.
+
+### Check the result
+
+You should know which words you are changing and which identifiers/settings must remain intact. Ask the maintainer about an uncertain field. Continue to [translate a guide](translate-guide.md#i-do-not-have-an-agent-and-want-to-do-this-manually) or [update a translation](update-translation.md#i-do-not-have-an-agent-and-want-to-do-this-manually).
