@@ -124,18 +124,27 @@ Describe 'Guide-site installation and update' {
         $before=(Get-FileHash "$workspace/.OpenGuidePlatform/installation.json").Hash
         $local=& $resolver -WorkspaceRoot $workspace
         # Exercise a normal site workflow, independent of the enclosing platform build's inputs.
+        Mock Get-Module {} -ParameterFilter {$ListAvailable -and $Name -contains 'powershell-yaml'}
+        Mock Install-Module {} -ParameterFilter {$Name -eq 'powershell-yaml'}
         $workflowEnvironment=@{}
         foreach($name in @('PLATFORM_RING','PLATFORM_RELEASE','PLATFORM_PACKAGE_URL','PLATFORM_PACKAGE_SHA256','PLATFORM_VERSION','GITHUB_OUTPUT')){
             $workflowEnvironment[$name]=[Environment]::GetEnvironmentVariable($name)
         }
+        Push-Location -LiteralPath $workspace
         try{
             foreach($name in $workflowEnvironment.Keys){[Environment]::SetEnvironmentVariable($name,$null)}
-            $ci=& $resolver -WorkspaceRoot $workspace -FromWorkflow -OutputPath '.processing/ci-platform'
+            & "$root/.build/Restore-OpenGuidePlatform.ps1" -FromWorkflow -OutputPath '.processing/ci-platform'
         }finally{
+            Pop-Location
             foreach($name in $workflowEnvironment.Keys){[Environment]::SetEnvironmentVariable($name,$workflowEnvironment[$name])}
         }
+        Should -Invoke Install-Module -Times 1 -Exactly
+        Should -Invoke Install-Module -Times 1 -Exactly -ParameterFilter {
+            $Name -eq 'powershell-yaml' -and $MinimumVersion -eq '0.4.12' -and
+            $Repository -eq 'PSGallery' -and $Scope -eq 'CurrentUser'
+        }
         (Get-Content "$local/platform.json" -Raw|ConvertFrom-Json).version|Should -Be '1.2.3-Preview.2'
-        (Get-Content "$ci/platform.json" -Raw|ConvertFrom-Json).version|Should -Be '1.2.3-Preview.2'
+        (Get-Content "$workspace/.processing/ci-platform/platform.json" -Raw|ConvertFrom-Json).version|Should -Be '1.2.3-Preview.2'
         (Get-FileHash "$workspace/.OpenGuidePlatform/installation.json").Hash|Should -Be $before
     }
     It 'migrates legacy delivery during upgrade without putting editable settings in the record hashes' {
