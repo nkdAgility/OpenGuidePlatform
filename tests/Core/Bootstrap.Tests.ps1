@@ -100,6 +100,7 @@ Describe 'Guide-site installation and update' {
         $record=Get-Content "$workspace/.OpenGuidePlatform/installation.json" -Raw|ConvertFrom-Json
         $record.releaseTag|Should -Be v1.2.3-Preview.2
         $record.workflowReference|Should -Be v1.2-preview
+        Get-Content "$workspace/.agents/skills/USAGE.md" -Raw|Should -Match "https://github.com/nkdAgility/OpenGuidePlatform/blob/$('a'*40)/system/OpenGuidePlatform.Agents.Integration/contributor-guide/setup.md#"
         $record.managedFiles.PSObject.Properties.Name|Should -Not -Contain '.OpenGuidePlatform/settings.yaml'
         Get-Content "$workspace/.github/workflows/main.yaml" -Raw|Should -Match '@v1.2-preview'
         & "$workspace/build.ps1" -Target production|Should -Be 'GuideSite|1.2.3-Preview.2|production|site'

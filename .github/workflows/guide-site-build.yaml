@@ -206,6 +206,8 @@ jobs:
           # Prepare and Build verify executable identities; runner caches must not select different patches.
           go-version: '1.26.10'
           cache: false
+      - name: Install guide-site dependencies
+        run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Dependencies -DependencyScope CurrentUser -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE
       - name: Build guide site
         run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Build -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE -Target $env:SITE_TARGET -OutputPath .processing/guide-site
       - name: Retain built artifact and identity
@@ -240,6 +242,8 @@ jobs:
         with:
           name: GuideSite-Build
           path: .processing/guide-site
+      - name: Install guide-site dependencies
+        run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Dependencies -DependencyScope CurrentUser -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE
       - name: Validate guide site
         run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Validate -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE -Target $env:SITE_TARGET -OutputPath .processing/guide-site
       - name: Check deployment inputs without deployment credentials
@@ -365,6 +369,8 @@ jobs:
         with:
           name: GuideSite-Validate
           path: .processing/guide-site
+      - name: Install guide-site dependencies
+        run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Dependencies -DependencyScope CurrentUser -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE
       - name: Verify guide site
         run: ./.processing/platform/build.ps1 -Product GuideSite -Stage Verify -WorkspaceRoot $PWD -SourcePath $env:SITE_SOURCE -Target $env:SITE_TARGET -OutputPath .processing/guide-site -DeploymentUrl $env:SITE_DEPLOYMENT_URL
       - name: Retain deployed-site verification
