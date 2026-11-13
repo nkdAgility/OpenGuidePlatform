@@ -88,7 +88,13 @@ $actionsLockPath=Resolve-InstallPath '.github/workflows/actions.lock'
 $actionsLockBefore=if(Test-Path $actionsLockPath){Get-Digest $actionsLockPath}else{$null}
 foreach($item in Get-ChildItem "$package/system/OpenGuidePlatform.Agents.Integration/skills" -File -Recurse){
     $relative=[IO.Path]::GetRelativePath("$package/system/OpenGuidePlatform.Agents.Integration/skills",$item.FullName).Replace('\','/')
-    $files[".agents/skills/$relative"]=[IO.File]::ReadAllBytes($item.FullName)
+    if($relative -ceq 'USAGE.md'){
+        $setupUrl="https://github.com/nkdAgility/OpenGuidePlatform/blob/$($manifest.sourceCommit)/system/OpenGuidePlatform.Agents.Integration/contributor-guide/setup.md"
+        $usage=[IO.File]::ReadAllText($item.FullName).Replace('../contributor-guide/setup.md',$setupUrl)
+        $files[".agents/skills/$relative"]=[Text.Encoding]::UTF8.GetBytes($usage)
+    }else{
+        $files[".agents/skills/$relative"]=[IO.File]::ReadAllBytes($item.FullName)
+    }
 }
 $instructions=[IO.File]::ReadAllBytes("$package/system/OpenGuidePlatform.Agents.Integration/instructions/guide-site.md")
 $files['.agents/agents.md']=$instructions

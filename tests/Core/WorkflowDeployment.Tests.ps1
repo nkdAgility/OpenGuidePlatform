@@ -81,3 +81,16 @@ Describe 'Deployment validates site data using the selected platform package' {
         {Confirm-GuideDeploymentData @arguments}|Should -Throw '*passing evidence*'
     }
 }
+
+Describe 'Guide-site jobs start with their own YAML dependency' {
+    It 'installs runner dependencies before <stage>' -ForEach @(
+        @{job='build';stage='Build'},@{job='validate';stage='Validate'},@{job='verify';stage='Verify'}
+    ) {
+        $commands=@($workflow.jobs[$job].steps | ForEach-Object { [string]$_['run'] })
+        $dependency=@($commands -match '-Stage Dependencies -DependencyScope CurrentUser')
+        $operation=@($commands -match "-Stage $stage\b")
+        $dependency.Count|Should -Be 1
+        $operation.Count|Should -Be 1
+        [array]::IndexOf($commands,$dependency[0])|Should -BeLessThan ([array]::IndexOf($commands,$operation[0]))
+    }
+}
