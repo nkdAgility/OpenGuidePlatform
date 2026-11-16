@@ -41,7 +41,7 @@ $metadata.nativeHugoModule=[ordered]@{path=$metadata.hugoModule;version="v$Versi
 $metadata.workflow=[ordered]@{repository='nkdAgility/OpenGuidePlatform';path='.github/workflows/guide-site-build.yaml';version="v$Version";sourceCommit=$commit}
 $metadata.components=[ordered]@{}
 foreach($component in Get-ChildItem "$stage/system" -Directory|Sort-Object Name){$metadata.components[$component.Name]=$Version}
-$metadata.requirements=[ordered]@{powerShell='>=7.4';hugo='>=0.146.0';hugoExtended=$true;go='>=1.24.5'}
+$metadata.requirements=[ordered]@{powerShell='>=7.4';hugo='>=0.146.0';hugoExtendedRequiredBelow='0.170.0';go='>=1.24.5'}
 [IO.File]::WriteAllText("$stage/platform.json",($metadata|ConvertTo-Json -Depth 10))
 function New-DistributionArchive([string]$stage,[string]$archive) {
 $zip=[IO.Compression.ZipFile]::Open($archive,[IO.Compression.ZipArchiveMode]::Create)

@@ -23,7 +23,7 @@ Installation and updates support published preview and production releases. Firs
 
 ## Before you start
 
-Work from the root of your **guide-site repository**, using PowerShell 7.4 or newer. You need Git, [GitHub CLI](https://cli.github.com/), Hugo Extended 0.146 or newer, and Go 1.24.5 or newer (or the newer version required by your site's modules).
+Work from the root of your **guide-site repository**, using PowerShell 7.4 or newer. You need Git, [GitHub CLI](https://cli.github.com/), Hugo 0.146 or newer (use the Extended edition before 0.170), and Go 1.24.5 or newer (or the newer version required by your site's modules).
 
 Sign in from your ordinary PowerShell window:
 

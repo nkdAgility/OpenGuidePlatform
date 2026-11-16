@@ -49,10 +49,10 @@ Ask the site team for its GitHub address, contribution policy, supported tool ve
 
 This setup is only for someone running the commands themselves. For [wording-only participation](review-wording.md#i-do-not-have-an-agent-and-want-to-do-this-manually), another volunteer handles these tools and submits the reviewed files for you.
 
-The tools have separate jobs: **Git** copies and shares the project; **PowerShell** runs the OGP commands; **Hugo Extended** makes the review website; **Go** supplies its shared website components; **GitHub CLI** signs in from the command window. Ask the setup volunteer to check which are already installed and install only what is missing, using the supported versions. You do not need to learn their internals to translate.
+The tools have separate jobs: **Git** copies and shares the project; **PowerShell** runs the OGP commands; **Hugo (Extended before 0.170)** makes the review website; **Go** supplies its shared website components; **GitHub CLI** signs in from the command window. Ask the setup volunteer to check which are already installed and install only what is missing, using the supported versions. You do not need to learn their internals to translate.
 
 1. Create a GitHub account, open the guide site's GitHub page and choose **Fork**. Confirm the resulting project is under your account. Keep the original site's address too: the submission goes back there later.
-2. Install the versions the site team supports: [Git](https://git-scm.com/install/), [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell), [Hugo Extended](https://gohugo.io/installation/), [Go](https://go.dev/doc/install) and [GitHub CLI](https://cli.github.com/). PowerShell must be 7.4 or later. Ask the team to install any tool you are not authorised to install. PDF generation needs extra tools only if you reach that task.
+2. Install the versions the site team supports: [Git](https://git-scm.com/install/), [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell), [Hugo (Extended before 0.170)](https://gohugo.io/installation/), [Go](https://go.dev/doc/install) and [GitHub CLI](https://cli.github.com/). PowerShell must be 7.4 or later. Ask the team to install any tool you are not authorised to install. PDF generation needs extra tools only if you reach that task.
 3. Choose a plain-text editor with the team. It must edit text without word-processor formatting. You will use **File → Open** to open the exact draft path a command prints; do not use a word processor to edit site files.
 4. On Windows, open **PowerShell 7** from Start. On macOS/Linux, open Terminal and type `pwsh`, then press Enter. If it says the command is missing, complete installation first.
 
@@ -73,7 +73,7 @@ gh --version
 gh auth status
 ```
 
-**You should see:** PowerShell 7.4 or newer, version information from each tool, Hugo with Extended support, and a GitHub sign-in result. Compare versions with the site's requirements. If a tool is missing or too old, stop and ask the team to fix that prerequisite.
+**You should see:** PowerShell 7.4 or newer, version information from each tool, and a GitHub sign-in result. Hugo must be 0.146 or newer. If the Hugo version is below 0.170, its output should include `extended`. Compare versions with the site's requirements. If a tool is missing or too old, stop and ask the team to fix that prerequisite.
 
 If GitHub CLI says you are not signed in, run this and follow its sign-in prompts:
 

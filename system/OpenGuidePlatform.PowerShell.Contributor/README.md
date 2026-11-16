@@ -27,8 +27,8 @@ run Set-Location again. Every command below runs from this same folder.
 
 Your website team must already have installed OGP into this website. You also
 need [Git](https://git-scm.com/downloads), [GitHub CLI](https://cli.github.com/),
-[Hugo Extended](https://gohugo.io/installation/) and
-[Go](https://go.dev/doc/install). OGP needs Hugo Extended 0.146 or later and Go
+[Hugo](https://gohugo.io/installation/) and
+[Go](https://go.dev/doc/install). OGP needs Hugo 0.146 or later (Extended before 0.170) and Go
 1.24.5 or later; the website may require newer versions. Ask the team for its
 supported versions if you are unsure. PDF creation additionally needs Pandoc,
 XeLaTeX and the fonts selected by the website; other tasks do not need them.

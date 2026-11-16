@@ -13,9 +13,9 @@ function Get-GuideHugoToolchain {
     }
     $version=[version]$Matches.version
     $qualifiers=$Matches.qualifiers
-    if($qualifiers -notmatch '(?:\+|\.)extended(?:\+|\.|$)'){
-        throw 'Hugo Extended is required; the detected executable is not an Extended build.'
+    if($version -lt [version]'0.170.0' -and $qualifiers -notmatch '(?:\+|\.)extended(?:\+|\.|$)'){
+        throw 'Hugo versions below 0.170.0 require Hugo Extended; the detected executable is not an Extended build.'
     }
     if($version -lt $MinimumVersion){throw "Hugo $version is below required minimum $MinimumVersion."}
-    [pscustomobject]@{Version=$version.ToString();Extended=$true;Raw=$raw}
+    [pscustomobject]@{Version=$version.ToString();Extended=($qualifiers -match '(?:\+|\.)extended(?:\+|\.|$)');Raw=$raw}
 }
