@@ -17,6 +17,13 @@ Describe 'Hugo toolchain prerequisites' {
         Mock Invoke-GuideHugoVersion -ModuleName OpenGuidePlatform.PowerShell.GuideSiteBuild { 'hugo v0.145.0+extended windows/amd64 BuildDate=2025-01-01' }
         {Get-GuideHugoToolchain} | Should -Throw '*below required minimum*'
     }
+    It 'accepts Hugo 0.170 without an Extended marker and still enforces the minimum' {
+        Mock Invoke-GuideHugoVersion -ModuleName OpenGuidePlatform.PowerShell.GuideSiteBuild { 'hugo v0.170.0-f7aa05f linux/amd64 BuildDate=2026-11-13' }
+        $toolchain=Get-GuideHugoToolchain
+        $toolchain.Version | Should -Be '0.170.0'
+        $toolchain.Extended | Should -BeFalse
+        {Get-GuideHugoToolchain -MinimumVersion '0.171.0'} | Should -Throw '*below required minimum*'
+    }
     It 'does not claim valid tools when execution or parsing fails' {
         Mock Invoke-GuideHugoVersion -ModuleName OpenGuidePlatform.PowerShell.GuideSiteBuild { 'unrecognized development build' }
         {Get-GuideHugoToolchain} | Should -Throw '*Cannot establish*'
