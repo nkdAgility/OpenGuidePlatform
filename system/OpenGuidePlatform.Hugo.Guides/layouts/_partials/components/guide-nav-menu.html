@@ -40,7 +40,7 @@
   {{- $isDetails = true }}
 {{- else if or (eq .RelPermalink $guideRootPattern) (eq .RelPermalink $guideRootPatternAlt) }}
   {{- $isGuideRoot = true }}
-{{- else if eq .Type "guide" }}
+{{- else if and (eq .Type "guide") (not .Draft) }}
   {{/* If it's a guide type but doesn't match specific patterns, treat as guide root */}}
   {{- $isGuideRoot = true }}
 {{- end }}

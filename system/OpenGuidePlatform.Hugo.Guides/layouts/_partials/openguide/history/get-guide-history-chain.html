@@ -10,7 +10,7 @@
 
 {{/* Get current section's latest version using get-all-versions */}}
 {{- $currentSection := .Section }}
-{{- $allVersions := partial "functions/get-all-versions" . }}
+{{- $allVersions := where (partial "functions/get-all-versions" .) "page.Draft" false }}
 
 {{/* Find current latest version */}}
 {{- if $allVersions }}
@@ -43,7 +43,7 @@
   {{/* Get fork source versions using get-all-versions */}}
   {{- $forkSectionPage := .Site.GetPage $forkSection }}
   {{- if $forkSectionPage }}
-    {{- $forkAllVersions := partial "functions/get-all-versions" $forkSectionPage }}
+    {{- $forkAllVersions := where (partial "functions/get-all-versions" $forkSectionPage) "page.Draft" false }}
 
     {{- if $forkAllVersions }}
       {{/* If specific version is mentioned, try to find that version first */}}
@@ -78,7 +78,7 @@
 
 {{/* Fallback: try to find by version number in URL path if no date-sorted results */}}
 {{- if not $result.current }}
-  {{- $sectionPages := where .Site.RegularPages "Section" $currentSection }}
+  {{- $sectionPages := where (where .Site.RegularPages "Section" $currentSection) "Draft" false }}
   {{- $latestVersion := "" }}
   {{- $latestPage := "" }}
 

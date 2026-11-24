@@ -7,7 +7,7 @@
   {{- $guidePage := "" }}
 
   {{/* Get all pages in the current section */}}
-  {{- $sectionPages := where .Site.RegularPages "Section" .Section }}
+  {{- $sectionPages := where (where .Site.RegularPages "Section" .Section) "Draft" false }}
 
   {{/* Filter for guide pages and sort by date (newest first) */}}
   {{- $guidePages := where $sectionPages "Type" "guide" }}
@@ -32,7 +32,7 @@
     {{- end }}
   {{- end }}
 
-  {{ partial "components/guide/render-guide.html" $guidePage }}
+  {{ with $guidePage }}{{ partial "components/guide/render-guide.html" . }}{{ end }}
 {{- end }}
 {{- define "template" }}
   guide/single.html
