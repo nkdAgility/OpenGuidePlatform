@@ -119,11 +119,6 @@
                         <i class="fa-solid fa-download me-1"></i>
                         {{ i18n "guide_pdf_en" . }}
                       </a>
-                    {{- else }}
-                      <button class="btn btn-primary btn-sm flex-shrink-0 disabled" disabled title="{{ i18n "guide_pdf_en_not_available" . }}">
-                        <i class="fa-solid fa-ban me-1"></i>
-                        {{ i18n "guide_pdf_en" . }}
-                      </button>
                     {{- end }}
 
                     {{- $pdfPatternENUS := "pdf/*.en-us.pdf" }}
@@ -142,16 +137,16 @@
                         <i class="fa-solid fa-download me-1"></i>
                         {{ i18n "guide_pdf_en_us" . }}
                       </a>
-                    {{- else }}
-                      <button class="btn btn-outline-primary btn-sm flex-shrink-0 disabled" disabled title="{{ i18n "guide_pdf_en_us_not_available" . }}">
-                        <i class="fa-solid fa-ban me-1"></i>
-                        {{ i18n "guide_pdf_en_us" . }}
-                      </button>
+                    {{- else if not $pdfResourceEN }}
+                      <span class="text-muted">{{ i18n "guide_pdf_not_available" . }}</span>
                     {{- end }}
                   {{- else }}
                     {{- /* Single PDF button for other languages */ -}}
                     {{- $pdfPattern := printf "pdf/*.%s.pdf" .Site.Language.Lang }}
                     {{- $pdfResource := partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" $pdfPattern) }}
+                    {{- if not $pdfResource }}
+                      {{- $pdfResource = partial "openguide/pdfs/select-first-edition-pdf.html" (dict "Page" . "Pattern" (printf "*.%s.pdf" .Site.Language.Lang)) }}
+                    {{- end }}
                     {{- if $pdfResource }}
                       <a
                         href="{{ $pdfResource.RelPermalink }}"
@@ -167,10 +162,7 @@
                         {{ i18n "guide_pdf_download_button" . }}
                       </a>
                     {{- else }}
-                      <button class="btn btn-primary btn-sm flex-shrink-0 disabled" disabled title="{{ i18n "guide_pdf_not_available" . }}">
-                        <i class="fa-solid fa-ban me-1"></i>
-                        {{ i18n "guide_pdf_download_button" . }}
-                      </button>
+                      <span class="text-muted">{{ i18n "guide_pdf_not_available" . }}</span>
                     {{- end }}
                   {{- end }}
                 </div>

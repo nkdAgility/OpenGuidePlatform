@@ -1,6 +1,7 @@
 {{/* Input: Hugo page. Output: Version/Page. Preserve date-first, then lexical
      section fallback, including the old empty-version result. */}}
 {{- $pages := where .Site.RegularPages "Section" .Section -}}
+{{- $pages = where $pages "Draft" false -}}
 {{- $guides := where $pages "Type" "guide" -}}
 {{- $version := "" -}}
 {{- $page := false -}}
