@@ -1,0 +1,62 @@
+{{- $defaults := dict
+  "homepage" (dict "roles" (slice "contributor" "creator"))
+  "guidedetails" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator"))
+  "versioncard" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator"))
+  "versioncardwithcontributors" (dict)
+  "creators" (dict "allflags" (slice "founder") "roles" (slice "creator"))
+  "officialtranslation" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator"))
+  "jsonldauthors" (dict "allflags" (slice "founder") "roles" (slice "creator"))
+  "guidecontributors" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator" "reviewer"))
+-}}
+{{- $configured := dict -}}
+{{- if isset .context.Site.Params "contributorfilters" -}}
+  {{- $configured = .context.Site.Params.contributorfilters -}}
+{{- end -}}
+{{- $matches := slice -}}
+{{- if not (reflect.IsMap $configured) -}}
+  {{- errorf "Hugo config params.contributorFilters must map filter names to definitions." -}}
+{{- else -}}
+  {{- $valid := true -}}
+  {{- range $name, $definition := $configured -}}
+    {{- if not (reflect.IsMap $definition) -}}
+      {{- errorf "Hugo config params.contributorFilters.%s must be a mapping; use {} to select everyone in scope." $name -}}
+      {{- $valid = false -}}
+      {{- continue -}}
+    {{- end -}}
+    {{- range $condition, $values := $definition -}}
+      {{- if not (in (slice "roles" "allflags" "anyflags" "excludeflags") $condition) -}}
+        {{- $valid = false -}}
+        {{- errorf "Hugo config params.contributorFilters.%s.%s is unknown; use roles, allFlags, anyFlags or excludeFlags." $name $condition -}}
+      {{- else if not (reflect.IsSlice $values) -}}
+        {{- $valid = false -}}
+        {{- errorf "Hugo config params.contributorFilters.%s.%s must be a list of strings." $name $condition -}}
+      {{- else -}}
+        {{- range $values -}}
+          {{- if or (ne (printf "%T" .) "string") (not (strings.TrimSpace (string .))) -}}
+            {{- $valid = false -}}
+            {{- errorf "Hugo config params.contributorFilters.%s.%s must contain non-empty strings." $name $condition -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- $name := lower (.filter | default "") -}}
+  {{- $filter := index $defaults $name -}}
+  {{- if isset $configured $name -}}
+    {{- $filter = index $configured $name -}}
+  {{- else if not (isset $defaults $name) -}}
+    {{- errorf "%s: unknown contributor filter %q; pass a platform filter name or define it under params.contributorFilters." .context.RelPermalink $name -}}
+  {{- end -}}
+  {{- if and $valid (reflect.IsMap $filter) -}}
+    {{- range .records -}}
+      {{- $flags := .flags | default slice -}}
+      {{- if and $filter.roles (not (in $filter.roles .role)) -}}{{- continue -}}{{- end -}}
+      {{- if and $filter.allflags (ne (len (intersect $flags $filter.allflags)) (len (uniq $filter.allflags))) -}}{{- continue -}}{{- end -}}
+      {{- if and $filter.anyflags (not (intersect $flags $filter.anyflags)) -}}{{- continue -}}{{- end -}}
+      {{- if and $filter.excludeflags (intersect $flags $filter.excludeflags) -}}{{- continue -}}{{- end -}}
+      {{- $matches = $matches | append . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $matches -}}

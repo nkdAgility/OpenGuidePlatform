@@ -1,6 +1,4 @@
-{{ $contributors := partial "functions/get-contributors.html" . }}
-{{- $contributors = where $contributors "founder" true -}}
-{{- $contributors = where $contributors "role" "creator" -}}
+{{ $contributors := partial "functions/get-contributors.html" (dict "context" . "filter" "creators") }}
 {{ if $contributors }}
   <div class="content-authors mt-3">
     <div class="row">

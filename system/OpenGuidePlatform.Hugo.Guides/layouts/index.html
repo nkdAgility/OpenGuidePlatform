@@ -123,8 +123,7 @@
               {{- range $sections.ByWeight }}
                 <h6 class="text-primary mb-3 fw-bold">{{ .Params.short_title | default .Title }}</h6>
                 <!-- Contributors Section -->
-                {{- $contributors := partial "functions/get-contributors.html" . -}}
-                {{- $contributors = where $contributors "role" "in" (slice "contributor" "creator") -}}
+                {{- $contributors := partial "functions/get-contributors.html" (dict "context" . "filter" "homepage") -}}
                 {{- if $contributors -}}
                   <div class="mb-4">
                     <div class="d-flex flex-wrap justify-content-center gap-2">

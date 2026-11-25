@@ -1,7 +1,8 @@
 function Get-GuideModuleResolution {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$PlatformRoot,[Parameter(Mandatory)][string]$SourcePath,[Parameter(Mandatory)][string]$Version)
-    $canonical='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'
+    $baseModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'
+    $canonical="$baseModule/v2"
     $module=Join-Path $PlatformRoot 'system/OpenGuidePlatform.Hugo.Guides'
     $metadataPath=Join-Path $PlatformRoot 'platform.json'
     $mode='development'
@@ -15,6 +16,8 @@ function Get-GuideModuleResolution {
         if($mode -eq 'release'){
             if(-not $metadata.PSObject.Properties['nativeHugoModule']){throw 'This preview predates native module distribution; select a newer coordinated release.'}
             $native=$metadata.nativeHugoModule
+            $major=[int]($Version.Split('.')[0])
+            $canonical=if($major -ge 2){"$baseModule/v$major"}else{$baseModule}
             if($native.path -cne $canonical -or $native.version -cne "v$Version" -or $native.sourceCommit -cne $metadata.sourceCommit){throw 'Native module identity differs from the selected platform.'}
             $installed=Invoke-GuideGoModuleQuery $SourcePath $canonical
             if($installed.Version -cne $native.version -or $installed.PSObject.Properties['Replace']){throw 'Released builds require the coordinated native Hugo dependency without a Go replacement. Run the reviewed platform update.'}
@@ -23,5 +26,6 @@ function Get-GuideModuleResolution {
     }
     # Only source development and explicitly identified pre-publication candidates
     # use packaged source. Released consumer builds must use the native module.
-    [pscustomobject]@{Mode=$mode;ModulePath=$canonical;ModuleVersion=$null;Replacements=@("$canonical -> $($module.Replace('\','/'))","github.com/nkdAgility/HugoGuides/module -> $($module.Replace('\','/'))")}
+    $moduleDirectory=$module.Replace('\','/')
+    [pscustomobject]@{Mode=$mode;ModulePath=$canonical;ModuleVersion=$null;Replacements=@("$canonical -> $moduleDirectory","$baseModule -> $moduleDirectory","github.com/nkdAgility/HugoGuides/module -> $moduleDirectory")}
 }

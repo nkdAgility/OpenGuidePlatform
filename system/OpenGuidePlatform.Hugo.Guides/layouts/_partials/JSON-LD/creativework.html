@@ -20,9 +20,7 @@
   "url": {{ $pageURL }},
   "datePublished": "{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}",
   "dateModified": "{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}",
-  {{- $foundingContributors := partial "functions/get-contributors.html" . -}}
-  {{- $foundingContributors = where $foundingContributors "founder" true -}}
-  {{- $foundingContributors = where $foundingContributors "role" "creator" -}}
+  {{- $foundingContributors := partial "functions/get-contributors.html" (dict "context" . "filter" "jsonLdAuthors") -}}
   {{- with $foundingContributors }}
   "author": [
     {{- range $index, $creator := sort . "weight" -}}

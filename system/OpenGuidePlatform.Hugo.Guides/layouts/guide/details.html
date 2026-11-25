@@ -315,10 +315,8 @@
                 <p class="text-muted">{{ i18n "contributors_description_card" . }}</p>
               </div>
 
-              {{- $contributors := partial "functions/get-contributors.html" . }}
+              {{- $contributors := partial "functions/get-contributors.html" (dict "context" . "filter" "guideDetails") }}
               {{- if $contributors }}
-                {{- $contributors = where $contributors "founder" true -}}
-                {{- $contributors = where $contributors "role" "in" (slice "contributor" "creator") -}}
                 <div class="d-flex flex-wrap justify-content-center mb-4">
                   {{- range sort $contributors "weight" "asc" }}
                     {{ partial "components/guide/guide-author.html" (dict "author" . "lightList" false) }}

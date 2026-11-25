@@ -7,6 +7,7 @@ $WorkspaceRoot=[IO.Path]::GetFullPath($WorkspaceRoot)
 $OutputPath=[IO.Path]::GetFullPath($OutputPath,$WorkspaceRoot)
 $manifest=Get-Content "$OutputPath/release-manifest.json" -Raw|ConvertFrom-Json
 if($manifest.schemaVersion -ne 2 -or $manifest.version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'){throw 'Invalid coordinated release version or manifest schema.'}
+if($manifest.version -ceq '0.0.0-local'){throw 'The synthetic local package cannot be published.'}
 $prerelease=$manifest.version.Contains('-')
 $channel=if($prerelease){'preview'}else{'stable'}
 if($manifest.channel -cne $channel){throw 'Release channel disagrees with the built version. Rebuild the coordinated package.'}
@@ -19,7 +20,10 @@ $commit=if($SourceCommit){$SourceCommit}else{(& git -C $WorkspaceRoot rev-parse 
 if($commit -cnotmatch '^[a-f0-9]{40}$' -or $commit -cne $manifest.sourceCommit){throw 'Release source commit does not match the package.'}
 $tag="v$($manifest.version)"
 $module=$manifest.nativeHugoModule
-if($module.path -cne 'github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides' -or $module.version -cne $tag -or $module.tag -cne "system/OpenGuidePlatform.Hugo.Guides/$tag" -or $module.sourceCommit -cne $commit){throw 'Native Hugo publication identity differs from the tested release.'}
+$baseModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'
+$major=[int]($manifest.version.Split('.')[0])
+$expectedPath=if($major -ge 2){"$baseModule/v$major"}else{$baseModule}
+if($module.path -cne $expectedPath -or $module.version -cne $tag -or $module.tag -cne "system/OpenGuidePlatform.Hugo.Guides/$tag" -or $module.sourceCommit -cne $commit){throw 'Native Hugo publication identity differs from the tested release.'}
 # A module under system/ requires its own subdirectory-prefixed tag. Never move it.
 $remote="https://github.com/$Repository.git"
 $releaseRef="refs/tags/$tag"

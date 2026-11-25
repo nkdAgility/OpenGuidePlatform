@@ -11,7 +11,26 @@ OGP renders shared metadata in its existing Hugo templates. No template override
 
 Social page URLs use Hugo's page permalink. Configure the build base URL for the intended host. This does not change canonical URL policy.
 
-CreativeWork authors use the same existing contributor discovery and `founder: true`, `role: creator` selection as the visible guide creators. Existing edition filtering is retained. A person's explicit URL takes precedence over their GitHub profile; a missing URL is omitted. If no creators are known, the author property is omitted.
+CreativeWork authors use the independently configurable `jsonLdAuthors` contributor filter. Its default selects records with the `founder` flag and the `creator` role for the current edition. A person's explicit URL takes precedence over their GitHub profile. The template omits missing URLs and omits the author property when the filter returns no creators.
+
+### Configure contributor listings
+
+Add flags to records in `data/contributions/<guide>.yml` and define listing filters in the site's Hugo configuration.
+
+```yaml
+params:
+  contributorFilters:
+    guideDetails:
+      roles: [creator, contributor]
+      anyFlags: [founder, advisory-board]
+      excludeFlags: [hide-from-guide-details]
+```
+
+The built-in filter names are `homepage`, `guideDetails`, `versionCard`, `versionCardWithContributors`, `creators`, `guideContributors`, `officialTranslation`, and `jsonLdAuthors`. A site definition replaces the built-in definition of the same name. Within a definition, every populated condition must pass. Use `roles` for allowed roles, `allFlags` for required flags, `anyFlags` for alternatives, and `excludeFlags` for flags that disqualify a record. Use `{}` to select everyone in the current scope.
+
+When upgrading, remove the `founder` field from all contributor records, including localized files. For `founder: true`, add `founder` to the record's `flags` list. Where a template selected explicit `founder: false` records, add a site-chosen flag to those records and select it with a named filter. Update bespoke templates to pass `(dict "context" . "filter" "guideContributors")` to the shared contributor partial. Replace legacy `roles`, `founder`, and `skipFounderFilter` arguments with a named filter that expresses the intended selection.
+
+Run `./build.ps1 Update -Ring production -PlatformRelease v2.0.0` on the same branch as the site migration. The [coordinated platform update](../../readme.md) moves the native Hugo dependency and wrapper imports to the `/v2` module path together.
 
 OGP does not advertise a `/search?q=…` search endpoint. Its existing search interface is unchanged. Historical editions do not claim to be based on the latest edition. These changes introduce no new adaptation relationship configuration.
 

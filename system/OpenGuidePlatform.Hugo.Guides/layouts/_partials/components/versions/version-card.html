@@ -87,11 +87,9 @@ Parameters: - page: The Hugo page object to render - itemType: Type of item - "l
 
         <div class="d-flex flex-wrap gap-2 mb-3">
           {{/* Display contributors */}}
-          {{ $contributors := partial "functions/get-contributors.html" . }}
-          {{ if not .Params.contributors }}
-            {{- $contributors = where $contributors "founder" true -}}
-            {{- $contributors = where $contributors "role" "in" (slice "contributor" "creator") -}}
-          {{ end }}
+          {{ $filter := "versionCard" }}
+          {{ if .Params.contributors }}{{ $filter = "versionCardWithContributors" }}{{ end }}
+          {{ $contributors := partial "functions/get-contributors.html" (dict "context" . "filter" $filter) }}
           {{ range sort $contributors "weight" "asc" }}
             <span class="badge {{ if eq .role "creator" }}bg-primary{{- else }}bg-secondary{{- end }}">
               {{ if .url }}

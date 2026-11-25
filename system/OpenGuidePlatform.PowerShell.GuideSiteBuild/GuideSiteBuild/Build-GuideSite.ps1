@@ -48,7 +48,7 @@ if($Stage -in @('All','Prepare','Serve')){
         [IO.File]::WriteAllText($overlay,($values|ConvertTo-Json -Depth 10))
         if($resolution.Mode -eq 'release'){
             $effective=(Get-GuideHugoConfiguration -SourcePath $source -ConfigFiles $configs -Target $Target).Configuration
-            if(@($effective.module.replacements|Where-Object { $_ -match '^\s*github\.com/nkdAgility/(?:HugoGuides/module|OpenGuidePlatform/system/OpenGuidePlatform\.Hugo\.Guides)\s*->' }).Count -or -not @($effective.module.imports|Where-Object { $_.path -ceq $resolution.ModulePath }).Count){throw 'Released builds require a canonical Hugo import without a configuration replacement.'}
+            if(@($effective.module.replacements|Where-Object { $_ -match '^\s*github\.com/nkdAgility/(?:HugoGuides/module|OpenGuidePlatform/system/OpenGuidePlatform\.Hugo\.Guides(?:/v[0-9]+)?)\s*->' }).Count -or -not @($effective.module.imports|Where-Object { $_.path -ceq $resolution.ModulePath }).Count){throw 'Released builds require a canonical Hugo import without a configuration replacement.'}
         }
         if($inferred){
             $policy=New-GuideSiteDiscovery -WorkspaceRoot $root -SourcePath $SourcePath -ConfigFiles $configs -Target $Target -OutputPath $OutputPath

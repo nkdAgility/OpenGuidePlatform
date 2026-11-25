@@ -176,7 +176,7 @@
                 </time>
               </div>
             {{ end }}
-            {{ partial "components/guide/guide-contributors.html" . }}
+            {{ partial "components/guide/guide-contributors.html" (dict "context" . "filter" "guideContributors") }}
             {{ partial "components/guide/guide-translators.html" . }}
             <!-- Authors from creators list -->
 

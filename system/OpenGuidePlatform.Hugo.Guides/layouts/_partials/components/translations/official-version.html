@@ -68,9 +68,7 @@
   {{- end }}
 {{- end }}
 
-{{- $foundingContributors := partial "functions/get-contributors.html" . -}}
-{{- $foundingContributors = where $foundingContributors "founder" true -}}
-{{- $foundingContributors = where $foundingContributors "role" "in" (slice "contributor" "creator") -}}
+{{- $foundingContributors := partial "functions/get-contributors.html" (dict "context" . "filter" "officialTranslation") -}}
 
 {{ $pdfPattern := printf "pdf/*.%s*.pdf" $defaultSite.Language }}
 {{ $pdfMatches := slice }}{{ range partial "openguide/pdfs/discover-edition-pdfs.html" (dict "Page" $guidePage "Pattern" $pdfPattern) }}{{ $pdfMatches = $pdfMatches | append .Resource }}{{ end }}

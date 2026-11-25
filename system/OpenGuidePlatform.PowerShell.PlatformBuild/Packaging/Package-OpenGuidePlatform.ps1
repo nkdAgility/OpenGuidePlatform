@@ -36,7 +36,17 @@ if($prerelease){$manifestText=$manifestText.Replace('Tags = @(',"Prerelease = '$
 [IO.File]::WriteAllText($moduleManifest,$manifestText,[Text.UTF8Encoding]::new($false))
 $galleryVersion=$moduleVersion.GalleryVersion
 [ordered]@{schemaVersion=1;version=$Version;galleryVersion=$galleryVersion;sourceCommit=$commit}|ConvertTo-Json|Set-Content "$contributor/ogp-module.json"
-$metadata=[ordered]@{schemaVersion=1;product='OpenGuidePlatform';version=$Version;sourceCommit=$commit;channel=if($Version.Contains('-')){'preview'}else{'stable'};hugoModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'}
+$baseModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'
+$major=[int]($Version.Split('.')[0])
+$nativePath=if($major -ge 2){"$baseModule/v$major"}else{$baseModule}
+$goMod="$stage/system/OpenGuidePlatform.Hugo.Guides/go.mod"
+if($Version -ceq '0.0.0-local'){
+    # The local-only package also exercises installation at its synthetic version.
+    $moduleText=[regex]::Replace([IO.File]::ReadAllText($goMod),'(?m)^module [^\r\n]+',"module $nativePath")
+    [IO.File]::WriteAllText($goMod,$moduleText)
+}
+if((Get-Content $goMod -First 1) -cne "module $nativePath"){throw 'The source Go module path does not match the release major version.'}
+$metadata=[ordered]@{schemaVersion=1;product='OpenGuidePlatform';version=$Version;sourceCommit=$commit;channel=if($Version.Contains('-')){'preview'}else{'stable'};hugoModule=$nativePath}
 $metadata.nativeHugoModule=[ordered]@{path=$metadata.hugoModule;version="v$Version";tag="system/OpenGuidePlatform.Hugo.Guides/v$Version";sourceCommit=$commit}
 $metadata.workflow=[ordered]@{repository='nkdAgility/OpenGuidePlatform';path='.github/workflows/guide-site-build.yaml';version="v$Version";sourceCommit=$commit}
 $metadata.components=[ordered]@{}

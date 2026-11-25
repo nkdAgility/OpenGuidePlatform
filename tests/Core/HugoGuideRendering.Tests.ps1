@@ -30,14 +30,14 @@ languages:
 - name: Fixture Creator
   githubUsername: fixture-creator
   role: creator
-  founder: true
+  flags: [founder]
   weight: 1
   localizedNames:
     fa: سازنده آزمایشی
 - name: Fixture Contributor
   gravatarHash: fixture-hash
   role: contributor
-  founder: true
+  flags: [founder]
   weight: 2
 '@)
     # Translation teams: the data key keeps the content language's case (es-ES)
@@ -84,6 +84,73 @@ Describe 'Guide contributor rendering' {
             $rendered | Should -Match 'Fixture Contributor'
             $rendered | Should -Match 'avatars.githubusercontent.com/fixture-creator'
             $rendered | Should -Match 'gravatar.com/avatar/fixture-hash'
+        }
+    }
+}
+Describe 'Site contributor filter configuration' {
+    It 'combines conditions before deduplicating and distinguishes empty filters from zero matches' {
+        $config="$fixture/hugo.yaml"
+        $layout="$fixture/layouts/index.html"
+        $team="$fixture/data/contributions/second.yaml"
+        $originalConfig=[IO.File]::ReadAllText($config)
+        $originalLayout=[IO.File]::ReadAllText($layout)
+        try {
+            [IO.File]::AppendAllText($config,@'
+
+params:
+  contributorFilters:
+    board:
+      roles: [creator]
+      allFlags: [founder, invited]
+      anyFlags: [advisory, executive]
+      excludeFlags: [hidden]
+    homepage: {}
+    emptyResult:
+      anyFlags: [absent]
+'@)
+            [IO.File]::WriteAllText($team,@'
+- {name: Matched Creator, githubUsername: fixture-creator, role: creator, flags: [founder, invited, advisory]}
+- {name: Hidden Creator, role: creator, flags: [founder, invited, advisory, hidden]}
+- {name: Uninvited Creator, role: creator, flags: [founder, advisory]}
+- {name: Other Creator, role: creator, flags: [founder, invited]}
+- {name: Board Reviewer, role: reviewer, flags: [founder, invited, executive]}
+'@)
+            [IO.File]::WriteAllText($layout,@'
+{{ define "main" }}
+{{ $page := . }}
+{{ range slice "board" "homepage" "emptyResult" }}
+  <div id="{{ . }}">{{ range partial "functions/get-contributors.html" (dict "context" $page "filter" .) }}{{ .name }}|{{ end }}</div>
+{{ end }}
+{{ end }}
+'@)
+            $log=@(& hugo --source $fixture --destination "$fixture/filter-public" 2>&1)
+            if($LASTEXITCODE){throw ($log -join [Environment]::NewLine)}
+            $result=[IO.File]::ReadAllText("$fixture/filter-public/index.html")
+            $result | Should -Match '<div id="board">Matched Creator\|</div>'
+            $result | Should -Match '<div id="homepage">[^<]*Board Reviewer\|'
+            $result | Should -Match '<div id="emptyResult"></div>'
+            [IO.File]::AppendAllText($config,"`n    malformed:`n      anyFlags: founder`n")
+            $log=@(& hugo --source $fixture --destination "$fixture/invalid-filter-public" 2>&1)
+            $LASTEXITCODE | Should -Not -Be 0
+            ($log -join "`n") | Should -Match 'contributorFilters.malformed.anyflags must be a list'
+
+            [IO.File]::WriteAllText($config,$originalConfig)
+            [IO.File]::WriteAllText($layout,@'
+{{ define "main" }}
+  {{ partial "components/guide/guide-contributors.html" (dict "context" . "roles" (slice "creator")) }}
+  {{ range partial "functions/get-contributors.html" (dict "context" . "filter" "missing") }}{{ .name }}{{ end }}
+{{ end }}
+'@)
+            $log=@(& hugo --source $fixture --destination "$fixture/retired-arguments-public" 2>&1)
+            $LASTEXITCODE | Should -Not -Be 0
+            $errors=$log -join "`n"
+            $errors | Should -Match 'argument "roles" is retired'
+            $errors | Should -Match 'unknown contributor filter "missing"'
+            $errors | Should -Not -Match '%!q'
+        } finally {
+            [IO.File]::WriteAllText($config,$originalConfig)
+            [IO.File]::WriteAllText($layout,$originalLayout)
+            [IO.File]::Delete($team)
         }
     }
 }
