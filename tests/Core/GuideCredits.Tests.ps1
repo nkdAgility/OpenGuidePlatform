@@ -167,6 +167,15 @@ Describe 'Contributor records and credits' {
         {Add-GuideContribution $workspace $policy example fa $hash ($original+$suffix)} | Should -Throw
         (Get-FileHash $path).Hash | Should -Be $hash
     }
+    It 'rejects a retired founder field in an unused translation team' {
+        Write-Fixture "$data/example.ja.yml" "- name: Kenji`n  role: translator`n  founder: false`n  flags: founder`n"
+        $findings=@(Find-ContributorIssues $workspace $policy)
+        $legacy=$findings|Where-Object Code -eq CONTRIBUTOR_FOUNDER_RETIRED
+        $legacy.Severity | Should -Be blocker
+        $legacy.Subject | Should -Match 'example\.ja\.yml#1$'
+        $legacy.Remediation | Should -Match 'flags'
+        $findings.Code | Should -Contain CONTRIBUTOR_FLAGS_INVALID
+    }
     It 'reports invalid roles, unknown editions, duplicates and unknown files' {
         Write-Fixture "$data/example.es-ES.yml" "- name: Ana`n  role: Translator`n  contributions: [`"$editionId`"]`n- name: Ana`n  role: translator`n  contributions: [`"2030.1`"]`n"
         Write-Fixture "$data/unknown-guide.yml" "- name: Nobody`n  role: creator`n  contributions: [`"$editionId`"]`n"

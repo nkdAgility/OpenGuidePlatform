@@ -149,6 +149,21 @@ function Get-GuideContributorFindings {
     $creatorEditions=@{}
     $translatorKeys=@{}
     foreach($file in $files){
+        try{$records=@(Read-GuideContributionFile $file.Path)}catch{Add CONTRIBUTOR_RECORD_INVALID $file.Relative $_.Exception.Message 'Correct the YAML so the file is a list of contributor records.';continue}
+        for($index=0;$index -lt $records.Count;$index++){
+            $record=$records[$index]
+            if($record -isnot [Collections.IDictionary]){continue}
+            $subject="$($file.Relative)#$($index+1)"
+            if($record.Contains('founder')){
+                Add CONTRIBUTOR_FOUNDER_RETIRED $subject 'The founder field is retired.' 'Replace founder: true with the founder entry in flags, or remove founder: false and update any explicit false-selection filter.'
+            }
+            if($record.Contains('flags')){
+                $flags=$record['flags']
+                if($flags -isnot [Collections.IList] -or @($flags | Where-Object {$_ -isnot [string] -or [string]::IsNullOrWhiteSpace($_)}).Count){
+                    Add CONTRIBUTOR_FLAGS_INVALID $subject 'flags must be a list of non-empty strings.' 'Use a YAML list such as flags: [founder].'
+                }
+            }
+        }
         if(-not $file.GuideId){Add CONTRIBUTOR_FILE_UNKNOWN $file.Relative 'The contributor file does not match a declared guide.' 'Name contributor files <guide>.yml or <guide>.<lang>.yml using a declared guide identifier.';continue}
         $guide=@($Policy.guides|Where-Object id -CEQ $file.GuideId)[0]
         $editionIds=@($guide.editions|ForEach-Object {[string]$_.id})
@@ -157,7 +172,6 @@ function Get-GuideContributorFindings {
             # A translation may be missing while it is being (re)created; its team file is kept.
             if($declared -inotcontains $file.Language){Add CONTRIBUTOR_FILE_UNUSED $file.Relative "No edition of $($file.GuideId) has a $($file.Language) translation yet." 'Keep the file while the translation is in progress; otherwise remove it.' warning;continue}
         }
-        try{$records=@(Read-GuideContributionFile $file.Path)}catch{Add CONTRIBUTOR_RECORD_INVALID $file.Relative $_.Exception.Message 'Correct the YAML so the file is a list of contributor records.';continue}
         $roles=if($file.Language){$script:GuideTranslationRoles}else{$script:GuideContributorRoles}
         $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         for($index=0;$index -lt $records.Count;$index++){

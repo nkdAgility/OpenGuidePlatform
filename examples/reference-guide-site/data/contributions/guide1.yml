@@ -7,7 +7,7 @@
     - "2020.12"
     - "2025.5"
   weight: 1
-  founder: true
+  flags: [founder]
   localizedNames:
     min: Jane Banana Smith
 - name: Anonymous Author
@@ -16,7 +16,7 @@
     - "2020.7"
     - "2025.5"
   weight: 2
-  founder: true
+  flags: [founder]
   localizedNames:
     min: Anonymous Banana Author
 - name: Martin Hinshelwood
@@ -29,4 +29,4 @@
     - "2025.5"
   role: contributor
   weight: 100
-  founder: true
+  flags: [founder]

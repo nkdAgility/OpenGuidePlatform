@@ -1,60 +1,53 @@
-{{- $section := .Section -}}
-{{- $type := .Type -}}
-
-{{- $pathParts := split .Path "/" -}}
-{{- $version := "" -}}
-{{- range $pathParts -}}
-  {{- if and (ne . "") (findRE `^\d{4}\.\d+$` .) -}}
-    {{- $version = . -}}
-    {{- break -}}
-  {{- end -}}
-{{- end -}}
-
-{{- $allContributors := slice -}}
-
-{{- /* If no section AND not a guide type, return all contributors from all guides */ -}}
-{{- if and (not $section) (ne $type "guide") -}}
-  {{- $seenContributors := dict -}}
-  {{- range $guideKey, $guideContributors := hugo.Data.contributions -}}
-    {{- range $guideContributors -}}
-      {{- $uniqueKey := .name -}}
-      {{- if .githubUsername -}}
-        {{- $uniqueKey = .githubUsername -}}
-      {{- end -}}
-      {{- if not (index $seenContributors $uniqueKey) -}}
-        {{- $seenContributors = $seenContributors | merge (dict $uniqueKey true) -}}
-        {{- $allContributors = $allContributors | append . -}}
-        {{ fmt.Warnf "DEBUG get-contributors1: section=%s type=%s version=%s allContributorsFrom=%s" $section $type $version "ALL" -}}
-      {{- end -}}
+{{- $localized := slice -}}
+{{- if not (reflect.IsMap .) -}}
+  {{- errorf "Contributor selection requires a context page and a named filter. Update the caller of functions/get-contributors.html." -}}
+{{- else if not .context -}}
+  {{- errorf "Contributor selection requires a context page and a named filter. Check the contributor partial call." -}}
+{{- else -}}
+  {{- $page := .context -}}
+  {{- $valid := true -}}
+  {{- range slice "founder" "skipFounderFilter" "roles" -}}
+    {{- if isset $ . -}}
+      {{- $valid = false -}}
+      {{- errorf "%s: contributor partial argument %q is retired; pass filter with a name from params.contributorFilters instead. Check the contributor partial call for this page." $page.RelPermalink . -}}
     {{- end -}}
   {{- end -}}
-{{- else -}}
-  {{- /* Try to get guide-specific contributors based on section */ -}}
-  {{- $sectionContributors := index hugo.Data.contributions $section -}}
-  {{- if $sectionContributors -}}
-    {{ fmt.Warnf "DEBUG get-contributors1: section=%s type=%s version=%s allContributorsFrom=%s" $section $type $version "SECTION" -}}
-    {{- $allContributors = $sectionContributors -}}
+
+  {{- $section := $page.Section -}}
+  {{- $siteWide := and (not $section) (ne $page.Type "guide") -}}
+  {{- $version := "" -}}
+  {{- range split $page.Path "/" -}}
+    {{- if findRE `^\d{4}\.\d+$` . -}}
+      {{- $version = . -}}
+      {{- break -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- $records := slice -}}
+  {{- if $siteWide -}}
+    {{- range hugo.Data.contributions -}}
+      {{- $records = $records | append . -}}
+    {{- end -}}
+  {{- else -}}
+    {{- with index hugo.Data.contributions $section -}}
+      {{- $records = . -}}
+    {{- end -}}
+  {{- end -}}
+  {{- with $version -}}
+    {{- $records = where $records "contributions" "intersect" (slice .) -}}
+  {{- end -}}
+  {{- if $valid -}}
+    {{- $records = partial "functions/filter-contributors.html" (dict "context" $page "filter" .filter "records" $records) -}}
+  {{- else -}}
+    {{- $records = slice -}}
+  {{- end -}}
+  {{- $seen := dict -}}
+  {{- range $records -}}
+    {{- $key := .githubUsername | default .name -}}
+    {{- if or (not $siteWide) (not (isset $seen $key)) -}}
+      {{- $seen = merge $seen (dict $key true) -}}
+      {{- $localized = $localized | append (partial "functions/localize-contributor.html" (dict "record" . "language" $page.Language.Lang)) -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
-
-{{ $filtered := $allContributors -}}
-{{- if and $allContributors $version -}}
-  {{ $filtered = where $allContributors "contributions" "intersect" (slice $version) }}
-{{- end -}}
-
-{{ fmt.Warnf "DEBUG get-contributors2: section=%s type=%s version=%s allContributors=%d filtered=%d" $section $type $version (len ($allContributors | default slice)) (len ($filtered | default slice)) -}}
-
-{{- /* Filter contributors by version if specified */ -}}
-{{- if not $filtered -}}
-  {{- $filtered = slice -}}
-{{- end -}}
-
-{{- /* Show localizedNames.<language> where a record provides one */ -}}
-{{- $language := "" -}}
-{{- with .Language -}}{{- $language = .Lang -}}{{- end -}}
-{{- $localized := slice -}}
-{{- range $filtered -}}
-  {{- $localized = $localized | append (partial "functions/localize-contributor.html" (dict "record" . "language" $language)) -}}
-{{- end -}}
-
 {{- return $localized -}}

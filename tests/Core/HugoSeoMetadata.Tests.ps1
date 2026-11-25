@@ -15,18 +15,18 @@ BeforeAll {
     [IO.File]::WriteAllText("$fixture/data/contributions/guide.yaml", @'
 - name: 'Creator "One"'
   role: creator
-  founder: true
+  flags: [founder]
   githubUsername: creator-one
   contributions: ['2025.1', '2024.1']
   weight: 1
 - name: Creator Two
   role: creator
-  founder: true
+  flags: [founder]
   contributions: ['2025.1']
   weight: 2
 - name: Contributor Only
   role: contributor
-  founder: true
+  flags: [founder]
   contributions: ['2025.1']
 '@)
     foreach ($guide in @('guide','unknown')) {

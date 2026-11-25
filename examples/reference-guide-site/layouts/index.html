@@ -27,7 +27,7 @@
                 <p class="flex-grow-1 text-muted">{{ .Params.which_to_use_summary | markdownify }}</p>
 
                 <!-- Contributors - Light List -->
-                {{ partial "components/guide/guide-contributors.html" (dict "context" . "roles" (slice "contributor" "creator" "reviewer") "lightList" true) }}
+                {{ partial "components/guide/guide-contributors.html" (dict "context" . "filter" "guideContributors" "lightList" true) }}
 
                 <!-- Action buttons with more inviting design -->
                 <div class="d-flex flex-wrap gap-2 justify-content-center py-3">
@@ -126,8 +126,7 @@
               {{- range $sections.ByWeight }}
                 <h6 class="text-primary mb-3 fw-bold">{{ .Params.short_title | default .Title }}</h6>
                 <!-- Contributors Section -->
-                {{- $contributors := partial "functions/get-contributors.html" . -}}
-                {{- $contributors = where $contributors "role" "in" (slice "contributor" "creator") -}}
+                {{- $contributors := partial "functions/get-contributors.html" (dict "context" . "filter" "homepage") -}}
                 {{- if $contributors -}}
                   <div class="mb-4">
                     <div class="d-flex flex-wrap justify-content-center gap-2">

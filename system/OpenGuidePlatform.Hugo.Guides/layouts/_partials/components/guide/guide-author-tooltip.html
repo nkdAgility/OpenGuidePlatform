@@ -20,6 +20,6 @@
     {{- else if eq .role "contributor" }}
       {{- $badgeType = "secondary" }}
     {{- end }}
-    <span class="badge text-bg-{{- $badgeType }} mb-2"> {{- if .founder }}<i class="fas fa-star me-1"></i>{{- end }}{{ .role | title }} </span>
+    <span class="badge text-bg-{{- $badgeType }} mb-2"> {{- if in (.flags | default slice) "founder" }}<i class="fas fa-star me-1"></i>{{- end }}{{ .role | title }} </span>
   </div>
 </div>

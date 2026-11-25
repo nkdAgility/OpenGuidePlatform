@@ -5,7 +5,7 @@
   contributions:
     - "2025.7"
   weight: 1
-  founder: true
+  flags: [founder]
   localizedNames:
     min: Johnny Banana
 - name: Martin Hinshelwood
@@ -16,4 +16,4 @@
     - "2025.7"
   role: contributor
   weight: 100
-  founder: true
+  flags: [founder]
