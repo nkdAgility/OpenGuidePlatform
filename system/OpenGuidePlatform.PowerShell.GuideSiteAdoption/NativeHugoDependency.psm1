@@ -60,6 +60,9 @@ if($PreviousVersion){
 }
 $removeRequirements=@($superseded|ForEach-Object {"-droprequire=$_"})
 $removeReplacements=@($knownPaths|ForEach-Object {"-dropreplace=$_"})
+if($before.PSObject.Properties['Replace'] -and $before.Replace){
+    $removeReplacements+=@($before.Replace|Where-Object {$_.Old.Path -cin $knownPaths -and $_.Old.PSObject.Properties['Version']}|ForEach-Object {"-dropreplace=$($_.Old.Path)@$($_.Old.Version)"})
+}
 $null=Invoke-NativeGo -Stage $stage -Arguments (@('mod','edit')+$removeRequirements+$removeReplacements+@("-require=$canonical@$($NativeModule.version)"))
 $download=(Invoke-NativeGo -Stage $stage -Arguments @('mod','download','-json',"$canonical@$($NativeModule.version)"))|ConvertFrom-Json
 if(-not $download.PSObject.Properties['Origin'] -or $download.Origin.Hash -cne $NativeModule.sourceCommit -or $download.Path -cne $canonical -or $download.Version -cne $NativeModule.version){throw 'Downloaded native module does not match the coordinated release source/version.'}

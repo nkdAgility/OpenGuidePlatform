@@ -19,7 +19,16 @@ Describe 'Coordinated native Hugo dependency plan' {
             if($Arguments[1] -eq 'edit' -and $Arguments[2] -eq '-json') {
                 $text=[IO.File]::ReadAllText("$Stage/go.mod")
                 if($text -notmatch 'require\s+(\S+)\s+(\S+)'){throw 'Fixture requires a native/legacy dependency.'}
-                return (@{Require=@(@{Path=$Matches[1];Version=$Matches[2]})}|ConvertTo-Json -Depth 4)
+                $result=@{Require=@(@{Path=$Matches[1];Version=$Matches[2]})}
+                $replacements=@(foreach($line in $text -split "`n"){
+                    if($line -match '^replace (\S+)(?: (v\S+))? => '){
+                        $old=@{Path=$Matches[1]}
+                        if($Matches[2]){$old.Version=$Matches[2]}
+                        @{Old=$old}
+                    }
+                })
+                $result.Replace=if($replacements.Count){,$replacements}else{$null}
+                return ($result|ConvertTo-Json -Depth 4)
             }
             if($Arguments[1] -eq 'edit') {
                 $require=@($Arguments|Where-Object {$_ -like '-require=*'})[0].Substring(9).Replace('@',' ')
@@ -64,6 +73,17 @@ Describe 'Coordinated native Hugo dependency plan' {
         $native.sourceCommit='b'*40
         {New-GuideNativeHugoUpdatePlan @parameters} | Should -Throw '*does not match*'
         Get-Content "$workspace/site/hugo.yaml" -Raw | Should -Match ([regex]::Escape($legacy))
+    }
+    It 'removes qualified replacements for platform paths and preserves unrelated replacements' {
+        $native.path="$canonical/v2"
+        $native.version='v2.0.0'
+        [IO.File]::AppendAllText("$workspace/site/go.mod","replace $canonical => ../old`nreplace $($native.path) v2.0.0 => ../local`nreplace example.invalid/other v1.0.0 => ../other`n")
+        New-GuideNativeHugoUpdatePlan @parameters | Out-Null
+        Should -Invoke Invoke-NativeGo -ModuleName NativeHugoDependency -Times 1 -Exactly -ParameterFilter {
+            $Arguments -contains "-dropreplace=$canonical" -and
+            $Arguments -contains "-dropreplace=$canonical/v2@v2.0.0" -and
+            $Arguments -notcontains '-dropreplace=example.invalid/other@v1.0.0'
+        }
     }
     It 'removes migration replacements outside local while retaining unrelated configuration' {
         Add-Content "$workspace/site/hugo.yaml" "  # wrapper-owned comment"

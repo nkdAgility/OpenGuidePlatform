@@ -30,7 +30,7 @@ The built-in filter names are `homepage`, `guideDetails`, `versionCard`, `versio
 
 When upgrading, remove the `founder` field from all contributor records, including localized files. For `founder: true`, add `founder` to the record's `flags` list. Where a template selected explicit `founder: false` records, add a site-chosen flag to those records and select it with a named filter. Update bespoke templates to pass `(dict "context" . "filter" "guideContributors")` to the shared contributor partial. Replace legacy `roles`, `founder`, and `skipFounderFilter` arguments with a named filter that expresses the intended selection.
 
-Use the [coordinated platform update](../../readme.md) on the same branch as the site migration. For OGP v2, the updater moves the native Hugo dependency and wrapper imports to the `/v2` module path together.
+Run `./build.ps1 Update -Ring production -PlatformRelease v2.0.0` on the same branch as the site migration. The [coordinated platform update](../../readme.md) moves the native Hugo dependency and wrapper imports to the `/v2` module path together.
 
 OGP does not advertise a `/search?q=…` search endpoint. Its existing search interface is unchanged. Historical editions do not claim to be based on the latest edition. These changes introduce no new adaptation relationship configuration.
 
