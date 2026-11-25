@@ -37,7 +37,7 @@ Describe 'Released native dependency and candidate overlay separation' {
         [IO.File]::WriteAllText("$platform/platform-resolution.json",($resolution|ConvertTo-Json))
         $result=Get-GuideModuleResolution @parameters
         $result.Mode | Should -Be candidate
-        @($result.Replacements).Count | Should -Be 2
+        @($result.Replacements).Count | Should -Be 3
         Should -Invoke Invoke-GuideGoModuleQuery -ModuleName OpenGuidePlatform.PowerShell.GuideSiteBuild -Times 0 -Exactly
     }
     It 'supports source development without a fabricated release identity' {

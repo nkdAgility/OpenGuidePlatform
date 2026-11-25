@@ -13,7 +13,10 @@ try {
     $destination=& "$PSScriptRoot/../../OpenGuidePlatform.PowerShell.GuideSiteAdoption/Resolve-OpenGuidePlatform.ps1" -WorkspaceRoot $validationRoot -PlatformPath "$output/OpenGuidePlatform-GuideSite.zip" -Product Platform
     $metadata=& "$destination/system/OpenGuidePlatform.PowerShell.GuideSiteAdoption/Confirm-PlatformPackage.ps1" -PackageRoot $destination -Manifest $manifest
     $module=$manifest.nativeHugoModule
-    if($module.path -cne 'github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides' -or $module.version -cne "v$($manifest.version)" -or $module.tag -cne "system/OpenGuidePlatform.Hugo.Guides/v$($manifest.version)" -or $module.sourceCommit -cne $manifest.sourceCommit){throw 'Native Hugo identity is not coordinated with the release.'}
+    $baseModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'
+    $major=[int]($manifest.version.Split('.')[0])
+    $expectedPath=if($major -ge 2){"$baseModule/v$major"}else{$baseModule}
+    if($module.path -cne $expectedPath -or $module.version -cne "v$($manifest.version)" -or $module.tag -cne "system/OpenGuidePlatform.Hugo.Guides/v$($manifest.version)" -or $module.sourceCommit -cne $manifest.sourceCommit){throw 'Native Hugo identity is not coordinated with the release.'}
     if((Get-Content "$destination/system/OpenGuidePlatform.Hugo.Guides/go.mod" -First 1) -cne "module $($module.path)"){throw 'Packaged Hugo module declaration differs from its release identity.'}
     if($manifest.workflow.repository -cne 'nkdAgility/OpenGuidePlatform' -or $manifest.workflow.path -cne '.github/workflows/guide-site-build.yaml' -or $manifest.workflow.version -cne "v$($manifest.version)" -or $manifest.workflow.sourceCommit -cne $manifest.sourceCommit){throw 'Workflow identity is not coordinated with the release.'}
     $directories=@(Get-ChildItem "$destination/system" -Directory|Where-Object Name -ne OpenGuidePlatform.PowerShell.PlatformBuild)

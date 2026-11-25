@@ -116,7 +116,7 @@ module:
     #   mounts:
     #     - source: content
     #       target: content
-    - path: github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides
+    - path: github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides/v2
 
 markup:
   goldmark:

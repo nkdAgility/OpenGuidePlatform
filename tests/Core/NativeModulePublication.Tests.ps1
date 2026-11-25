@@ -90,6 +90,21 @@ Describe 'Coordinated native module publication' {
         & $publisher -WorkspaceRoot $root -OutputPath $assets
         ($global:OgpNativeTagCalls|Where-Object {$_ -like 'release create *'}|Select-Object -Last 1)|Should -Match '--prerelease --latest=false'
     }
+    It 'publishes v2 under the physical module directory tag' {
+        $manifest.version='2.0.0';$manifest.channel='stable'
+        $manifest.nativeHugoModule.path+='/v2'
+        $manifest.nativeHugoModule.version='v2.0.0'
+        $manifest.nativeHugoModule.tag='system/OpenGuidePlatform.Hugo.Guides/v2.0.0'
+        ConvertTo-PackageManifest $manifest|ConvertTo-Json -Depth 10|Set-Content "$assets/release-manifest.json"
+        & $publisher -WorkspaceRoot $root -OutputPath $assets
+        $global:OgpNativeTagCalls[0]|Should -Match 'refs/tags/system/OpenGuidePlatform.Hugo.Guides/v2\.0\.0'
+    }
+    It 'refuses to publish a synthetic local package' {
+        $manifest.version='0.0.0-local'
+        ConvertTo-PackageManifest $manifest|ConvertTo-Json -Depth 10|Set-Content "$assets/release-manifest.json"
+        { & $publisher -WorkspaceRoot $root -OutputPath $assets } | Should -Throw '*synthetic local package*'
+        $global:OgpNativeTagCalls.Count | Should -Be 0
+    }
     It 'rejects a manifest channel inconsistent with its version' {
         $manifest.channel='stable'
         ConvertTo-PackageManifest $manifest|ConvertTo-Json -Depth 10|Set-Content "$assets/release-manifest.json"

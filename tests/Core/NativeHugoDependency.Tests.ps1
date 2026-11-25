@@ -45,6 +45,21 @@ Describe 'Coordinated native Hugo dependency plan' {
         {New-GuideNativeHugoUpdatePlan @parameters -PreviousVersion v1.0.0} | Should -Throw '*differs from its installation record*'
         Should -Invoke Invoke-NativeGo -ModuleName NativeHugoDependency -Times 0 -Exactly -ParameterFilter {$Arguments[1] -eq 'download'}
     }
+    It 'moves an installed v1 dependency and wrapper imports to v2' {
+        $next="$canonical/v2"
+        $native.path=$next
+        $native.version='v2.0.0'
+        [IO.File]::WriteAllText("$workspace/site/go.mod","module example.invalid/wrapper`nrequire $canonical v1.2.3`n")
+        [IO.File]::WriteAllText("$workspace/site/go.sum","$canonical v1.2.3 h1:old`n")
+        [IO.File]::WriteAllText("$workspace/site/hugo.yaml","module:`n  imports:`n    - path: $canonical`n")
+        [IO.File]::WriteAllText("$workspace/site/hugo.local.yaml","module:`n  replacements: ['$canonical -> ../../HugoGuides/module']`n")
+        $plan=New-GuideNativeHugoUpdatePlan @parameters -PreviousVersion v1.2.3
+        [Text.Encoding]::UTF8.GetString($plan.Files['site/hugo.yaml']) | Should -Match ([regex]::Escape($next))
+        [Text.Encoding]::UTF8.GetString($plan.Files['site/hugo.local.yaml']) | Should -Match ([regex]::Escape("$next ->"))
+        [Text.Encoding]::UTF8.GetString($plan.Files['site/go.mod']) | Should -Match ([regex]::Escape("$next v2.0.0"))
+        [Text.Encoding]::UTF8.GetString($plan.Files['site/go.sum']) | Should -BeExactly "$next v2.0.0 h1:new`n"
+        Should -Invoke Invoke-NativeGo -ModuleName NativeHugoDependency -Times 1 -Exactly -ParameterFilter {$Arguments -contains "-droprequire=$canonical"}
+    }
     It 'refuses a mismatched native source without altering consumer YAML' {
         $native.sourceCommit='b'*40
         {New-GuideNativeHugoUpdatePlan @parameters} | Should -Throw '*does not match*'

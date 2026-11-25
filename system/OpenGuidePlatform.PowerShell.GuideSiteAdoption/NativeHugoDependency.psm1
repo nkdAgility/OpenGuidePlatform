@@ -24,9 +24,18 @@ $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSScriptRoot '../OpenGuidePlatform.PowerShell.Core/OpenGuidePlatform.PowerShell.Core.psd1') -Force
 Import-Module powershell-yaml -MinimumVersion 0.4.12 -ErrorAction Stop
-$canonical='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'
+$baseModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides'
 $legacy='github.com/nkdAgility/HugoGuides/module'
-if($NativeModule.path -cne $canonical -or $NativeModule.version -cnotmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$' -or $NativeModule.sourceCommit -cnotmatch '^[a-f0-9]{40}$'){throw 'Invalid native Hugo update identity.'}
+function Get-ModulePath([string]$Version){
+    if($Version -cnotmatch '^v(?<major>[0-9]+)\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'){throw 'Invalid native Hugo update version.'}
+    if([int]$Matches.major -ge 2){"$baseModule/v$($Matches.major)"}else{$baseModule}
+}
+$canonical=Get-ModulePath $NativeModule.version
+if($NativeModule.path -cne $canonical -or $NativeModule.sourceCommit -cnotmatch '^[a-f0-9]{40}$'){throw 'Invalid native Hugo update identity.'}
+$previousPath=if($PreviousVersion){Get-ModulePath $PreviousVersion}else{$baseModule}
+$knownPaths=@($legacy,$baseModule,$previousPath,$canonical)|Select-Object -Unique
+$superseded=@($knownPaths|Where-Object {$_ -cne $canonical})
+$pathPattern=($knownPaths|ForEach-Object {[regex]::Escape($_)}) -join '|'
 $source=Resolve-GuideWorkspacePath $WorkspaceRoot $SourcePath
 $stage=Resolve-GuideWorkspacePath $WorkspaceRoot ('.processing/native-module/'+[guid]::NewGuid().ToString('N'))
 [IO.Directory]::CreateDirectory($stage)|Out-Null
@@ -46,15 +55,17 @@ $sumBytes=Read-Existing $sumPath
 if($null -ne $sumBytes){[IO.File]::WriteAllBytes("$stage/go.sum",$sumBytes)}
 $before=(Invoke-NativeGo -Stage $stage -Arguments @('mod','edit','-json'))|ConvertFrom-Json
 if($PreviousVersion){
-    $installed=@($before.Require|Where-Object Path -CEQ $canonical)
+    $installed=@($before.Require|Where-Object Path -CEQ $previousPath)
     if($installed.Count -ne 1 -or $installed[0].Version -cne $PreviousVersion){throw 'The consumer native pin differs from its installation record; reconcile it before updating.'}
 }
-$null=Invoke-NativeGo -Stage $stage -Arguments @('mod','edit',"-droprequire=$legacy","-dropreplace=$legacy","-dropreplace=$canonical","-require=$canonical@$($NativeModule.version)")
+$removeRequirements=@($superseded|ForEach-Object {"-droprequire=$_"})
+$removeReplacements=@($knownPaths|ForEach-Object {"-dropreplace=$_"})
+$null=Invoke-NativeGo -Stage $stage -Arguments (@('mod','edit')+$removeRequirements+$removeReplacements+@("-require=$canonical@$($NativeModule.version)"))
 $download=(Invoke-NativeGo -Stage $stage -Arguments @('mod','download','-json',"$canonical@$($NativeModule.version)"))|ConvertFrom-Json
 if(-not $download.PSObject.Properties['Origin'] -or $download.Origin.Hash -cne $NativeModule.sourceCommit -or $download.Path -cne $canonical -or $download.Version -cne $NativeModule.version){throw 'Downloaded native module does not match the coordinated release source/version.'}
 $files[$modPath]=[IO.File]::ReadAllBytes("$stage/go.mod")
 if([IO.File]::Exists("$stage/go.sum")){
-    $lines=@([IO.File]::ReadAllLines("$stage/go.sum")|Where-Object {-not $_.StartsWith($legacy+' ',[StringComparison]::Ordinal)})
+    $lines=@([IO.File]::ReadAllLines("$stage/go.sum")|Where-Object {($_ -split ' ',2)[0] -cnotin $superseded})
     $files[$sumPath]=[Text.Encoding]::UTF8.GetBytes(($lines -join "`n")+"`n")
 }else{throw 'Native module update did not produce checksum evidence.'}
 $foundImport=$false
@@ -68,10 +79,10 @@ foreach($configuration in Get-ChildItem -LiteralPath $source -File|Where-Object 
     $module=$data.module
     if($module.Contains('imports')){
         foreach($import in $module.imports){
-            if($import.path -in @($legacy,$canonical)){
+            if($import.path -cin $knownPaths){
                 $foundImport=$true
-                if($import.path -ceq $legacy){
-                    $pattern='(?m)(^[ \t]*-[ \t]*path:[ \t]*["'']?)'+[regex]::Escape($legacy)+'(?=["'' \t\r\n#]|$)'
+                if($import.path -cne $canonical){
+                    $pattern='(?m)(^[ \t]*-[ \t]*path:[ \t]*["'']?)'+[regex]::Escape($import.path)+'(?=["'' \t\r\n#]|$)'
                     if(-not [regex]::IsMatch($text,$pattern)){throw "Reconcile the module import format in $relative before adoption."}
                     $text=[regex]::Replace($text,$pattern,('${1}'+$canonical))
                 }
@@ -81,13 +92,14 @@ foreach($configuration in Get-ChildItem -LiteralPath $source -File|Where-Object 
     if($module.Contains('replacements') -and $null -ne $module.replacements){
         if($configuration.Name -in @('hugo.local.yaml','hugo.local.yml')){
             # Preserve local development destinations; migrate only the module identity.
-            $text=$text.Replace($legacy+' ->',$canonical+' ->')
+            foreach($priorPath in $superseded){$text=$text.Replace("$priorPath ->","$canonical ->")}
+            $text=[regex]::Replace($text,'(?m)(^[ \t]*-[ \t]*["'']?)(?:'+$pathPattern+')(?=[ \t]*->)',('${1}'+$canonical))
             if($text -cne $original){$files[$relative]=[Text.Encoding]::UTF8.GetBytes($text)}
             continue
         }
         $removed=0
         foreach($replacement in $module.replacements){
-            if($replacement -match ('^\s*(?:'+[regex]::Escape($legacy)+'|'+[regex]::Escape($canonical)+')\s*->')){
+            if($replacement -cmatch ('^\s*(?:'+$pathPattern+')\s*->')){
                 $pattern='(?m)^[ \t]*-[ \t]*["'']?'+[regex]::Escape($replacement)+'["'']?[ \t]*(?:#[^\r\n]*)?(?:\r?\n|$)'
                 if([regex]::Matches($text,$pattern).Count -ne 1){throw "Reconcile the module replacement format in $relative before adoption."}
                 $text=[regex]::Replace($text,$pattern,'');$removed++

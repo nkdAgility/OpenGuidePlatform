@@ -66,6 +66,9 @@ try {
     # permits the normal locked-release route, without replacements, network,
     # resolver mocks, changed consumer sites, or claiming remote publication.
     $canonical=[string]$release.nativeHugoModule.path;$tag=[string]$release.nativeHugoModule.version
+    $fixtureConfig="$site/site/hugo.yaml"
+    $fixtureModule='github.com/nkdAgility/OpenGuidePlatform/system/OpenGuidePlatform.Hugo.Guides/v2'
+    [IO.File]::WriteAllText($fixtureConfig,[IO.File]::ReadAllText($fixtureConfig).Replace($fixtureModule,$canonical))
     $escaped=[regex]::Replace($canonical,'[A-Z]',{param($m)'!'+$m.Value.ToLowerInvariant()})
     $escapedTag=[regex]::Replace($tag,'[A-Z]',{param($m)'!'+$m.Value.ToLowerInvariant()})
     $proxy="$scratch/go-proxy";$versions="$proxy/$escaped/@v"
