@@ -10,7 +10,7 @@
   - Uses the default site's page date, resources, and permalink
 
   Features:
-  - Displays founding contributors/creators with external links
+  - Displays the contributors selected by the site with external links
   - Provides online reading link to the default language guide version
   - Shows PDF download buttons for all available language variants if available
   - Responsive design with mobile cards and desktop table rows
@@ -68,7 +68,7 @@
   {{- end }}
 {{- end }}
 
-{{- $foundingContributors := partial "functions/get-contributors.html" (dict "context" . "filter" "officialTranslation") -}}
+{{- $contributors := partial "functions/get-contributors.html" (dict "context" . "filter" "officialTranslation") -}}
 
 {{ $pdfPattern := printf "pdf/*.%s*.pdf" $defaultSite.Language }}
 {{ $pdfMatches := slice }}{{ range partial "openguide/pdfs/discover-edition-pdfs.html" (dict "Page" $guidePage "Pattern" $pdfPattern) }}{{ $pdfMatches = $pdfMatches | append .Resource }}{{ end }}
@@ -96,10 +96,10 @@
       </h6>
       <p class="card-text text-muted mb-3">
         <small>{{ i18n "download_table_written_by" . }}:</small><br />
-        {{- range $index, $creator := sort $foundingContributors "weight" "asc" }}
+        {{- range $index, $contributor := sort $contributors "weight" "asc" }}
           {{- if $index }},{{ end }}
-          {{- if gt (len $foundingContributors) 1 }}{{ if eq $index (sub (len $foundingContributors) 1) }}&nbsp;{{ end }}{{ end }}
-          <a href="{{ $creator.url }}" class="text-decoration-none">{{ $creator.name }}<i class="fa-solid fa-external-link-alt ms-1" style="font-size: 0.6em;"></i> </a>
+          {{- if gt (len $contributors) 1 }}{{ if eq $index (sub (len $contributors) 1) }}&nbsp;{{ end }}{{ end }}
+          <a href="{{ $contributor.url }}" class="text-decoration-none">{{ $contributor.name }}<i class="fa-solid fa-external-link-alt ms-1" style="font-size: 0.6em;"></i> </a>
         {{- end }}
       </p>
       <div class="d-flex gap-2 flex-wrap">
@@ -126,10 +126,10 @@
       {{ i18n "download_official_current_version" . }}
     </div>
     <div class="col-md-6">
-      {{- range $index, $creator := sort $foundingContributors "weight" "asc" }}
+      {{- range $index, $contributor := sort $contributors "weight" "asc" }}
         {{- if $index }},{{ end }}
-        {{- if gt (len $foundingContributors) 1 }}{{ if eq $index (sub (len $foundingContributors) 1) }}&nbsp;{{ end }}{{ end }}
-        <a href="{{ $creator.url }}" class="text-decoration-none"> {{ $creator.name }}<i class="fa-solid fa-external-link-alt ms-1" style="font-size: 0.6em;"></i> </a>
+        {{- if gt (len $contributors) 1 }}{{ if eq $index (sub (len $contributors) 1) }}&nbsp;{{ end }}{{ end }}
+        <a href="{{ $contributor.url }}" class="text-decoration-none"> {{ $contributor.name }}<i class="fa-solid fa-external-link-alt ms-1" style="font-size: 0.6em;"></i> </a>
       {{- end }}
     </div>
     <div class="col-md-3">

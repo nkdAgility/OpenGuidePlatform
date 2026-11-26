@@ -20,18 +20,18 @@
   "url": {{ $pageURL }},
   "datePublished": "{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}",
   "dateModified": "{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}",
-  {{- $foundingContributors := partial "functions/get-contributors.html" (dict "context" . "filter" "jsonLdAuthors") -}}
-  {{- with $foundingContributors }}
+  {{- $authors := partial "functions/get-contributors.html" (dict "context" . "filter" "jsonLdAuthors") -}}
+  {{- with $authors }}
   "author": [
-    {{- range $index, $creator := sort . "weight" -}}
+    {{- range $index, $author := sort . "weight" -}}
     {{- if $index }},{{ end }}
     {
       "@type": "Person",
-      "name": "{{ $creator.name }}"
-      {{- if $creator.url }},
-      "url": {{ $creator.url }}
-      {{- else if $creator.githubUsername }},
-      "url": {{ printf "https://github.com/%s" $creator.githubUsername }}
+      "name": "{{ $author.name }}"
+      {{- if $author.url }},
+      "url": {{ $author.url }}
+      {{- else if $author.githubUsername }},
+      "url": {{ printf "https://github.com/%s" $author.githubUsername }}
       {{- end }}
     }
     {{- end }}

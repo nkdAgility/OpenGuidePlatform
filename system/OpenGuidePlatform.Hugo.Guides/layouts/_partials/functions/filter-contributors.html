@@ -1,13 +1,3 @@
-{{- $defaults := dict
-  "homepage" (dict "roles" (slice "contributor" "creator"))
-  "guidedetails" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator"))
-  "versioncard" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator"))
-  "versioncardwithcontributors" (dict)
-  "creators" (dict "allflags" (slice "founder") "roles" (slice "creator"))
-  "officialtranslation" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator"))
-  "jsonldauthors" (dict "allflags" (slice "founder") "roles" (slice "creator"))
-  "guidecontributors" (dict "allflags" (slice "founder") "roles" (slice "contributor" "creator" "reviewer"))
--}}
 {{- $configured := dict -}}
 {{- if isset .context.Site.Params "contributorfilters" -}}
   {{- $configured = .context.Site.Params.contributorfilters -}}
@@ -24,9 +14,9 @@
       {{- continue -}}
     {{- end -}}
     {{- range $condition, $values := $definition -}}
-      {{- if not (in (slice "roles" "allflags" "anyflags" "excludeflags") $condition) -}}
+      {{- if not (in (slice "requireanyrole" "requireallflags" "requireanyflag" "excludeanyflag") $condition) -}}
         {{- $valid = false -}}
-        {{- errorf "Hugo config params.contributorFilters.%s.%s is unknown; use roles, allFlags, anyFlags or excludeFlags." $name $condition -}}
+        {{- errorf "Hugo config params.contributorFilters.%s.%s is unknown; use requireAnyRole, requireAllFlags, requireAnyFlag or excludeAnyFlag." $name $condition -}}
       {{- else if not (reflect.IsSlice $values) -}}
         {{- $valid = false -}}
         {{- errorf "Hugo config params.contributorFilters.%s.%s must be a list of strings." $name $condition -}}
@@ -42,19 +32,17 @@
   {{- end -}}
 
   {{- $name := lower (.filter | default "") -}}
-  {{- $filter := index $defaults $name -}}
-  {{- if isset $configured $name -}}
-    {{- $filter = index $configured $name -}}
-  {{- else if not (isset $defaults $name) -}}
-    {{- errorf "%s: unknown contributor filter %q; pass a platform filter name or define it under params.contributorFilters." .context.RelPermalink $name -}}
+  {{- $filter := index $configured $name -}}
+  {{- if not (isset $configured $name) -}}
+    {{- errorf "%s: unknown contributor filter %q; define it in params.contributorFilters in your site Hugo configuration." .context.RelPermalink $name -}}
   {{- end -}}
   {{- if and $valid (reflect.IsMap $filter) -}}
     {{- range .records -}}
       {{- $flags := .flags | default slice -}}
-      {{- if and $filter.roles (not (in $filter.roles .role)) -}}{{- continue -}}{{- end -}}
-      {{- if and $filter.allflags (ne (len (intersect $flags $filter.allflags)) (len (uniq $filter.allflags))) -}}{{- continue -}}{{- end -}}
-      {{- if and $filter.anyflags (not (intersect $flags $filter.anyflags)) -}}{{- continue -}}{{- end -}}
-      {{- if and $filter.excludeflags (intersect $flags $filter.excludeflags) -}}{{- continue -}}{{- end -}}
+      {{- if and $filter.requireanyrole (not (in $filter.requireanyrole .role)) -}}{{- continue -}}{{- end -}}
+      {{- if and $filter.requireallflags (ne (len (intersect $flags $filter.requireallflags)) (len (uniq $filter.requireallflags))) -}}{{- continue -}}{{- end -}}
+      {{- if and $filter.requireanyflag (not (intersect $flags $filter.requireanyflag)) -}}{{- continue -}}{{- end -}}
+      {{- if and $filter.excludeanyflag (intersect $flags $filter.excludeanyflag) -}}{{- continue -}}{{- end -}}
       {{- $matches = $matches | append . -}}
     {{- end -}}
   {{- end -}}
