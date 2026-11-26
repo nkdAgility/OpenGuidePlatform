@@ -1,5 +1,5 @@
 # Contributors to Guide 1. Authors are the records with role: creator.
-# Roles: creator, contributor, reviewer, involved. Translation teams live in guide1.<lang>.yml.
+# Roles: creator, contributor, reviewer, involved. Translation teams live in translators.<lang>.yml.
 - name: Jane Smith
   role: creator
   contributions:

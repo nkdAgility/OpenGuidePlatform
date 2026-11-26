@@ -195,10 +195,10 @@ Describe 'Filesystem publishing operations' {
         $policy.guides[0].protectSource=$true
         { New-GuideEdition $workspace $policy guide-a 2026.1 2025.12 2025.12 } | Should -Throw '*PROTECTED_RESOURCE*'
     }
-    It 'creates contributor data at the consumer root and refuses replacement' {
+    It 'creates contributor data at the declared guide root and refuses replacement' {
         $entries=@(@{name='Example Person';role='contributor';contributions=@('2026.1')})
         (New-GuideContributions $workspace $policy guide-a $entries).Status | Should -Be 'created'
-        Test-Path (Join-Path $workspace 'site/data/contributions/guide-a.yml') | Should -BeTrue
+        Test-Path (Join-Path $workspace 'site/content/guide-a/data/contributors.yml') | Should -BeTrue
         { New-GuideContributions $workspace $policy guide-a $entries } | Should -Throw '*exists*'
     }
     It 'preserves declared PDF names and passes Persian explicitly' {

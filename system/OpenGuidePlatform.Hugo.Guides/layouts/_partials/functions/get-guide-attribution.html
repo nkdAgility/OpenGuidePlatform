@@ -1,0 +1,21 @@
+{{- /* Prepare mounts each guide's data as global assets. Asset names retain
+     language suffixes on every supported Hugo version and across content mounts. */ -}}
+{{- $files := dict -}}
+{{- $guide := lower (string .guide) -}}
+{{- with site.Data.contributions -}}
+  {{- errorf "OGP v2.2.0: move data/contributions records to each guide's data/contributors.yml and data/translators.<language>.yml before building." -}}
+{{- end -}}
+{{- range resources.Match (printf "ogp-attribution/%s/*" $guide) -}}
+  {{- $name := path.Base .Name -}}
+  {{- if findRE `(?i)^(contributors|translators\.[a-z]{2,8}(-[a-z0-9]{1,8})*)\.ya?ml$` $name -}}
+    {{- $key := lower (replaceRE `(?i)\.ya?ml$` "" $name) -}}
+    {{- if isset $files $key -}}
+      {{- errorf "Ambiguous attribution files for guide %s, %s; keep one .yml or .yaml file." $guide $key -}}
+    {{- else -}}
+      {{- $records := slice -}}
+      {{- with . | transform.Unmarshal -}}{{- $records = . -}}{{- end -}}
+      {{- $files = merge $files (dict $key $records) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $files -}}

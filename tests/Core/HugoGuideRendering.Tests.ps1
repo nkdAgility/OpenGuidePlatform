@@ -2,7 +2,7 @@ BeforeAll {
     $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
     $module=Join-Path $root 'system/OpenGuidePlatform.Hugo.Guides'
     $fixture=Join-Path $TestDrive 'rendering'
-    foreach($directory in @('themes/guides/layouts/_partials','layouts/guide','content/guide/latest/pdf','data/contributions')){
+    foreach($directory in @('themes/guides/layouts/_partials','layouts/guide','content/guide/latest/pdf','content/guide/data')){
         [IO.Directory]::CreateDirectory("$fixture/$directory")|Out-Null
     }
     # Exercise the production partials and three callers with small, deterministic
@@ -35,7 +35,7 @@ params:
     creators: {requireAnyRole: [creator]}
     guideContributors: {}
 '@)
-    [IO.File]::WriteAllText("$fixture/data/contributions/guide.yaml",@'
+    [IO.File]::WriteAllText("$fixture/content/guide/data/contributors.yaml",@'
 - name: Fixture Creator
   githubUsername: fixture-creator
   role: creator
@@ -51,7 +51,7 @@ params:
 '@)
     # Translation teams: the data key keeps the content language's case (es-ES)
     # while Hugo reports the page language in lower case (es-es).
-    [IO.File]::WriteAllText("$fixture/data/contributions/guide.es-ES.yml","- name: Fixture Traductora`n  role: translator`n  weight: 2`n- name: Fixture Revisora`n  role: reviewer`n  weight: 1`n")
+    [IO.File]::WriteAllText("$fixture/content/guide/data/translators.es-ES.yml","- name: Fixture Traductora`n  role: translator`n  weight: 2`n- name: Fixture Revisora`n  role: reviewer`n  weight: 1`n")
     [IO.File]::WriteAllText("$fixture/content/guide/_index.md","---`ntitle: Fixture guide`ntype: guide`nlayout: details`n---`nGuide overview.")
     foreach($language in @('en','fa','fr','ja','min','es-ES','pt-BR')){
         [IO.File]::WriteAllText("$fixture/content/guide/latest/index.$($language.ToLowerInvariant()).md","---`ntitle: Fixture guide $language`ntype: guide`nlayout: probe`n---`nThis is a complete guide body with enough words to represent an online translation in the catalogue.")
@@ -61,6 +61,19 @@ params:
     foreach($language in @('en','en-us','fa','fr','ja','min','pt-br')){
         [IO.File]::WriteAllText("$fixture/content/guide/latest/pdf/guide.$language.pdf","%PDF fixture $language")
     }
+    $originalConfig=[IO.File]::ReadAllText("$fixture/hugo.yaml")
+    [IO.File]::WriteAllText("$fixture/hugo.yaml", @'
+module:
+  mounts:
+    - source: assets
+      target: assets
+    - source: content/guide/data
+      target: assets/ogp-attribution/guide
+    - source: content/second/data
+      target: assets/ogp-attribution/second
+
+
+'@+"`n"+$originalConfig)
     $log=@(& hugo --source $fixture --destination "$fixture/public" 2>&1)
     if($LASTEXITCODE -ne 0 -or @($log|Where-Object {$_ -match '^ERROR'}).Count){throw "Hugo fixture failed: $($log -join [Environment]::NewLine)"}
     $html=[IO.File]::ReadAllText("$fixture/public/min/guide/latest/index.html")
@@ -119,7 +132,7 @@ Describe 'Site contributor filter configuration' {
     It 'combines conditions before deduplicating and distinguishes empty filters from zero matches' {
         $config="$fixture/hugo.yaml"
         $layout="$fixture/layouts/index.html"
-        $team="$fixture/data/contributions/second.yaml"
+        $team="$fixture/content/second/data/contributors.yaml"
         $originalConfig=[IO.File]::ReadAllText($config)
         $originalLayout=[IO.File]::ReadAllText($layout)
         try {
@@ -134,6 +147,8 @@ Describe 'Site contributor filter configuration' {
     emptyResult:
       requireAnyFlag: [absent]
 '@)
+            [IO.Directory]::CreateDirectory("$fixture/content/second/data")|Out-Null
+            [IO.File]::WriteAllText("$fixture/content/second/_index.md","---`ntitle: Second guide`ntype: guide`n---")
             [IO.File]::WriteAllText($team,@'
 - {name: Matched Creator, githubUsername: fixture-creator, role: creator, flags: [founder, invited, advisory]}
 - {name: Hidden Creator, role: creator, flags: [founder, invited, advisory, hidden]}
@@ -190,6 +205,27 @@ Describe 'Translator and localized name rendering' {
     It 'uses localizedNames for the page language only' {
         [IO.File]::ReadAllText("$fixture/public/fa/guide/latest/index.html") | Should -Match 'سازنده آزمایشی'
         [IO.File]::ReadAllText("$fixture/public/fr/guide/latest/index.html") | Should -Match 'Fixture Creator'
+    }
+}
+Describe 'Guide-local attribution migration diagnostics' {
+    It 'rejects ambiguous extensions rather than selecting one silently' {
+        $duplicate="$fixture/content/guide/data/contributors.yml"
+        try {
+            Copy-Item "$fixture/content/guide/data/contributors.yaml" $duplicate
+            $log=@(& hugo --source $fixture --destination "$fixture/ambiguous-public" 2>&1)
+            $LASTEXITCODE | Should -Not -Be 0
+            ($log -join "`n") | Should -Match 'Ambiguous attribution files'
+        } finally { [IO.File]::Delete($duplicate) }
+    }
+    It 'rejects unmigrated site data rather than silently omitting credits' {
+        $legacy="$fixture/data/contributions"
+        [IO.Directory]::CreateDirectory($legacy)|Out-Null
+        try {
+            [IO.File]::WriteAllText("$legacy/guide.yml","- name: Legacy Author`n  role: creator`n")
+            $log=@(& hugo --source $fixture --destination "$fixture/legacy-public" 2>&1)
+            $LASTEXITCODE | Should -Not -Be 0
+            ($log -join "`n") | Should -Match 'OGP v2.2.0: move data/contributions'
+        } finally { [IO.File]::Delete("$legacy/guide.yml");[IO.Directory]::Delete($legacy) }
     }
 }
 Describe 'Translation PDF resource selection' {

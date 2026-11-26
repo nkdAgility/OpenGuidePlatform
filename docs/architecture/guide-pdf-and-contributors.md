@@ -1,5 +1,9 @@
 # Guide PDFs and contributor records
 
+Storage update: OGP v2.2.0 supersedes this document’s `data/contributions`
+paths and direct `hugo.Data.contributions` access. Use [guide-local attribution](../using/guide-local-attribution.md)
+for the current file layout and migration. The record schema and credit semantics remain applicable.
+
 Status: platform part (actions 1 and 3, and section 5) implemented on branch `feature/guide-pdf-and-contributors`; consumer adoption (actions 2 and 4) not started. Section 9 records where the implementation differs from the original draft.
 
 ## 1. Purpose and scope

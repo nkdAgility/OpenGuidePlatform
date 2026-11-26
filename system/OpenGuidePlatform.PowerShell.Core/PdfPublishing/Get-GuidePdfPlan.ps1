@@ -3,7 +3,7 @@ function Get-GuidePdfPlan {
     Plans one generated PDF. The recipe comes only from committed configuration:
     platform defaults, then <site>/pdf, <site>/pdf/<guide> and
     <site>/pdf/<guide>/<edition> (see Resolve-GuidePdfRecipe). Cover credits come
-    from data/contributions and labels from the site i18n catalogues.
+    from the guide contentRoot/data directory and labels from the site i18n catalogues.
     #>
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$WorkspaceRoot,[Parameter(Mandatory)][System.Collections.IDictionary]$Policy,[Parameter(Mandatory)][string]$GuideId,[Parameter(Mandatory)][string]$EditionId,[Parameter(Mandatory)][string]$Language,[Parameter(Mandatory)][string]$DownloadPath)

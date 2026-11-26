@@ -73,7 +73,7 @@
         {{- if .ReadOnline }}
           {{- $pageObj = $.Site.GetPage .RelPermalink }}
         {{- end }}
-        {{/* Translators come from data/contributions/<guide>.<language>.yml, so PDF-only translations are credited too */}}
+        {{/* Translators come from <guide>/data/translators.<language>.yml, so PDF-only translations are credited too */}}
         {{- $translators := partial "functions/get-translators.html" (dict "guide" $guidePage.Section "version" .Version "language" .Language) }}
 
 
