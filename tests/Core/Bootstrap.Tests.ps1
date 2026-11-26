@@ -270,6 +270,46 @@ jobs:
         $updated.managedFiles.ContainsKey('.github/workflows/main.yaml') | Should -BeFalse
         Get-Content "$workspace/.github/workflows/main.yaml" -Raw | Should -Match '# Site customisation'
     }
+    It 'upgrades a site-owned workflow without changing workflow files (<inventory>)' -TestCases @(
+        @{inventory='caller inventory'; legacy=$false}
+        @{inventory='legacy managed workflow'; legacy=$true}
+    ) {
+        param($legacy)
+        & $bootstrap -Install @parameters
+        $recordPath="$workspace/.OpenGuidePlatform/installation.json"
+        if($legacy){
+            $record=Get-Content $recordPath -Raw | ConvertFrom-Json -AsHashtable
+            $record.Remove('workflowCallers')
+            $record.managedFiles['.github/workflows/main.yaml']='0'*64
+            $record | ConvertTo-Json -Depth 30 | Set-Content $recordPath
+        }
+        $settingsPath="$workspace/.OpenGuidePlatform/settings.yaml"
+        $settings=Get-Content $settingsPath -Raw | ConvertFrom-Yaml
+        $settings.site['workflow']='site-owned'
+        $settings | ConvertTo-Yaml | Set-Content $settingsPath
+        { & $bootstrap -Update -WorkspaceRoot $workspace -ReleaseTag v1.2.3-Preview.2 } | Should -Throw '*still calls a reusable OGP workflow*'
+        $workflowPath="$workspace/.github/workflows/main.yaml"
+        @'
+name: Site build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./build.ps1
+'@ | Set-Content $workflowPath
+        $lockPath="$workspace/.github/workflows/actions.lock"
+        $workflowHash=(Get-FileHash $workflowPath).Hash
+        $lockHash=(Get-FileHash $lockPath).Hash
+        $global:OgpLockFailure=$true
+        & "$workspace/build.ps1" Update -Ring preview -PlatformRelease v1.2.3-Preview.2
+        $record=Get-Content $recordPath -Raw | ConvertFrom-Json -AsHashtable
+        $record.releaseTag | Should -Be 'v1.2.3-Preview.2'
+        $record.workflowCallers.Count | Should -Be 0
+        $record.managedFiles.ContainsKey('.github/workflows/main.yaml') | Should -BeFalse
+        (Get-FileHash $workflowPath).Hash | Should -Be $workflowHash
+        (Get-FileHash $lockPath).Hash | Should -Be $lockHash
+    }
     It 'rolls back callers native dependency and lockfile if locking fails' {
         & $bootstrap -Install @parameters
         $paths=@('.github/workflows/main.yaml','.github/workflows/actions.lock','site/go.mod','.OpenGuidePlatform/installation.json','build.ps1')

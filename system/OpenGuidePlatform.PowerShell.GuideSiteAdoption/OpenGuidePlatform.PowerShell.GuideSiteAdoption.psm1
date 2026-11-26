@@ -82,7 +82,8 @@ $files['.OpenGuidePlatform/Resolve-OpenGuidePlatform.ps1']=[IO.File]::ReadAllByt
 $workflow=[IO.File]::ReadAllText("$package/system/OpenGuidePlatform.PowerShell.GuideSiteAdoption/main.yaml")
 $workflow=$workflow.Replace('__RELEASE__',$settingsPlan.WorkflowReference).Replace('__COMMIT__',$manifest.sourceCommit).Replace('__SOURCE__',($SourcePath|ConvertTo-Json -Compress))
 Import-Module "$PSScriptRoot/WorkflowCallers.psm1" -Force
-$callerPlan=New-GuideWorkflowCallerPlan -WorkspaceRoot $root -ReleaseTag $settingsPlan.WorkflowReference -Previous $previous -Starter $workflow
+$siteOwnsWorkflow=$settingsPlan.WorkflowMode -eq 'site-owned'
+$callerPlan=New-GuideWorkflowCallerPlan -WorkspaceRoot $root -ReleaseTag $settingsPlan.WorkflowReference -Previous $previous -Starter $workflow -SiteOwned:$siteOwnsWorkflow
 foreach($name in $callerPlan.Files.Keys){$files[$name]=$callerPlan.Files[$name]}
 $actionsLockPath=Resolve-InstallPath '.github/workflows/actions.lock'
 $actionsLockBefore=if(Test-Path $actionsLockPath){Get-Digest $actionsLockPath}else{$null}
@@ -127,6 +128,9 @@ function Confirm-NativeSnapshot {
         $actual=if(Test-Path -LiteralPath $path -PathType Leaf){Get-Digest $path}else{$null}
         if($actual -cne $callerPlan.ExpectedHashes[$name]){throw "Consumer workflow changed during update: $name"}
     }
+    if($siteOwnsWorkflow){
+        New-GuideWorkflowCallerPlan -WorkspaceRoot $root -SiteOwned | Out-Null
+    }
     $lockDigest=if(Test-Path $actionsLockPath){Get-Digest $actionsLockPath}else{$null}
     if($lockDigest -cne $actionsLockBefore){throw 'Actions lockfile changed during update.'}
 }
@@ -137,6 +141,7 @@ if($previous){
     foreach($name in $previous.managedFiles.Keys){
         # Legacy whole-file callers become site-owned after semantic preflight.
         if($callerPlan.Files.Contains($name) -or $settingsPlan.Files.Contains($name) -or $name -in $settingsPlan.Retired){continue}
+        if($siteOwnsWorkflow -and $name -ceq '.github/workflows/main.yaml'){continue}
         if(-not $files.Contains($name) -and $name -cnotin @('bootstrap.ps1','Resolve-OpenGuidePlatform.ps1')){throw "Managed file retirement needs explicit migration: $name"}
         $path=Resolve-InstallPath $name
         if(-not (Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Digest $path) -cne $previous.managedFiles[$name]){$conflicts.Add($name)}
@@ -169,8 +174,10 @@ if($reviewBranch){
 $original=@{};$written=[Collections.Generic.List[string]]::new()
 try{
     $lockName='.github/workflows/actions.lock'
-    $original[$lockName]=if(Test-Path $actionsLockPath){[IO.File]::ReadAllBytes($actionsLockPath)}else{$null}
-    $written.Add($lockName)
+    if($callerPlan.Files.Count){
+        $original[$lockName]=if(Test-Path $actionsLockPath){[IO.File]::ReadAllBytes($actionsLockPath)}else{$null}
+        $written.Add($lockName)
+    }
     $retired=@()
     if($previous){$retired=@(@('bootstrap.ps1','Resolve-OpenGuidePlatform.ps1')|Where-Object {$previous.managedFiles.ContainsKey($_)})}
     if($previousPath -eq $legacyLockPath -and (Test-Path $legacyLockPath)){$retired+=@('open-guide-platform.installation.json')}
@@ -182,7 +189,7 @@ try{
     }
     foreach($name in $files.Keys){
         # Lock the new references before committing the installation record.
-        if($name -eq '.OpenGuidePlatform/installation.json'){
+        if($name -eq '.OpenGuidePlatform/installation.json' -and $callerPlan.Files.Count){
             Push-Location $root
             try{
                 $callerPaths=@($callerPlan.Files.Keys)
