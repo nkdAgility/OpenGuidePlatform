@@ -44,6 +44,30 @@ taxonomies: {}
 
 # Site-wide parameters
 params:
+  contributorPresentation:
+    starFlag: founder
+  contributorFilters:
+    homepage:
+      requireAnyRole: [contributor, creator]
+    guideDetails:
+      requireAnyRole: [contributor, creator]
+      requireAllFlags: [founder]
+    versionCard:
+      requireAnyRole: [contributor, creator]
+      requireAllFlags: [founder]
+    versionCardWithContributors: {}
+    creators:
+      requireAnyRole: [creator]
+      requireAllFlags: [founder]
+    officialTranslation:
+      requireAnyRole: [contributor, creator]
+      requireAllFlags: [founder]
+    jsonLdAuthors:
+      requireAnyRole: [creator]
+      requireAllFlags: [founder]
+    guideContributors:
+      requireAnyRole: [contributor, creator, reviewer]
+      requireAllFlags: [founder]
   description: "Guides Demo"
   keywords: "Guides"
   logo_image: "/images/guide-1-logo-512.png" # URL to the site logo image

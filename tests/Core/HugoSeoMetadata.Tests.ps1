@@ -51,6 +51,9 @@ params:
   description: A long description which must not become the homepage title.
   keywords: guides
   siteProdUrl: https://fixture.example
+  contributorFilters:
+    jsonLdAuthors: {requireAnyRole: [creator], requireAllFlags: [founder]}
+    guideContributors: {}
 $extra
 "@)
         $log = @(& hugo --source $fixture --destination "$fixture/$name" 2>&1)

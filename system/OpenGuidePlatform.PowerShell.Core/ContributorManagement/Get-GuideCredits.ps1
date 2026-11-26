@@ -155,7 +155,7 @@ function Get-GuideContributorFindings {
             if($record -isnot [Collections.IDictionary]){continue}
             $subject="$($file.Relative)#$($index+1)"
             if($record.Contains('founder')){
-                Add CONTRIBUTOR_FOUNDER_RETIRED $subject 'The founder field is retired.' 'Replace founder: true with the founder entry in flags, or remove founder: false and update any explicit false-selection filter.'
+                Add CONTRIBUTOR_FOUNDER_RETIRED $subject 'The founder field is retired.' 'Remove the retired field. If a listing or badge needs to distinguish these records, add a site-defined name to flags.'
             }
             if($record.Contains('flags')){
                 $flags=$record['flags']

@@ -20,6 +20,19 @@
     {{- else if eq .role "contributor" }}
       {{- $badgeType = "secondary" }}
     {{- end }}
-    <span class="badge text-bg-{{- $badgeType }} mb-2"> {{- if in (.flags | default slice) "founder" }}<i class="fas fa-star me-1"></i>{{- end }}{{ .role | title }} </span>
+    {{- $starFlag := "" -}}
+    {{- if isset site.Params "contributorpresentation" -}}
+      {{- $presentation := site.Params.contributorpresentation -}}
+      {{- if not (reflect.IsMap $presentation) -}}
+        {{- errorf "Hugo config params.contributorPresentation must be a mapping." -}}
+      {{- else if isset $presentation "starflag" -}}
+        {{- if and (eq (printf "%T" $presentation.starflag) "string") (strings.TrimSpace (string $presentation.starflag)) -}}
+          {{- $starFlag = $presentation.starflag -}}
+        {{- else -}}
+          {{- errorf "Hugo config params.contributorPresentation.starFlag must be a non-empty string." -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    <span class="badge text-bg-{{- $badgeType }} mb-2"> {{- if and $starFlag (in (.flags | default slice) $starFlag) }}<i class="fas fa-star me-1"></i>{{- end }}{{ .role | title }} </span>
   </div>
 </div>

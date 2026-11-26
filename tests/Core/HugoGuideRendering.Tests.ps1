@@ -25,12 +25,21 @@ languages:
   min: {languageName: Minionese}
   es-ES: {languageName: Spanish}
   pt-BR: {languageName: Portuguese}
+params:
+  contributorPresentation:
+    starFlag: featured
+  contributorFilters:
+    homepage: {requireAnyRole: [creator, contributor]}
+    guideDetails: {}
+    versionCard: {}
+    creators: {requireAnyRole: [creator]}
+    guideContributors: {}
 '@)
     [IO.File]::WriteAllText("$fixture/data/contributions/guide.yaml",@'
 - name: Fixture Creator
   githubUsername: fixture-creator
   role: creator
-  flags: [founder]
+  flags: [founder, featured]
   weight: 1
   localizedNames:
     fa: سازنده آزمایشی
@@ -88,6 +97,25 @@ Describe 'Guide contributor rendering' {
     }
 }
 Describe 'Site contributor filter configuration' {
+    It 'shows a star only for the configured badge flag and never uses it to filter the list' {
+        $rendered=[IO.File]::ReadAllText("$fixture/public/index.html")
+        ([regex]::Matches($rendered,'fa-star')).Count | Should -Be 1
+        $rendered | Should -Match 'Fixture Contributor'
+        $config="$fixture/hugo.yaml"
+        $original=[IO.File]::ReadAllText($config)
+        try {
+            [IO.File]::WriteAllText($config,($original -replace '(?m)^  contributorPresentation:\r?\n    starFlag: featured\r?\n',''))
+            $log=@(& hugo --source $fixture --destination "$fixture/no-star-public" 2>&1)
+            if($LASTEXITCODE){throw ($log -join [Environment]::NewLine)}
+            $rendered=[IO.File]::ReadAllText("$fixture/no-star-public/index.html")
+            $rendered | Should -Not -Match 'fa-star'
+            $rendered | Should -Match 'Fixture Creator'
+            $rendered | Should -Match 'Fixture Contributor'
+        } finally {
+            [IO.File]::WriteAllText($config,$original)
+        }
+    }
+
     It 'combines conditions before deduplicating and distinguishes empty filters from zero matches' {
         $config="$fixture/hugo.yaml"
         $layout="$fixture/layouts/index.html"
@@ -97,16 +125,14 @@ Describe 'Site contributor filter configuration' {
         try {
             [IO.File]::AppendAllText($config,@'
 
-params:
-  contributorFilters:
     board:
-      roles: [creator]
-      allFlags: [founder, invited]
-      anyFlags: [advisory, executive]
-      excludeFlags: [hidden]
-    homepage: {}
+      requireAnyRole: [creator]
+      requireAllFlags: [founder, invited]
+      requireAnyFlag: [advisory, executive]
+      excludeAnyFlag: [hidden]
+    everyone: {}
     emptyResult:
-      anyFlags: [absent]
+      requireAnyFlag: [absent]
 '@)
             [IO.File]::WriteAllText($team,@'
 - {name: Matched Creator, githubUsername: fixture-creator, role: creator, flags: [founder, invited, advisory]}
@@ -118,7 +144,7 @@ params:
             [IO.File]::WriteAllText($layout,@'
 {{ define "main" }}
 {{ $page := . }}
-{{ range slice "board" "homepage" "emptyResult" }}
+{{ range slice "board" "everyone" "emptyResult" }}
   <div id="{{ . }}">{{ range partial "functions/get-contributors.html" (dict "context" $page "filter" .) }}{{ .name }}|{{ end }}</div>
 {{ end }}
 {{ end }}
@@ -127,25 +153,25 @@ params:
             if($LASTEXITCODE){throw ($log -join [Environment]::NewLine)}
             $result=[IO.File]::ReadAllText("$fixture/filter-public/index.html")
             $result | Should -Match '<div id="board">Matched Creator\|</div>'
-            $result | Should -Match '<div id="homepage">[^<]*Board Reviewer\|'
+            $result | Should -Match '<div id="everyone">[^<]*Board Reviewer\|'
             $result | Should -Match '<div id="emptyResult"></div>'
-            [IO.File]::AppendAllText($config,"`n    malformed:`n      anyFlags: founder`n")
+            [IO.File]::AppendAllText($config,"`n    malformed:`n      requireAnyFlag: founder`n")
             $log=@(& hugo --source $fixture --destination "$fixture/invalid-filter-public" 2>&1)
             $LASTEXITCODE | Should -Not -Be 0
-            ($log -join "`n") | Should -Match 'contributorFilters.malformed.anyflags must be a list'
+            ($log -join "`n") | Should -Match 'contributorFilters.malformed.requireanyflag must be a list'
 
             [IO.File]::WriteAllText($config,$originalConfig)
             [IO.File]::WriteAllText($layout,@'
 {{ define "main" }}
   {{ partial "components/guide/guide-contributors.html" (dict "context" . "roles" (slice "creator")) }}
-  {{ range partial "functions/get-contributors.html" (dict "context" . "filter" "missing") }}{{ .name }}{{ end }}
+  {{ range partial "functions/get-contributors.html" (dict "context" . "filter" "jsonLdAuthors") }}{{ .name }}{{ end }}
 {{ end }}
 '@)
             $log=@(& hugo --source $fixture --destination "$fixture/retired-arguments-public" 2>&1)
             $LASTEXITCODE | Should -Not -Be 0
             $errors=$log -join "`n"
             $errors | Should -Match 'argument "roles" is retired'
-            $errors | Should -Match 'unknown contributor filter "missing"'
+            $errors | Should -Match 'unknown contributor filter "jsonldauthors"'
             $errors | Should -Not -Match '%!q'
         } finally {
             [IO.File]::WriteAllText($config,$originalConfig)
