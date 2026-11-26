@@ -47,7 +47,9 @@ function New-GuideSettingsPlan {
     }
     $workflowReference=[string]$settings.platform.version
     if($workflowReference -match '^v[0-9]+(?:\.[0-9]+)?$' -and $settings.platform.ring -eq 'preview'){$workflowReference+='-preview'}
+    $workflowMode=if($settings.site.Contains('workflow')){$settings.site['workflow']}else{'reusable'}
+    if($workflowMode -cnotin @('reusable','site-owned')){throw 'site.workflow must be reusable or site-owned.'}
     $bytes=if($null -ne $original -and -not $changed){$original}else{[Text.Encoding]::UTF8.GetBytes(($settings|ConvertTo-Yaml))}
-    [pscustomobject]@{Settings=$settings;Files=[ordered]@{$relative=$bytes};ExpectedHashes=$expected;Retired=$retired;WorkflowReference=$workflowReference}
+    [pscustomobject]@{Settings=$settings;Files=[ordered]@{$relative=$bytes};ExpectedHashes=$expected;Retired=$retired;WorkflowReference=$workflowReference;WorkflowMode=$workflowMode}
 }
 Export-ModuleMember -Function New-GuideSettingsPlan

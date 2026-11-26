@@ -24,9 +24,16 @@ Review the resulting module/configuration diff, build adapter, installation reco
 
 The starter triggers the same pipeline for pushes to `main`, pull requests and version-tag pushes (for example `v1.2.3` or `1.2.3`). Prepare uses GitVersion to select the site version and ring; the installed OGP pin remains unchanged. Existing sites own their callers and must add the tag triggers themselves. Tag a commit that already contains the updated workflow; adding the trigger does not replay older tag pushes.
 
-The installer creates a small site-owned caller when no OGP caller exists. It starts with deployment disabled. Configure its triggers, concurrency, inputs and secret mapping for your site; keep build logic in the shared workflow. Add the [shared close-PR workflow](../../.github/workflows/guide-site-close-pr.yaml) through another site-owned caller. The platform's [sample cleanup caller](../../.github/workflows/sample-close-pr.yaml) illustrates this; its hosting destination and secret belong to the sample, not your site.
+In reusable mode, the installer creates a small caller when no OGP caller exists. It starts with deployment disabled. Configure its triggers, concurrency, inputs and secret mapping for your site and keep build logic in the shared workflow. Add the [shared close-PR workflow](../../.github/workflows/guide-site-close-pr.yaml) through another caller. Use the [sample cleanup caller](../../.github/workflows/sample-close-pr.yaml) as a reference and supply your site's hosting destination and secret.
 
 ### Caller ownership and updates
+
+If your site runs OGP from its own GitHub Actions jobs, set `site.workflow` to
+`site-owned` in `.OpenGuidePlatform/settings.yaml`. The updater then upgrades the
+platform installation and clears any previous reusable caller inventory. It leaves
+workflow files and their Actions lockfile under the site's control. Remove reusable
+OGP workflow calls before selecting this mode. Sites that use reusable OGP workflows
+can omit the setting or set it to `reusable`.
 
 PR cleanup must use the same environment name as deployment. The shared cleanup
 workflow defaults to the PR number, preserving existing callers. If your delivery
@@ -51,9 +58,9 @@ path, active language and occurrence count.
 
 OGP owns the reusable workflow implementation. Your site owns the caller YAML and `.OpenGuidePlatform/settings.yaml`. Callers are recorded separately from checksum-managed adapters and skills. Updates also migrate callers from older installations that checksum-managed the whole file, preserving site edits when their references can be recognised safely.
 
-Install/update recognises literal job-level calls to `guide-site-build.yaml` and `guide-site-close-pr.yaml` in `.github/workflows/*.yaml` and `*.yml`. Existing calls must use the installed release tag (or the selected release on first installation). Updates change only these release references, preserving comments, triggers, inputs and secret mappings. Flow-style calls, aliases, unsupported refs, missing recorded callers and conflicting versions stop for manual reconciliation before installation changes. An unrelated existing `main.yaml` is never overwritten to create a starter.
+In reusable mode, install and update recognise literal job-level calls to `guide-site-build.yaml` and `guide-site-close-pr.yaml` in `.github/workflows/*.yaml` and `*.yml`. Existing calls must use the installed release tag (or the selected release on first installation). Updates change only these release references, preserving comments, triggers, inputs and secret mappings. Flow-style calls, aliases, unsupported refs, missing recorded callers and conflicting versions stop for manual reconciliation before installation changes. An unrelated existing `main.yaml` is never overwritten to create a starter.
 
-Install the official locking extension before adoption:
+For reusable mode, install the official locking extension before adoption.
 
 ```powershell
 gh extension install github/gh-actions-lock

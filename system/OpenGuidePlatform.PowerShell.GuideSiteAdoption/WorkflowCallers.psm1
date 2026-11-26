@@ -1,7 +1,7 @@
 #Requires -Version 7.4
 function New-GuideWorkflowCallerPlan {
     [CmdletBinding()]
-    param([string]$WorkspaceRoot,[string]$ReleaseTag,$Previous,[string]$Starter)
+    param([string]$WorkspaceRoot,[string]$ReleaseTag,$Previous,[string]$Starter,[switch]$SiteOwned)
     Import-Module powershell-yaml -MinimumVersion 0.4.12 -ErrorAction Stop
     $files=[ordered]@{}; $expected=[ordered]@{}; $callers=[ordered]@{}
     $directory=Join-Path $WorkspaceRoot '.github/workflows'
@@ -58,6 +58,7 @@ function New-GuideWorkflowCallerPlan {
                     $uses=$null
                     if($job -is [YamlDotNet.RepresentationModel.YamlMappingNode]){$uses=$job.Children[[YamlDotNet.RepresentationModel.YamlScalarNode]::new('uses')]}
                     if($uses -is [YamlDotNet.RepresentationModel.YamlScalarNode] -and $uses.Value.StartsWith('nkdAgility/OpenGuidePlatform/',[StringComparison]::OrdinalIgnoreCase)){
+                        if($SiteOwned){throw "site.workflow is site-owned but $($item.Name) still calls a reusable OGP workflow. Remove the caller or select reusable mode."}
                         $reference=$uses.Value
                         if($reference -cnotmatch '^nkdAgility/OpenGuidePlatform/\.github/workflows/guide-site-(build|close-pr)\.yaml@(?<version>v[0-9]+(?:\.[0-9]+){0,2}(?:-[A-Za-z0-9.-]+)?)$'){
                             throw "Unsupported OGP caller reference in $($item.Name): $reference. Reconcile the caller manually."
@@ -89,6 +90,7 @@ function New-GuideWorkflowCallerPlan {
             $callers[$relative]=@($references|ForEach-Object {$_.Substring(0,$_.LastIndexOf('@'))}|Sort-Object -Unique)
         }
     }
+    if($SiteOwned){return [pscustomobject]@{Files=$files;ExpectedHashes=$expected;Callers=$callers}}
     $required=@()
     if($Previous){
         if($Previous.ContainsKey('workflowCallers')){$required=@($Previous.workflowCallers.Keys)}
