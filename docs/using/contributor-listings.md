@@ -2,7 +2,7 @@
 
 Each guide site defines who appears in its listings. OGP supplies the filtering and badge behaviour. It supplies zero flag names and zero listing rules.
 
-Add any flags your site uses to its contributor records in `data/contributions/<guide>.yml`. Then define the filters used by your templates in the site's `hugo.yaml`.
+Add any flags your site uses to its contributor records in `<guide>/data/contributors.yml`. Then define the filters used by your templates in the site's `hugo.yaml`.
 
 ```yaml
 params:

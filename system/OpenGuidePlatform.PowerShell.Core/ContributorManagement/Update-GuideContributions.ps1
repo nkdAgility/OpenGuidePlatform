@@ -2,11 +2,11 @@ function Resolve-GuideContributionsPath {
     param([string]$WorkspaceRoot,[System.Collections.IDictionary]$Policy,[string]$GuideId,[string]$Language)
     if (@($Policy.guides | Where-Object { $_.id -ceq $GuideId }).Count -ne 1) { throw 'Select one declared guide.' }
     if ($Language -and $Language -notmatch '^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$') { throw "Invalid language: $Language" }
-    # <guide>.yml holds the guide's own contributors; <guide>.<lang>.yml holds one translation team.
+    $guide=@($Policy.guides | Where-Object { $_.id -ceq $GuideId })[0]
     $existing=@(Get-GuideContributionFiles $WorkspaceRoot $Policy | Where-Object { $_.GuideId -ceq $GuideId -and "$($_.Language)" -ieq "$Language" })
     if ($existing.Count -gt 1) { throw 'Ambiguous contributor files: both .yml and .yaml exist.' }
     if ($existing.Count -eq 1) { return [pscustomobject]@{Path=(Resolve-GuideWorkspacePath $WorkspaceRoot $existing[0].Relative);Relative=$existing[0].Relative} }
-    $relative="$($Policy.wrapper.sourcePath)/data/contributions/$GuideId$(if($Language){".$Language"}).yml"
+    $relative="$($guide.contentRoot)/data/$(if($Language){"translators.$Language"}else{"contributors"}).yml"
     [pscustomobject]@{Path=(Resolve-GuideWorkspacePath $WorkspaceRoot $relative);Relative=$relative}
 }
 function Update-GuideContributions {

@@ -55,6 +55,20 @@ if($Stage -in @('All','Prepare','Serve')){
             $policy|ConvertTo-Json -Depth 100|Set-Content (Join-Path $root $PolicyPath)
             $inputArguments.Policy=$policy
         }
+        # Use assets rather than page resources: older Hugo versions collapse
+        # unconfigured language suffixes in content bundles. Preserve all effective
+        # mounts (including defaults) and add only the declared guide data roots.
+        $effective=(Get-GuideHugoConfiguration -SourcePath $source -ConfigFiles $configs -Target $Target).Configuration
+        $mounts=@($effective.module.mounts)
+        foreach($guide in $policy.guides){
+            $data=Resolve-GuideWorkspacePath $root "$($guide.contentRoot)/data"
+            if([IO.Directory]::Exists($data)){
+                $mounts+=@{source=$data;target="assets/ogp-attribution/$($guide.id.ToLowerInvariant())"}
+            }
+        }
+        if(-not $values.ContainsKey('module')){$values.module=@{}}
+        $values.module.mounts=$mounts
+        [IO.File]::WriteAllText($overlay,($values|ConvertTo-Json -Depth 100))
         $null=Get-GuideHugoToolchain
         $preparedTools=Get-GuidePreparedBuildTools
         if(Test-Path "$platformRoot/platform.json"){

@@ -18,8 +18,8 @@ Describe 'Layered PDF recipe' {
         $pdf="site/pdf";$guidePdf="$pdf/$($guide.id)";$editionPdf="$guidePdf/$($edition.path)"
         Write-Fixture "$content/index.md" "---`ntitle: Example Guide`nshort_title: Example`ndate: 2024-08-01`n---`nBody"
         Write-Fixture "$content/index.fa.md" "---`ntitle: راهنمای نمونه`n---`nمتن"
-        Write-Fixture "site/data/contributions/$($guide.id).yml" "- name: Jane Author`n  role: creator`n  contributions: [`"$($edition.id)`"]`n"
-        Write-Fixture "site/data/contributions/$($guide.id).fa.yml" "- name: Parisa Translator`n  role: translator`n  contributions: [`"$($edition.id)`"]`n"
+        Write-Fixture "$($guide.contentRoot)/data/contributors.yml" "- name: Jane Author`n  role: creator`n  contributions: [`"$($edition.id)`"]`n"
+        Write-Fixture "$($guide.contentRoot)/data/translators.fa.yml" "- name: Parisa Translator`n  role: translator`n  contributions: [`"$($edition.id)`"]`n"
         Write-Fixture "$pdf/pdf.yaml" "mainfont: Site Serif`nsansfont: Site Sans`nlicence: CC BY-SA 4.0`n"
         Write-Fixture "$guidePdf/pdf.fa.yaml" "mainfont: Persian Serif`n"
         Write-Fixture "$editionPdf/pdf.yaml" "papersize: letter`ndownloads:`n  - path: pdf/guide.en.pdf`n    handling: generated`n    fontsize: 12pt`n"
@@ -50,7 +50,7 @@ Describe 'Layered PDF recipe' {
         $plan.Metadata.Contains('babeloptions') | Should -BeFalse
         $plan.Arguments | Should -Contain 'title='
         $plan.Arguments | Should -Contain 'lang=en'
-        $plan.Fingerprints.Path | Should -Contain "site/data/contributions/$($guide.id).yml"
+        $plan.Fingerprints.Path | Should -Contain "$($guide.contentRoot)/data/contributors.yml"
     }
     It 'marks Latin credits left-to-right in right-to-left documents and adds RTL support' {
         Write-Fixture 'site/i18n/fa.yaml' "- id: pdf_translators_label`n  translation: مترجمان`n"

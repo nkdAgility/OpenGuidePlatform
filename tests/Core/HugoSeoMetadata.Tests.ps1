@@ -2,7 +2,7 @@ BeforeAll {
     $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
     $module = Join-Path $root 'system/OpenGuidePlatform.Hugo.Guides'
     $fixture = Join-Path $TestDrive 'seo'
-    foreach ($directory in @('themes/guides/layouts/_partials','layouts/guide','content/guide/2025.1','content/guide/2024.1','content/unknown/2025.1','data/contributions')) {
+    foreach ($directory in @('themes/guides/layouts/_partials','layouts/guide','content/guide/2025.1','content/guide/2024.1','content/unknown/2025.1','content/guide/data')) {
         [IO.Directory]::CreateDirectory("$fixture/$directory") | Out-Null
     }
     Copy-Item "$module/layouts/_partials/*" "$fixture/themes/guides/layouts/_partials/" -Recurse
@@ -12,7 +12,7 @@ BeforeAll {
     foreach ($layout in @('index.html','guide/single.html','guide/list.html')) {
         [IO.File]::WriteAllText("$fixture/layouts/$layout", $wrapper)
     }
-    [IO.File]::WriteAllText("$fixture/data/contributions/guide.yaml", @'
+    [IO.File]::WriteAllText("$fixture/content/guide/data/contributors.yaml", @'
 - name: 'Creator "One"'
   role: creator
   flags: [founder]
@@ -40,6 +40,16 @@ BeforeAll {
     function Build-SeoFixture([string]$name, [string]$extra) {
         [IO.File]::WriteAllText("$fixture/hugo.yaml", @"
 baseURL: https://fixture.example/
+module:
+  mounts:
+    - source: assets
+      target: assets
+    - source: content/guide/data
+      target: assets/ogp-attribution/guide
+    - source: content/second/data
+      target: assets/ogp-attribution/second
+
+
 title: Fixture site
 theme: guides
 defaultContentLanguage: en

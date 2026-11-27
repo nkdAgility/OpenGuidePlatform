@@ -18,26 +18,23 @@ function Get-GuideContributorIdentity {
 }
 
 function Get-GuideContributionFiles {
-    # Maps site/data/contributions/<guide>[.<lang>].(yml|yaml) to declared guides.
+    # Attribution belongs to each declared guide's content root, independent of its id.
     param([string]$WorkspaceRoot,[Collections.IDictionary]$Policy)
-    $relativeDirectory="$($Policy.wrapper.sourcePath)/data/contributions"
-    $directory=Resolve-GuideWorkspacePath $WorkspaceRoot $relativeDirectory
-    if(-not [IO.Directory]::Exists($directory)){return @()}
-    # Script blocks, not ForEach-Object <key>: key access on hashtables honours -WhatIf.
-    $guideIds=@(foreach($guide in $Policy.guides){$guide.id})
-    foreach($file in [IO.Directory]::GetFiles($directory)|Sort-Object){
-        $name=[IO.Path]::GetFileName($file)
-        if($name -notmatch '^(?<base>.+)\.(?<extension>ya?ml)$'){continue}
-        $base=$Matches['base'];$extension=$Matches['extension']
-        $guideId=$null;$language=$null
-        foreach($id in $guideIds|Sort-Object Length -Descending){
-            if($base -ieq $id){$guideId=$id;break}
-            if($base.StartsWith("$id.",[StringComparison]::OrdinalIgnoreCase)){
-                $suffix=$base.Substring($id.Length+1)
-                if($suffix -match '^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$'){$guideId=$id;$language=$suffix;break}
+    foreach($guide in $Policy.guides){
+        $relativeDirectory="$($guide.contentRoot)/data"
+        $directory=Resolve-GuideWorkspacePath $WorkspaceRoot $relativeDirectory
+        if(-not [IO.Directory]::Exists($directory)){continue}
+        foreach($file in [IO.Directory]::GetFiles($directory)|Sort-Object){
+            $name=[IO.Path]::GetFileName($file)
+            if($name -notmatch '^(?<base>contributors|translators(?:\..+)?)\.(?<extension>ya?ml)$'){continue}
+            $base=$Matches['base'];$extension=$Matches['extension']
+            $guideId=$guide.id;$language=$null
+            if($base -ine 'contributors'){
+                if($base -match '^translators\.(?<language>[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*)$'){$language=$Matches['language']}
+                else{$guideId=$null}
             }
+            [pscustomobject]@{Relative="$relativeDirectory/$name";Path=$file;Base=$base;Extension=$extension;GuideId=$guideId;Language=$language}
         }
-        [pscustomobject]@{Relative="$relativeDirectory/$name";Path=$file;Base=$base;Extension=$extension;GuideId=$guideId;Language=$language}
     }
 }
 
@@ -112,7 +109,7 @@ function Get-GuideContributionWork {
 function Get-GuideCredits {
     <#
     Resolves the authors, contributors and translators of one guide edition in one
-    language from site/data/contributions. Authors are records with role creator.
+    language from the declared guide's data directory. Authors are records with role creator.
     #>
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$WorkspaceRoot,[Parameter(Mandatory)][Collections.IDictionary]$Policy,
@@ -141,8 +138,12 @@ function Get-GuideContributorFindings {
     $findings=[Collections.Generic.List[object]]::new()
     function Add($code,$subject,$message,$fix,$severity='blocker'){$findings.Add([pscustomobject]@{Code=$code;Severity=$severity;Subject=$subject;Message=$message;Remediation=$fix})}
     # Sites that do not keep contributor data are not asked for it.
-    if(-not [IO.Directory]::Exists((Resolve-GuideWorkspacePath $WorkspaceRoot "$($Policy.wrapper.sourcePath)/data/contributions"))){return @()}
+    $legacy="$($Policy.wrapper.sourcePath)/data/contributions"
+    if([IO.Directory]::Exists((Resolve-GuideWorkspacePath $WorkspaceRoot $legacy))){
+        Add CONTRIBUTOR_LOCATION_RETIRED $legacy 'Site-wide contributor storage is retired in OGP v2.2.0.' 'Move each <guide>.yml to <contentRoot>/data/contributors.yml and each <guide>.<language>.yml to <contentRoot>/data/translators.<language>.yml, preserving records; then remove the retired directory.'
+    }
     $files=@(Get-GuideContributionFiles $WorkspaceRoot $Policy)
+    if(-not $files.Count){return @($findings.ToArray())}
     foreach($group in $files|Group-Object {"$($_.GuideId)|$($_.Language)|$(if($_.GuideId){''}else{$_.Base})"}){
         if($group.Count -gt 1){Add CONTRIBUTOR_FILE_AMBIGUOUS $group.Group[0].Relative 'Both .yml and .yaml contributor files exist for the same guide and language.' 'Keep one file; new files use .yml.'}
     }
@@ -164,7 +165,7 @@ function Get-GuideContributorFindings {
                 }
             }
         }
-        if(-not $file.GuideId){Add CONTRIBUTOR_FILE_UNKNOWN $file.Relative 'The contributor file does not match a declared guide.' 'Name contributor files <guide>.yml or <guide>.<lang>.yml using a declared guide identifier.';continue}
+        if(-not $file.GuideId){Add CONTRIBUTOR_FILE_UNKNOWN $file.Relative 'Invalid attribution filename.' 'Use contributors.yml or translators.<language>.yml inside the declared guide contentRoot/data directory.';continue}
         $guide=@($Policy.guides|Where-Object id -CEQ $file.GuideId)[0]
         $editionIds=@($guide.editions|ForEach-Object {[string]$_.id})
         if($file.Language){
@@ -192,10 +193,10 @@ function Get-GuideContributorFindings {
         }
     }
     foreach($guide in $Policy.guides){foreach($edition in $guide.editions){
-        if(-not $creatorEditions.ContainsKey("$($guide.id)|$($edition.id)")){Add CREATORS_MISSING "$($guide.id)/$($edition.id)" 'No contributor record with role creator lists this edition.' "Add the authors to data/contributions/$($guide.id).yml with role: creator." warning}
+        if(-not $creatorEditions.ContainsKey("$($guide.id)|$($edition.id)")){Add CREATORS_MISSING "$($guide.id)/$($edition.id)" 'No contributor record with role creator lists this edition.' "Add the authors to $($guide.contentRoot)/data/contributors.yml with role: creator." warning}
         foreach($translation in $edition.translations){
             if($translation.language -ieq $edition.sourceLanguage -or $translation.intent -ne 'web'){continue}
-            if(-not $translatorKeys.ContainsKey("$($guide.id)|$($edition.id)|$($translation.language.ToLowerInvariant())")){Add TRANSLATORS_MISSING "$($guide.id)/$($edition.id)/$($translation.language)" 'This translation has no translator record.' "Add the translators to data/contributions/$($guide.id).$($translation.language).yml with role: translator." warning}
+            if(-not $translatorKeys.ContainsKey("$($guide.id)|$($edition.id)|$($translation.language.ToLowerInvariant())")){Add TRANSLATORS_MISSING "$($guide.id)/$($edition.id)/$($translation.language)" 'This translation has no translator record.' "Add the translators to $($guide.contentRoot)/data/translators.$($translation.language).yml with role: translator." warning}
         }
     }}
     @($findings.ToArray())

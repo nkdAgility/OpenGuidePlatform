@@ -5,11 +5,11 @@ BeforeAll {
 Describe 'Reviewed contributor updates' {
     BeforeEach {
         $policy=Get-Content -Raw (Join-Path $root 'tests/Contracts/fixtures/single-guide.site-policy.json') | ConvertFrom-Json -AsHashtable
-        $policy.protectedPaths=@();$policy.guides[0].id='example'
+        $policy.protectedPaths=@();$policy.guides[0].id='example';$policy.guides[0].contentRoot='site/content/example';$policy.guides[0].protectSource=$false
         $workspace=Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
-        $folder=Join-Path $workspace 'site/data/contributions'
+        $folder=Join-Path $workspace 'site/content/example/data'
         [IO.Directory]::CreateDirectory($folder)|Out-Null
-        $path=Join-Path $folder 'example.yaml'
+        $path=Join-Path $folder 'contributors.yaml'
         $original="# Preserve this comment`n- name: Alice`n  role: reviewer`n  weight: 1`n- name: Bob`n  role: contributor`n  url: https://example.org/bob`n"
         [IO.File]::WriteAllText($path,$original)
         $hash=(Get-FileHash $path).Hash
@@ -19,14 +19,14 @@ Describe 'Reviewed contributor updates' {
         $result=Update-GuideContributions $workspace $policy example Alice $hash $candidate
         $result.Status | Should -Be updated
         [IO.File]::ReadAllText($path) | Should -BeExactly $candidate
-        Test-Path (Join-Path $folder 'example.yml') | Should -BeFalse
+        Test-Path (Join-Path $folder 'contributors.yml') | Should -BeFalse
         @(Get-ChildItem $folder).Count | Should -Be 1
     }
     It 'returns a coherent public contributor snapshot including its existing BOM' {
         $bytes=[Text.UTF8Encoding]::new($false).GetBytes([string][char]0xFEFF+$original)
         [IO.File]::WriteAllBytes($path,$bytes)
         $work=Get-GuideContributionWork -WorkspaceRoot $workspace -Policy $policy -GuideId example
-        $work.Path | Should -Be 'site/data/contributions/example.yaml'
+        $work.Path | Should -Be 'site/content/example/data/contributors.yaml'
         $work.Content[0] | Should -Be ([char]0xFEFF)
         $work.Sha256 | Should -Be (Get-FileHash $path).Hash.ToLowerInvariant()
         $work.WriteAllowed | Should -BeTrue
@@ -36,7 +36,7 @@ Describe 'Reviewed contributor updates' {
         $work=Get-GuideContributionWork -WorkspaceRoot $workspace -Policy $policy -GuideId example -Language fr
         $work.Exists | Should -BeFalse
         $work.Content | Should -BeNullOrEmpty
-        $work.Path | Should -Be 'site/data/contributions/example.fr.yml'
+        $work.Path | Should -Be 'site/content/example/data/translators.fr.yml'
         Test-Path (Join-Path $workspace $work.Path) | Should -BeFalse
     }
     It 'refuses stale reviewed input without touching the file' {
@@ -56,15 +56,15 @@ Describe 'Reviewed contributor updates' {
     It 'honors WhatIf and protected path policy' {
         Update-GuideContributions $workspace $policy example Alice $hash $candidate -WhatIf
         (Get-FileHash $path).Hash | Should -Be $hash
-        $policy.protectedPaths=@('site/data/contributions/example.yaml')
+        $policy.protectedPaths=@('site/content/example/data/contributors.yaml')
         { Update-GuideContributions $workspace $policy example Alice $hash $candidate } | Should -Throw '*PROTECTED_RESOURCE*'
     }
     It 'does not create a second file when a .yaml file exists' {
         { New-GuideContributions $workspace $policy example @(@{name='Another';role='reviewer'}) } | Should -Throw '*exists*'
-        Test-Path (Join-Path $folder 'example.yml') | Should -BeFalse
+        Test-Path (Join-Path $folder 'contributors.yml') | Should -BeFalse
     }
     It 'refuses ambiguous extensions' {
-        [IO.File]::WriteAllText((Join-Path $folder 'example.yml'),$original)
+        [IO.File]::WriteAllText((Join-Path $folder 'contributors.yml'),$original)
         { Update-GuideContributions $workspace $policy example Alice $hash $candidate } | Should -Throw '*Ambiguous*'
     }
     It 'leaves the original intact after a staging failure' {

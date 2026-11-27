@@ -187,6 +187,7 @@ If you need help, include the command, finding and relevant report in a [GitHub 
 - [Sample preview](https://blue-field-06cea8c03-preview.westeurope.6.azurestaticapps.net/) — the shared preview environment when deployed. PR previews use their own URL, provided by the deployment comment.
 - [First-time site setup](docs/using/first-adoption.md) — policy, existing files and deployment setup.
 - [Contributor listings and badges](docs/using/contributor-listings.md) — choose who appears in each listing and who receives a star.
+- [Guide-local attribution in v2.2.0](docs/using/guide-local-attribution.md) — move credits beside their guide while preserving edition and language associations.
 - [SEO metadata](docs/using/seo-metadata.md) — homepage titles, social images, publisher logos, authors and publication licences.
 - [Platform development](docs/platform-development.md) — build this repository, run the sample locally and understand releases.
 - [Current system](docs/architecture/current-system.md) — component ownership, guide discovery, contracts, file formats and build evidence.

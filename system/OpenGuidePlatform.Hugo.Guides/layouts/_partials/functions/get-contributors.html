@@ -25,13 +25,13 @@
 
   {{- $records := slice -}}
   {{- if $siteWide -}}
-    {{- range hugo.Data.contributions -}}
-      {{- $records = $records | append . -}}
+    {{- range site.Sites.Default.Sections -}}
+      {{- $files := partial "functions/get-guide-attribution.html" (dict "guide" .Section) -}}
+      {{- range $files -}}{{- $records = $records | append . -}}{{- end -}}
     {{- end -}}
   {{- else -}}
-    {{- with index hugo.Data.contributions $section -}}
-      {{- $records = . -}}
-    {{- end -}}
+    {{- $files := partial "functions/get-guide-attribution.html" (dict "guide" $section) -}}
+    {{- with index $files "contributors" -}}{{- $records = . -}}{{- end -}}
   {{- end -}}
   {{- with $version -}}
     {{- $records = where $records "contributions" "intersect" (slice .) -}}
